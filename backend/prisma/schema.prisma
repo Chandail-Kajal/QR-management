@@ -1,0 +1,143 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+enum QRStatus {
+  ACTIVE
+  PAUSED
+  ARCHIVED
+}
+
+enum QRType {
+  URL
+  TEXT
+  EMAIL
+  PHONE
+  SMS
+  WIFI
+  FILE
+  VCARD
+}
+
+model User {
+  id               Int               @id @default(autoincrement())
+  name             String
+  email            String            @unique
+  password         String
+  createdQRCodes   QR[]              @relation("CreatedQRCodes")
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  deletedAt        DateTime?
+  workspaces       Workspace[]
+  workspaceMembers WorkspaceMember[]
+  qrs              QR[]
+}
+
+model Workspace {
+  id          Int               @id @default(autoincrement())
+  name        String
+  slug        String            @unique
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  deletedAt   DateTime?
+  members     WorkspaceMember[]
+  folders     Folder[]
+  qrs         QR[]
+  createdById Int
+  createdBy   User              @relation(fields: [createdById], references: [id])
+}
+
+model WorkspaceMember {
+  id Int @id @default(autoincrement())
+
+  workspaceId Int
+  userId      Int
+  role        Role
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id])
+  user      User      @relation(fields: [userId], references: [id])
+
+  @@unique([workspaceId, userId])
+}
+
+model Folder {
+  id   Int    @id @default(autoincrement())
+  name String
+
+  workspaceId Int
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+
+  qrs QR[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model QR {
+  id             Int       @id @default(autoincrement())
+  token          String    @unique
+  name           String
+  type           QRType    @default(URL)
+  destinationUrl String
+  status         QRStatus  @default(ACTIVE)
+  scanCount      Int       @default(0)
+  scanLimit      Int?
+  workspaceId    Int
+  workspace      Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  scans          QRScan[]
+
+  createdById Int
+  createdBy   User @relation("CreatedQRCodes", fields: [createdById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  deletedAt DateTime?
+  user      User?     @relation(fields: [userId], references: [id])
+  userId    Int?
+
+  folder   Folder? @relation(fields: [folderId], references: [id])
+  folderId Int?
+
+  @@index([workspaceId])
+  @@index([token])
+  @@index([status])
+}
+
+model QRScan {
+  id Int @id @default(autoincrement())
+
+  qrId      Int
+  qr        QR       @relation(fields: [qrId], references: [id], onDelete: Cascade)
+  ipAddress String?
+  userAgent String?
+  country   String?
+  city      String?
+  referer   String?
+  scannedAt DateTime @default(now())
+
+  @@index([qrId])
+  @@index([scannedAt])
+}
