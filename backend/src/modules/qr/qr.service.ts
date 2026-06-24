@@ -13,17 +13,18 @@ export async function createQR(
 
   console.log({ data, token, workspaceId, userId });
 
-  const qr = await prisma.qR.create({
-    data: {
-      token,
-      name: data.name,
-      destinationUrl: data.destinationUrl,
-      ...(data.scanLimit && { scanLimit: data.scanLimit }),
-      workspaceId,
-      createdById: userId,
-      status: "ACTIVE",
-    },
-  });
+ const qr = await prisma.qR.create({
+  data: {
+    token,
+    name: data.name,
+    type: data.type,
+    content: data.content as object ||{},
+    folderId: data.folderId,
+    workspaceId,
+    createdById: userId,
+    status: "ACTIVE",
+  },
+});
 
   return qr;
 }
@@ -33,7 +34,6 @@ export async function getQR(id: number, workspaceId: number) {
     where: {
       id,
       workspaceId,
-      deletedAt: null,
     },
   });
 
@@ -65,7 +65,6 @@ export async function listQRs(query: ListQRInput, workspaceId: number) {
 
   const where = {
     workspaceId,
-    deletedAt: null,
 
     ...(search && {
       OR: [

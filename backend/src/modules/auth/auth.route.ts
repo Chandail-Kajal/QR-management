@@ -103,6 +103,7 @@ authRouter.post(
       const payload: AuthJwtPayload = {
         userId: decoded.userId,
         email: decoded.email,
+        userRole: ""
       };
 
       const accessToken = signAccessToken(payload);

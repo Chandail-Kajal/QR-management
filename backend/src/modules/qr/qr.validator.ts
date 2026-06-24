@@ -1,10 +1,12 @@
-import { QRStatus } from "@/generated/prisma/enums";
+import { QRStatus, QRType } from "@/generated/prisma/enums";
 import { z } from "zod";
 
 export const createQRSchema = z.object({
   name: z.string().min(1).max(100),
+  type: z.nativeEnum(QRType),
+  content: z.record(z.any()),
 
-  destinationUrl: z.string().url("Invalid destination URL"),
+  folderId: z.number().int().positive().optional(),
 
   scanLimit: z.number().int().positive().nullable().optional(),
 });

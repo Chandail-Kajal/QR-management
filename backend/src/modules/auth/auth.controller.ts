@@ -29,7 +29,6 @@ export const getUser = async (
 ): Promise<LoginResult | null> => {
   const user = await prisma.user.findFirst({
     where: {
-      deletedAt: null,
       ...(email && {
         email: email.toLowerCase(),
       }),
@@ -88,7 +87,6 @@ export const login = async (
   const user = await prisma.user.findFirst({
     where: {
       email: email.toLowerCase(),
-      deletedAt: null,
     },
 
     select: {

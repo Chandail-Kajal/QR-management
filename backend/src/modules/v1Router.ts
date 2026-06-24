@@ -1,8 +1,14 @@
 import { Router } from "express";
 import { authRouter } from "./auth/auth.route";
 import { qrRouter } from "./qr/qr.routes";
+import { workspaceRouter } from "./workspace/workspace.routes";
+import { folderRouter } from "./folders/folder.route";
+import { dashboardRouter } from "./dashboard/dashboard.routes";
 
 export const v1Router = Router();
 
 v1Router.use("/auth", authRouter);
 v1Router.use("/qrs", qrRouter);
+v1Router.use("/workspaces", workspaceRouter);
+v1Router.use("/folders", folderRouter);
+v1Router.use("/dashboard", dashboardRouter);

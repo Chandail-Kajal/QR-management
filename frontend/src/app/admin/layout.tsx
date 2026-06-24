@@ -1,6 +1,6 @@
-import { Sidebar } from "./sidebar";
-import { Topbar } from "./topbar";
-import { ProtectedRoute } from "./protected-route";
+import { Sidebar } from "../../components/admin/sidebar";
+import { Topbar } from "../../components/admin/topbar";
+import { ProtectedRoute } from "../../components/admin/protected-route";
 
 export default function AdminLayout({
   children,

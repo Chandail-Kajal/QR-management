@@ -1,4 +1,5 @@
 import "express-serve-static-core";
+import { Role } from "@/generated/prisma/enums";
 
 declare module "express-serve-static-core" {
   interface Response {
@@ -15,7 +16,7 @@ declare module "express-serve-static-core" {
   }
 
   interface Request {
-    auth?: { userId: string | number; userRole: string | null };
+    auth?: { userId: number; userRole: string | null };
     workspace?: {
       id: number;
       role: Role;

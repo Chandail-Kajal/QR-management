@@ -93,6 +93,8 @@ model Folder {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@unique([workspaceId, name])
 }
 
 model QR {
@@ -100,13 +102,20 @@ model QR {
   token          String    @unique
   name           String
   type           QRType    @default(URL)
-  destinationUrl String
+  content        Json      @default("{}")
   status         QRStatus  @default(ACTIVE)
   scanCount      Int       @default(0)
   scanLimit      Int?
   workspaceId    Int
+
+  expiresAt DateTime?
+  activeFrom DateTime?
+  activeUntil DateTime?
+  password String?
+
   workspace      Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   scans          QRScan[]
+  
 
   createdById Int
   createdBy   User @relation("CreatedQRCodes", fields: [createdById], references: [id])
@@ -120,6 +129,9 @@ model QR {
 
   folder   Folder? @relation(fields: [folderId], references: [id])
   folderId Int?
+
+  @@unique([folderId, name])
+  @@index([workspaceId, folderId])
 
   @@index([workspaceId])
   @@index([token])
@@ -136,8 +148,15 @@ model QRScan {
   country   String?
   city      String?
   referer   String?
+  device    String?
+  browser     String?
+  os          String?
+  language    String?
   scannedAt DateTime @default(now())
 
+  @@index([qrId, scannedAt])
+  @@index([country])
+  @@index([city])
   @@index([qrId])
   @@index([scannedAt])
 }

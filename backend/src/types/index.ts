@@ -1,8 +1,8 @@
 import { JwtPayload } from "jsonwebtoken";
 
 export interface AuthJwtPayload extends JwtPayload {
-  userId?: number;
-  userRole?: string;
+  userId: number;
+  userRole: string;
 }
 
 export type TGetOptionsProps =

@@ -20,8 +20,6 @@ api.interceptors.request.use((config) => {
 
   if (selectedWorkspaceId) {
     config.headers["x-workspace-id"] = String(selectedWorkspaceId);
-  } else {
-    config.headers["x-workspace-id"] = "1";
   }
 
   return config;

@@ -9,6 +9,9 @@ interface AuthState {
 
   selectedWorkspaceId: number | null;
 
+  hydrated: boolean;
+  setHydrated: () => void;
+
   setAuth: (data: LoginResponseDTO) => void;
   setAccessToken: (token: string) => void;
   setWorkspace: (workspaceId: number) => void;
@@ -22,7 +25,9 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       workspaces: [],
       accessToken: null,
+      hydrated: false,
       selectedWorkspaceId: null,
+      setHydrated: () => set({ hydrated: true }),
 
       setAuth: (data) =>
         set({
@@ -35,7 +40,7 @@ export const useAuthStore = create<AuthState>()(
         set({
           accessToken: token,
         }),
-        
+
       setWorkspace: (workspaceId) =>
         set({
           selectedWorkspaceId: workspaceId,
@@ -50,6 +55,9 @@ export const useAuthStore = create<AuthState>()(
     }),
     {
       name: "qr-auth",
+      onRehydrateStorage: () => (state) => {
+        state?.setHydrated();
+      },
     },
   ),
 );

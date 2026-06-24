@@ -6,20 +6,26 @@ import { useEffect } from "react";
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+
   const user = useAuthStore((state) => state.user);
+  const hydrated = useAuthStore((state) => state.hydrated);
 
   useEffect(() => {
-    if (!user) {
+    if (hydrated && !user) {
       router.replace("/login");
     }
-  }, [user, router]);
+  }, [hydrated, user, router]);
 
-  if (!user) {
+  if (!hydrated) {
     return (
       <div className="flex h-screen items-center justify-center">
         Loading...
       </div>
     );
+  }
+
+  if (!user) {
+    return null;
   }
 
   return <>{children}</>;
