@@ -1,86 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-export type QRType = "URL";
-
-export type QRStatus = "ACTIVE" | "PAUSED" | "ARCHIVED";
-
-export interface QRDTO {
-  [x: string]: any;
-  id: number;
-  name: string;
-  token: string;
-
-  type: QRType;
-
-  content:QRContent;
-
-  status: QRStatus;
-
-  scanCount: number;
-  scanLimit: number | null;
-
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateQRRequestDTO {
-  name: string;
-  destinationUrl: string;
-  scanLimit?: number | null;
-}
-
-export interface CreateQRResponseDTO {
-  qr: QRDTO;
-}
-
-export interface UpdateQRRequestDTO {
-  name?: string;
-  destinationUrl?: string;
-  status?: QRStatus;
-  scanLimit?: number | null;
-}
-
-export interface UpdateQRResponseDTO {
-  qr: QRDTO;
-}
-
-export interface GetQRsRequestDTO {
-  page?: number;
-  limit?: number;
-  search?: string;
-  status?: QRStatus;
-}
-
-export interface GetQRsResponseDTO {
-  items: QRDTO[];
-  pagination: {
-    page: number;
-    limit: number;
-    totalItems: number;
-    totalPages: number;
-  };
-}
-
-export interface GetQRResponseDTO {
-  qr: QRDTO;
-}
-
-export interface DeleteQRResponseDTO {
-  success: true;
-}
-
-export type QRDownloadFormat = "PNG" | "SVG" | "PDF";
-
-export interface QRAnalyticsDTO {
-  totalScans: number;
-
-  lastScanAt: string | null;
-
-  scansByDay: {
-    date: string;
-    count: number;
-  }[];
-}
-
 export interface UrlQRContent {
   type: "URL";
   url: string;
@@ -227,3 +144,14 @@ export type QRContent =
   | YouTubeQRContent
   | TikTokQRContent
   | SocialQRContent;
+
+export interface ContactCardDto {
+  fullName: string;
+  company?: string;
+  title?: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  address?: string;
+  avatarUrl?: string;
+}

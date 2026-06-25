@@ -32,9 +32,11 @@ export const qrIdSchema = z.object({
 export const updateQRSchema = z.object({
   name: z.string().min(1).max(100).optional(),
 
-  destinationUrl: z.string().url("Invalid destination URL").optional(),
-
   status: z.nativeEnum(QRStatus).optional(),
+
+  content: z.record(z.any()),
+
+  folderId: z.number().int().positive().optional(),
 
   scanLimit: z.number().int().positive().nullable().optional(),
 });

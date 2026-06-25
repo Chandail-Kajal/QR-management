@@ -166,4 +166,4 @@ export async function getCities(
     city: item.city,
     scans: item._count.city,
   }));
-}
+} 

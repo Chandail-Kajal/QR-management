@@ -4,9 +4,11 @@ import { qrRouter } from "./qr/qr.routes";
 import { workspaceRouter } from "./workspace/workspace.routes";
 import { folderRouter } from "./folders/folder.route";
 import { dashboardRouter } from "./dashboard/dashboard.routes";
+import { publicRouter } from "./public/public.router";
 
 export const v1Router = Router();
 
+v1Router.use("/public",publicRouter)
 v1Router.use("/auth", authRouter);
 v1Router.use("/qrs", qrRouter);
 v1Router.use("/workspaces", workspaceRouter);

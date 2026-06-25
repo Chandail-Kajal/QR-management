@@ -117,3 +117,4 @@ export async function listQRs(query: ListQRInput, workspaceId: number) {
     },
   };
 }
+

@@ -21,6 +21,7 @@ export default function QRsPage() {
 
   const onEdit = (qr: QRDTO) => {
     setEditValues(qr);
+    console.log(qr);
     setCreateOpen(true);
   };
 
@@ -65,7 +66,8 @@ export default function QRsPage() {
         qr={
           editValues
             ? {
-                destinationUrl: editValues?.destinationUrl,
+                content:editValues.content,
+                type:editValues.type,
                 id: editValues.id as unknown as string,
                 name: editValues.name,
                 scanLimit: editValues.scanLimit as number,

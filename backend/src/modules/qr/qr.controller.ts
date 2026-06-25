@@ -52,6 +52,7 @@ export async function updateQR(
     const { id } = qrIdSchema.parse(req.params);
 
     const body = updateQRSchema.parse(req.body);
+    console.info(body);
 
     const qr = await service.updateQR(id, req.workspace!.id, body);
 

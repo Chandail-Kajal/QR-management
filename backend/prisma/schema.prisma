@@ -36,6 +36,18 @@ enum QRType {
   WIFI
   FILE
   VCARD
+
+  WHATSAPP
+  GOOGLE_REVIEW
+
+  INSTAGRAM
+  FACEBOOK
+  LINKEDIN
+  X
+  YOUTUBE
+  TIKTOK
+
+  SOCIAL
 }
 
 model User {
@@ -50,6 +62,7 @@ model User {
   workspaces       Workspace[]
   workspaceMembers WorkspaceMember[]
   qrs              QR[]
+  files            File[]
 }
 
 model Workspace {
@@ -64,6 +77,8 @@ model Workspace {
   qrs         QR[]
   createdById Int
   createdBy   User              @relation(fields: [createdById], references: [id])
+  campaigns   Campaign[]
+  files       File[]
 }
 
 model WorkspaceMember {
@@ -97,25 +112,44 @@ model Folder {
   @@unique([workspaceId, name])
 }
 
+model Campaign {
+  id Int @id @default(autoincrement())
+
+  name        String
+  description String?
+
+  workspaceId Int
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+
+  qrs QR[]
+
+  startDate DateTime?
+  endDate   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([workspaceId])
+}
+
 model QR {
-  id             Int       @id @default(autoincrement())
-  token          String    @unique
-  name           String
-  type           QRType    @default(URL)
-  content        Json      @default("{}")
-  status         QRStatus  @default(ACTIVE)
-  scanCount      Int       @default(0)
-  scanLimit      Int?
-  workspaceId    Int
+  id          Int      @id @default(autoincrement())
+  token       String   @unique
+  name        String
+  type        QRType   @default(URL)
+  content     Json     @default("{}")
+  status      QRStatus @default(ACTIVE)
+  scanCount   Int      @default(0)
+  scanLimit   Int?
+  workspaceId Int
 
-  expiresAt DateTime?
-  activeFrom DateTime?
+  expiresAt   DateTime?
+  activeFrom  DateTime?
   activeUntil DateTime?
-  password String?
+  password    String?
 
-  workspace      Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  scans          QRScan[]
-  
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  scans     QRScan[]
 
   createdById Int
   createdBy   User @relation("CreatedQRCodes", fields: [createdById], references: [id])
@@ -124,15 +158,21 @@ model QR {
   updatedAt DateTime @updatedAt
 
   deletedAt DateTime?
-  user      User?     @relation(fields: [userId], references: [id])
-  userId    Int?
+
+  user   User? @relation(fields: [userId], references: [id])
+  userId Int?
 
   folder   Folder? @relation(fields: [folderId], references: [id])
   folderId Int?
 
-  @@unique([folderId, name])
-  @@index([workspaceId, folderId])
+  campaign   Campaign? @relation(fields: [campaignId], references: [id])
+  campaignId Int?
 
+  qrdesign QRDesign?
+
+  @@unique([folderId, name])
+  @@index([campaignId])
+  @@index([workspaceId, folderId])
   @@index([workspaceId])
   @@index([token])
   @@index([status])
@@ -149,9 +189,10 @@ model QRScan {
   city      String?
   referer   String?
   device    String?
-  browser     String?
-  os          String?
-  language    String?
+  browser   String?
+  os        String?
+  language  String?
+  visitorId String?
   scannedAt DateTime @default(now())
 
   @@index([qrId, scannedAt])
@@ -162,30 +203,29 @@ model QRScan {
 }
 
 model File {
-  id            Int      @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-  fileName      String
-  originalName  String
+  fileName     String
+  originalName String
 
-  mimeType      String
-  size          Int
+  mimeType String
+  size     Int
 
-  storageKey    String
-  url           String
+  storageKey String
+  url        String
 
-  workspaceId   Int
-  workspace     Workspace @relation(fields:[workspaceId], references:[id])
+  workspaceId Int
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
 
-  uploadedById  Int
-  uploadedBy    User @relation(fields:[uploadedById], references:[id])
+  uploadedById Int
+  uploadedBy   User @relation(fields: [uploadedById], references: [id])
 
-  createdAt     DateTime @default(now())
-  deletedAt     DateTime?
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
 
   @@index([workspaceId])
   @@index([uploadedById])
 }
-
 
 model QRDesign {
   id Int @id @default(autoincrement())
@@ -200,7 +240,5 @@ model QRDesign {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  qr QR @relation(fields:[qrId], references:[id], onDelete: Cascade)
+  qr QR @relation(fields: [qrId], references: [id], onDelete: Cascade)
 }
-
-

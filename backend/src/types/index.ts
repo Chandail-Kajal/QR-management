@@ -8,3 +8,5 @@ export interface AuthJwtPayload extends JwtPayload {
 export type TGetOptionsProps =
   | { text: string; id?: never }
   | { id: number; text?: never };
+
+export * from "./qr.types";

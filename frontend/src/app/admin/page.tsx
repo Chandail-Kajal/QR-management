@@ -38,7 +38,7 @@ export default function DashboardPage() {
             <p className="text-3xl font-extrabold tracking-tight text-foreground group-hover:text-primary transition-colors duration-200">12</p>
           </div>
           <div className="h-11 w-11 rounded-xl bg-primary/10 border border-primary/10 text-primary flex items-center justify-center shadow-inner group-hover:bg-primary/20 transition-all duration-200">
-            <QrCode className="h-5 w-5 stroke-[2]" />
+            <QrCode className="h-5 w-5 stroke-2" />
           </div>
         </div>
 
