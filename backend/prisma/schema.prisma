@@ -160,3 +160,47 @@ model QRScan {
   @@index([qrId])
   @@index([scannedAt])
 }
+
+model File {
+  id            Int      @id @default(autoincrement())
+
+  fileName      String
+  originalName  String
+
+  mimeType      String
+  size          Int
+
+  storageKey    String
+  url           String
+
+  workspaceId   Int
+  workspace     Workspace @relation(fields:[workspaceId], references:[id])
+
+  uploadedById  Int
+  uploadedBy    User @relation(fields:[uploadedById], references:[id])
+
+  createdAt     DateTime @default(now())
+  deletedAt     DateTime?
+
+  @@index([workspaceId])
+  @@index([uploadedById])
+}
+
+
+model QRDesign {
+  id Int @id @default(autoincrement())
+
+  qrId Int @unique
+
+  foregroundColor String?
+  backgroundColor String?
+
+  logoFileId Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  qr QR @relation(fields:[qrId], references:[id], onDelete: Cascade)
+}
+
+
