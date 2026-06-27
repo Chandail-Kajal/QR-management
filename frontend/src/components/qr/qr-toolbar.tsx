@@ -17,10 +17,8 @@ import { QRStatus } from "@/types";
 interface QRToolbarProps {
   search: string;
   onSearchChange: (value: string) => void;
-
   status?: QRStatus;
   onStatusChange: (value?: QRStatus) => void;
-
   onCreate?: () => void;
 }
 
@@ -32,57 +30,90 @@ export function QRToolbar({
   onCreate,
 }: QRToolbarProps) {
   return (
-    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between p-1 bg-transparent">
-      {/* Search and Filters Compound Group */}
-      <div className="flex flex-1 flex-col sm:flex-row gap-3">
-        {/* Aesthetic Interactive Search Wrapper */}
-        <div className="relative flex-1 max-w-md group">
-          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground/60 transition-colors duration-200 group-focus-within:text-primary" />
+    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between p-1">
+      {/* Search + Filter */}
+      <div className="flex flex-1 flex-col sm:flex-row gap-2.5">
+
+        {/* Search */}
+        <div className="relative flex-1 max-w-md">
+          <Search
+            className="absolute left-3.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 pointer-events-none"
+            style={{ color: "#6b7db3" }}
+          />
           <Input
             placeholder="Search by name or token..."
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-10 h-10 bg-card/40 border-border/60 hover:border-border/90 focus-visible:ring-primary/40 focus-visible:border-primary rounded-xl transition-all duration-200"
+            className="pl-10 h-10 rounded-lg border text-sm placeholder:text-[#6b7db3] transition-all duration-150 focus-visible:ring-0 focus-visible:outline-none"
+            style={{
+              background: "#161b35",
+              borderColor: "#232848",
+              color: "#ffffff",
+            }}
+            onFocus={(e) => { e.currentTarget.style.borderColor = "#6366f1"; }}
+            onBlur={(e)  => { e.currentTarget.style.borderColor = "#232848"; }}
           />
         </div>
 
-        {/* Custom Glassmorphism Status Select Selector */}
+        {/* Status select */}
         <Select
           value={status ?? "ALL"}
           onValueChange={(value) =>
             onStatusChange(value === "ALL" ? undefined : (value as QRStatus))
           }
         >
-          <SelectTrigger className="w-full sm:w-[180px] h-10 bg-card/40 border-border/60 hover:border-border/90 focus:ring-primary/40 rounded-xl flex items-center gap-2 text-muted-foreground hover:text-foreground transition-all duration-200">
-            <Filter className="h-3.5 w-3.5 text-muted-foreground/60" />
+          <SelectTrigger
+            className="w-full sm:w-40 h-10 rounded-lg border text-sm gap-2 transition-all duration-150 focus:ring-0 focus:outline-none"
+            style={{
+              background: "#161b35",
+              borderColor: "#232848",
+              color: "#c7d2fe",
+            }}
+          >
+            <Filter className="h-3.5 w-3.5 shrink-0" style={{ color: "#6366f1" }} />
             <div className="flex-1 text-left truncate">
               <SelectValue placeholder="All statuses" />
             </div>
           </SelectTrigger>
 
-          <SelectContent className="p-1 border-border/60 bg-card/95 backdrop-blur-md shadow-xl rounded-2xl animate-in fade-in-50 slide-in-from-top-2 duration-200">
-            <SelectItem value="ALL" className="rounded-xl cursor-pointer py-2 focus:bg-primary/10 focus:text-primary">
-              All statuses
-            </SelectItem>
-            <SelectItem value="ACTIVE" className="rounded-xl cursor-pointer py-2 focus:bg-primary/10 focus:text-primary">
-              Active
-            </SelectItem>
-            <SelectItem value="PAUSED" className="rounded-xl cursor-pointer py-2 focus:bg-primary/10 focus:text-primary">
-              Paused
-            </SelectItem>
-            <SelectItem value="ARCHIVED" className="rounded-xl cursor-pointer py-2 focus:bg-primary/10 focus:text-primary">
-              Archived
-            </SelectItem>
+          <SelectContent
+            className="p-1 border rounded-xl"
+            style={{
+              background: "#131628",
+              borderColor: "#232848",
+              boxShadow: "0 16px 40px rgba(0,0,0,0.60)",
+            }}
+          >
+            {[
+              { value: "ALL",      label: "All statuses" },
+              { value: "ACTIVE",   label: "Active"       },
+              { value: "PAUSED",   label: "Paused"       },
+              { value: "ARCHIVED", label: "Archived"     },
+            ].map(({ value, label }) => (
+              <SelectItem
+                key={value}
+                value={value}
+                className="rounded-lg cursor-pointer py-2 text-sm transition-colors duration-100 focus:bg-[#1e2147] focus:text-indigo-400"
+                style={{ color: "#c7d2fe" }}
+              >
+                {label}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
       </div>
 
-      {/* Primary Orchid CTA Button */}
-      <Button 
+      {/* Create CTA */}
+      <Button
         onClick={onCreate}
-        className="h-10 rounded-xl font-medium shadow-md shadow-primary/10 bg-primary text-primary-foreground hover:opacity-90 active:scale-98 transition-all duration-200 px-5 flex items-center gap-1.5"
+        className="h-10 rounded-lg text-sm font-semibold px-5 flex items-center gap-2 border-0 transition-all duration-150 active:scale-95 hover:opacity-90"
+        style={{
+          background: "#5b5ef4",
+          color: "#ffffff",
+          boxShadow: "0 4px 14px rgba(99,102,241,0.35)",
+        }}
       >
-        <Plus className="h-4 w-4 stroke-[2.5]" />
+        <Plus className="h-4 w-4" strokeWidth={2.5} />
         <span>Create QR</span>
       </Button>
     </div>

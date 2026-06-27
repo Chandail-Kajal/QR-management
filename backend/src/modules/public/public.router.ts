@@ -50,4 +50,4 @@ publicRouter.get("/qr/:token", async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-});
+})
