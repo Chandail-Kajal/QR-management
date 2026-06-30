@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { QRRenderer } from "../../../components/r/QRRenderer";
+import { QRRenderer } from "../../../components/r/qr-renderer";
 import { VCardQRContent } from "@/types";
 
 type Redirect = {

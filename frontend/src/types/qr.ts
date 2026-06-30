@@ -1,9 +1,26 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-export type QRType = "URL";
+export type QRType =
+  | "URL"
+  | "TEXT"
+  | "EMAIL"
+  | "PHONE"
+  | "SMS"
+  | "WIFI"
+  | "FILE"
+  | "VCARD"
+  | "WHATSAPP"
+  | "GOOGLE_REVIEW"
+  | "INSTAGRAM"
+  | "FACEBOOK"
+  | "LINKEDIN"
+  | "X"
+  | "YOUTUBE"
+  | "TIKTOK"
+  | "SOCIAL";
 
 export type QRStatus = "ACTIVE" | "PAUSED" | "ARCHIVED";
 
-export interface QRDTO {
+export type TQRDTO = {
   [x: string]: any;
   id: number;
   name: string;
@@ -11,7 +28,7 @@ export interface QRDTO {
 
   type: QRType;
 
-  content:QRContent;
+  content: QRContent;
 
   status: QRStatus;
 
@@ -20,61 +37,22 @@ export interface QRDTO {
 
   createdAt: string;
   updatedAt: string;
-}
+};
 
-export interface CreateQRRequestDTO {
+export type TCreateQRDTO = {
   name: string;
-  destinationUrl: string;
   scanLimit?: number | null;
-}
+  content: any;
+  type: QRType;
+  status: QRStatus;
+};
 
-export interface CreateQRResponseDTO {
-  qr: QRDTO;
-}
-
-export interface UpdateQRRequestDTO {
-  name?: string;
-  destinationUrl?: string;
-  status?: QRStatus;
-  scanLimit?: number | null;
-}
-
-export interface UpdateQRResponseDTO {
-  qr: QRDTO;
-}
-
-export interface GetQRsRequestDTO {
-  page?: number;
-  limit?: number;
-  search?: string;
-  status?: QRStatus;
-}
-
-export interface GetQRsResponseDTO {
-  items: QRDTO[];
-  pagination: {
-    page: number;
-    limit: number;
-    totalItems: number;
-    totalPages: number;
-  };
-}
-
-export interface GetQRResponseDTO {
-  qr: QRDTO;
-}
-
-export interface DeleteQRResponseDTO {
-  success: true;
-}
+export type TUpdateQRDTO = TCreateQRDTO;
 
 export type QRDownloadFormat = "PNG" | "SVG" | "PDF";
-
 export interface QRAnalyticsDTO {
   totalScans: number;
-
   lastScanAt: string | null;
-
   scansByDay: {
     date: string;
     count: number;

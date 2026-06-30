@@ -14,6 +14,7 @@ import { useAuthStore } from "@/stores/auth.store";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { api } from "@/lib/axios";
+import { LogIn } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -39,7 +40,7 @@ export default function LoginPage() {
       setLoading(true);
       const response = await api.post("/auth/login", values);
       setAuth(response.data.data);
-      router.push("/admin/qrs");
+      router.push("/admin/qr-codes");
     } catch (error) {
       console.error("Login failed:", error);
       setError("root", {
@@ -72,7 +73,6 @@ export default function LoginPage() {
                 </p>
               )}
 
-              {/* Email Field via Base UI */}
               <Field>
                 <FieldLabel>Email</FieldLabel>
                 <Input
@@ -85,7 +85,6 @@ export default function LoginPage() {
                 )}
               </Field>
 
-              {/* Password Field via Base UI */}
               <Field>
                 <FieldLabel>Password</FieldLabel>
                 <Input
@@ -98,7 +97,13 @@ export default function LoginPage() {
                 )}
               </Field>
 
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button
+                type="submit"
+                className="w-full h-10"
+                size={"lg"}
+                disabled={loading}
+              >
+                <LogIn />
                 {loading ? "Signing in..." : "Login"}
               </Button>
             </form>

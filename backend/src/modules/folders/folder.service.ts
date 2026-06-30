@@ -1,10 +1,8 @@
 import { prisma } from "@/config/prisma";
 import { ApiError } from "@/shared/utils";
+import { ListFolderQuery } from "./folder.validator";
 
-export async function createFolder(
-  workspaceId: number,
-  name: string,
-) {
+export async function createFolder(workspaceId: number, name: string) {
   const existing = await prisma.folder.findFirst({
     where: {
       workspaceId,
@@ -13,10 +11,7 @@ export async function createFolder(
   });
 
   if (existing) {
-    throw new ApiError(
-      409,
-      "Folder already exists in this workspace",
-    );
+    throw new ApiError(409, "Folder already exists in this workspace");
   }
 
   return prisma.folder.create({
@@ -27,32 +22,97 @@ export async function createFolder(
   });
 }
 
-export async function listFolders(
-  workspaceId: number,
-) {
-  return prisma.folder.findMany({
-    where: {
-      workspaceId,
-    },
+export async function listFolders(query: ListFolderQuery, workspaceId: number) {
+  const { page = 1, limit = 10, search } = query;
 
-    include: {
-      _count: {
-        select: {
-          qrs: true,
+  const where = {
+    workspaceId,
+    ...(search && {
+      name: {
+        contains: search,
+        mode: "insensitive" as const,
+      },
+    }),
+  };
+
+  const skip = (page - 1) * limit;
+
+  const [total, folders, scans] = await prisma.$transaction([
+    prisma.folder.count({
+      where,
+    }),
+
+    prisma.folder.findMany({
+      where,
+      skip,
+      take: limit,
+      orderBy: {
+        updatedAt: "desc",
+      },
+      include: {
+        _count: {
+          select: {
+            qrs: true,
+          },
+        },
+        qrs: {
+          select: {
+            type: true,
+          },
+          take: 3,
+          orderBy: {
+            createdAt: "asc",
+          },
         },
       },
-    },
+    }),
 
-    orderBy: {
-      createdAt: "asc",
+    prisma.qR.groupBy({
+      by: ["folderId"],
+      where: {
+        workspaceId,
+        folderId: {
+          not: null,
+        },
+      },
+      _sum: {
+        scanCount: true,
+      },
+    }),
+  ]);
+
+  const scanMap = new Map<number, number>(
+    scans
+      .filter((s): s is typeof s & { folderId: number } => s.folderId !== null)
+      .map((s) => [s.folderId, s._sum.scanCount ?? 0]),
+  );
+
+  return {
+    items: folders.map((folder) => ({
+      id: folder.id,
+      name: folder.name,
+
+      qrCount: folder._count.qrs,
+      totalScans: scanMap.get(folder.id) ?? 0,
+
+      previewTypes: folder.qrs.map((q) => q.type),
+
+      createdAt: folder.createdAt,
+      updatedAt: folder.updatedAt,
+    })),
+
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+      hasNextPage: page * limit < total,
+      hasPreviousPage: page > 1,
     },
-  });
+  };
 }
 
-export async function getFolder(
-  id: number,
-  workspaceId: number,
-) {
+export async function getFolder(id: number, workspaceId: number) {
   const folder = await prisma.folder.findFirst({
     where: {
       id,
@@ -93,10 +153,7 @@ export async function updateFolder(
   });
 }
 
-export async function deleteFolder(
-  id: number,
-  workspaceId: number,
-) {
+export async function deleteFolder(id: number, workspaceId: number) {
   await getFolder(id, workspaceId);
 
   const qrCount = await prisma.qR.count({
@@ -106,10 +163,7 @@ export async function deleteFolder(
   });
 
   if (qrCount > 0) {
-    throw new ApiError(
-      400,
-      "Folder contains QR codes",
-    );
+    throw new ApiError(400, "Folder contains QR codes");
   }
 
   await prisma.folder.delete({

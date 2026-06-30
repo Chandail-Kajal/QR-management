@@ -12,9 +12,10 @@ import {
 } from "@/types";
 import { QRResponse } from "./public.types";
 import { ApiError } from "@/shared/utils";
+import { QRType } from "@/generated/prisma/enums";
 
-export function resolveQRDestination(content: QRContent): QRResponse {
-  switch (content.type) {
+export function resolveQRDestination(content: QRContent,qrtype:QRType): QRResponse {
+  switch (qrtype) {
     case "URL":
       return {
         renderMode: "REDIRECT",
@@ -181,6 +182,14 @@ export function buildSocialLandingUrl(content: SocialQRContent): string {
 export function generateVisitorId(
   ipAddress?: string | null,
   userAgent?: string | null,
+
+
+
+
+
+
+
+  
 ) {
   const payload = `${ipAddress ?? "unknown"}|${userAgent ?? "unknown"}`;
 

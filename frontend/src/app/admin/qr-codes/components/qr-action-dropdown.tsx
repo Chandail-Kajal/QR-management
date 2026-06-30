@@ -9,16 +9,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { MoreHorizontal, Copy, Pencil, Trash2, Download } from "lucide-react";
-import { QRDTO } from "@/types";
 import QRCode from "qrcode";
+import { TQRDTO } from "@/types";
 
 export function QRActionsDropdown({
   qr,
   onEdit,
   onDelete,
 }: {
-  qr: QRDTO;
-  onEdit: (qr: QRDTO) => void;
+  qr: TQRDTO;
+  onEdit: (qr: TQRDTO) => void;
   onDelete: (id: number | string) => void;
 }) {
   const copyLink = () => {
@@ -54,52 +54,52 @@ export function QRActionsDropdown({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button 
-          size="icon" 
+      <DropdownMenuTrigger>
+        <Button
+          size="icon"
           variant="ghost"
-          className="h-9 w-9 rounded-xl border border-transparent hover:border-border/40 hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-all duration-200 data-[state=open]:bg-muted data-[state=open]:text-foreground"
+          className="h-8 w-8 rounded-md border border-transparent hover:border-border/60 hover:bg-surface-hover text-text-secondary hover:text-text transition-all duration-200 data-[state=open]:bg-surface-hover data-[state=open]:text-text"
         >
           <MoreHorizontal className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent 
-        align="end" 
+      <DropdownMenuContent
+        align="end"
         sideOffset={6}
-        className="w-48 p-1.5 border-border/60 bg-card/95 backdrop-blur-md shadow-xl rounded-2xl animate-in fade-in-50 slide-in-from-top-2 duration-200"
+        className="w-48 p-1 rounded-md border border-border/80 bg-surface shadow-md animate-in fade-in-50 slide-in-from-top-2 duration-100"
       >
-        <DropdownMenuItem 
+        <DropdownMenuItem
           onClick={() => onEdit(qr)}
-          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-foreground/90 cursor-pointer transition-colors duration-150 focus:bg-primary/10 focus:text-primary"
+          className="flex items-center gap-2 px-2.5 py-1.5 rounded-sm text-sm text-text font-medium cursor-pointer outline-none transition-colors duration-150 focus:bg-surface-hover focus:text-secondary"
         >
-          <Pencil className="h-4 w-4 stroke-[2.25]" />
+          <Pencil className="h-4 w-4 shrink-0 text-text-secondary group-focus:text-secondary" />
           <span>Edit Details</span>
         </DropdownMenuItem>
 
-        <DropdownMenuItem 
+        <DropdownMenuItem
           onClick={copyLink}
-          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-foreground/90 cursor-pointer transition-colors duration-150 focus:bg-primary/10 focus:text-primary"
+          className="flex items-center gap-2 px-2.5 py-1.5 rounded-sm text-sm text-text font-medium cursor-pointer outline-none transition-colors duration-150 focus:bg-surface-hover focus:text-secondary"
         >
-          <Copy className="h-4 w-4 stroke-[2.25]" />
+          <Copy className="h-4 w-4 shrink-0 text-text-secondary group-focus:text-secondary" />
           <span>Copy URL</span>
         </DropdownMenuItem>
 
-        <DropdownMenuItem 
+        <DropdownMenuItem
           onClick={handleDownload}
-          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-foreground/90 cursor-pointer transition-colors duration-150 focus:bg-primary/10 focus:text-primary"
+          className="flex items-center gap-2 px-2.5 py-1.5 rounded-sm text-sm text-text font-medium cursor-pointer outline-none transition-colors duration-150 focus:bg-surface-hover focus:text-secondary"
         >
-          <Download className="h-4 w-4 stroke-[2.25]" />
+          <Download className="h-4 w-4 shrink-0 text-text-secondary group-focus:text-secondary" />
           <span>Download Asset</span>
         </DropdownMenuItem>
 
-        <DropdownMenuSeparator className="my-1 bg-border/40" />
+        <DropdownMenuSeparator className="my-1 h-px bg-border-light" />
 
         <DropdownMenuItem
           onClick={() => onDelete(qr.id)}
-          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-sm font-medium text-destructive cursor-pointer transition-colors duration-150 focus:bg-destructive/10 focus:text-destructive-foreground dark:focus:text-destructive"
+          className="flex items-center gap-2 px-2.5 py-1.5 rounded-sm text-sm text-danger font-medium cursor-pointer outline-none transition-colors duration-150 focus:bg-danger/10 focus:text-danger"
         >
-          <Trash2 className="h-4 w-4 stroke-[2.25]" />
+          <Trash2 className="h-4 w-4 shrink-0 text-danger" />
           <span>Delete Code</span>
         </DropdownMenuItem>
       </DropdownMenuContent>

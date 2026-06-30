@@ -45,6 +45,7 @@ publicRouter.get("/qr/:token", async (req, res, next) => {
     ]);
     const redirectContent = resolveQRDestination(
       qr.content as unknown as QRContent,
+      qr.type 
     );
     res.status(200).json({ ...redirectContent });
   } catch (error) {

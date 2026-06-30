@@ -1,5 +1,5 @@
+import { QRStatus, QRType } from "@/types";
 import { z } from "zod";
-
 
 const urlSchema = z.object({
   url: z.url("Invalid URL"),
@@ -59,12 +59,7 @@ export const createQRSchema = z
 
     status: z.string().default("ACTIVE"),
 
-    scanLimit: z
-      .number()
-      .int()
-      .positive()
-      .nullable()
-      .optional(),
+    scanLimit: z.number().int().positive().nullable().optional(),
 
     content: z.any(),
   })
@@ -80,8 +75,7 @@ export const createQRSchema = z
       WHATSAPP: whatsappSchema,
     };
 
-    const validator =
-      validators[data.type as keyof typeof validators];
+    const validator = validators[data.type as keyof typeof validators];
 
     if (!validator) return;
 
@@ -98,4 +92,6 @@ export const createQRSchema = z
     }
   });
 
-export type CreateQRForm = z.infer<typeof createQRSchema>;
+export type CreateQRForm = z.infer<
+  typeof createQRSchema & { status: QRStatus; type: QRType }
+>;

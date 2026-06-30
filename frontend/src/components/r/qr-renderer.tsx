@@ -1,9 +1,9 @@
 "use client";
 
 import { VCardQRContent, WifiQRContent } from "@/types";
-import { RedirectRenderer } from "./RedirectRenderer";
-import { VCardRenderer } from "./VCardRenderer";
-import { WifiRenderer } from "./WifiQRContent";
+import { RedirectRenderer } from "./redirect-renderer";
+import { VCardRenderer } from "./vcard-renderer";
+import { WifiRenderer } from "./wifi-qr-renderer";
 
 type Redirect = {
   destinationUrl: string;

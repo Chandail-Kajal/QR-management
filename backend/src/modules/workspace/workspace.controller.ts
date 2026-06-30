@@ -82,7 +82,7 @@ export async function updateWorkspace(
     const body = updateWorkspaceSchema.parse(req.body);
 
     const workspace = await service.updateWorkspace(
-      id,
+      id ,
       req.auth!.userId as number,
       body,
     );

@@ -1,6 +1,5 @@
 import { api } from "@/lib/api";
-import { GetQRsResponseDTO, UpdateQRRequestDTO } from "@/types";
-import { CreateQRRequestDTO, QRDTO } from "@/types";
+import { PaginatedDTO, TCreateQRDTO, TQRDTO, TUpdateQRDTO } from "@/types";
 
 interface Params {
   page: number;
@@ -9,7 +8,7 @@ interface Params {
   status?: string;
 }
 
-export async function getQRs(params: Params): Promise<GetQRsResponseDTO> {
+export async function getQRs(params: Params): Promise<PaginatedDTO<TQRDTO[]>> {
   const res = await api.get("/qrs", {
     params,
   });
@@ -17,15 +16,15 @@ export async function getQRs(params: Params): Promise<GetQRsResponseDTO> {
   return res.data.data;
 }
 
-export async function createQR(data: CreateQRRequestDTO): Promise<QRDTO> {
+export async function createQR(data: TCreateQRDTO): Promise<TQRDTO> {
   const res = await api.post("/qrs", data);
   return res.data.data;
 }
 
 export async function updateQr(
   id: number | string,
-  data: UpdateQRRequestDTO,
-): Promise<QRDTO> {
+  data: TUpdateQRDTO,
+): Promise<TQRDTO> {
   const res = await api.patch("/qrs/" + id, data);
   return res.data.data;
 }

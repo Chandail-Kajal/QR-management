@@ -100,10 +100,11 @@ authRouter.post(
 
       const decoded = verifyRefreshToken(refreshToken);
 
+      const user = await getUser(null, decoded.userId);
+
       const payload: AuthJwtPayload = {
         userId: decoded.userId,
-        email: decoded.email,
-        userRole: ""
+        userRole: user?.workspaces[0].role as string,
       };
 
       const accessToken = signAccessToken(payload);

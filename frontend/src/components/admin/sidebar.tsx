@@ -1,136 +1,192 @@
 "use client";
-
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-
 import {
-  QrCode,
   LayoutDashboard,
-  BarChart3,
+  QrCode,
+  ChartColumn,
   Folder,
   Users,
   CreditCard,
   Settings,
-  Sparkles,
+  LucideIcon,
 } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import clsx from "clsx";
+import { useUIStore } from "@/stores/ui.store";
 
-const items = [
+interface NavItem {
+  id: string;
+  label: string;
+  icon: LucideIcon;
+  href: string;
+}
+
+interface NavItemProps {
+  item: NavItem;
+  onClick: () => void;
+}
+
+const navigation: NavItem[] = [
   {
-    name: "Dashboard",
-    href: "/admin",
+    id: "dashboard",
+    label: "Dashboard",
     icon: LayoutDashboard,
+    href: "/admin/dashboard",
   },
   {
-    name: "QR Codes",
-    href: "/admin/qrs",
+    id: "qr-codes",
+    label: "QR Codes",
     icon: QrCode,
+    href: "/admin/qr-codes",
   },
   {
-    name: "Analytics",
+    id: "analytics",
+    label: "Analytics",
+    icon: ChartColumn,
     href: "/admin/analytics",
-    icon: BarChart3,
   },
   {
-    name: "Folders",
-    href: "/admin/folders",
+    id: "folders",
+    label: "Folders",
     icon: Folder,
+    href: "/admin/folders",
   },
   {
-    name: "Team",
-    href: "/admin/team",
+    id: "teams",
+    label: "Team",
     icon: Users,
+    href: "/admin/teams",
   },
   {
-    name: "Billing",
-    href: "/admin/billing",
+    id: "billing",
+    label: "Billing",
     icon: CreditCard,
+    href: "/admin/billing",
   },
   {
-    name: "Settings",
-    href: "/admin/settings",
+    id: "settings",
+    label: "Settings",
     icon: Settings,
+    href: "/admin/settings",
   },
 ];
 
-export function Sidebar() {
+interface NavItemProps {
+  item: NavItem;
+  collapsed: boolean;
+  onClick: () => void;
+}
+
+function SidebarItem({ item, collapsed, onClick }: NavItemProps) {
   const pathname = usePathname();
 
+  const Icon = item.icon;
+
+  const active = pathname === item.href || pathname.startsWith(item.href + "/");
+
   return (
-    <aside className="w-64 border-r border-[#E2E8F0] bg-gradient-to-b from-[#F8FAFC] via-[#F1F5F9] to-[#EEF2F7] p-4 flex flex-col justify-between h-screen relative select-none overflow-hidden">
-      {/* Decorative Top Sub-ambient Shadow Blurs */}
-      <div className="absolute top-0 left-1/4 h-28 w-32 rounded-full bg-[#60A5FA]/10 blur-2xl pointer-events-none" />
-      <div className="absolute bottom-24 -right-6 h-24 w-24 rounded-full bg-[#34D399]/10 blur-2xl pointer-events-none" />
-      <div className="absolute top-1/2 -left-8 h-20 w-20 rounded-full bg-[#818CF8]/10 blur-2xl pointer-events-none" />
+    <button
+      title={collapsed ? item.label : undefined}
+      onClick={onClick}
+      className={clsx(
+        "group flex w-full items-center border-r-4 py-3 text-sm transition-all duration-200",
+        collapsed ? "justify-center px-0" : "gap-3 px-5",
+        active
+          ? "border-secondary bg-white/10 text-sidebar-text"
+          : "border-transparent text-sidebar-muted hover:bg-white/5 hover:text-sidebar-text",
+      )}
+    >
+      <Icon size={20} strokeWidth={2} className="shrink-0" />
 
-      <div className="relative z-10">
-        {/* Brand App Header Section */}
-        <div className="flex items-center gap-2.5 px-3 py-4 mb-5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-gradient-to-br from-[#3B82F6] to-[#6366F1] text-white shadow-lg shadow-[#3B82F6]/30">
-            <QrCode className="h-4 w-4 stroke-[2.25]" />
-          </div>
-          <div className="flex flex-col">
-            <h1 className="text-sm font-bold tracking-tight text-[#1E293B] flex items-center gap-1">
-              <span>QR Platform</span>
-              <Sparkles className="h-3 w-3 text-[#3B82F6]" />
+      {!collapsed && <span className="font-medium">{item.label}</span>}
+    </button>
+  );
+}
+
+export function Sidebar() {
+  const router = useRouter();
+
+  const sidebar = useUIStore((s) => s.sidebar);
+
+  if (sidebar === "closed") {
+    return null;
+  }
+
+  const collapsed = sidebar === "compact";
+
+  return (
+    <aside
+      className={clsx(
+        "flex h-screen flex-col bg-sidebar transition-all duration-300",
+        collapsed ? "w-20" : "w-64",
+      )}
+    >
+      {/* Logo */}
+
+      <div
+        className={clsx(
+          "border-border/40 flex border-b p-6",
+          collapsed ? "justify-center" : "gap-4",
+        )}
+      >
+        <div className="bg-secondary shadow-card flex h-11 w-11 items-center justify-center rounded-xl shrink-0">
+          <QrCode size={22} className="text-white" />
+        </div>
+
+        {!collapsed && (
+          <div>
+            <h1 className="text-base font-semibold text-sidebar-text">
+              QR Platform
             </h1>
-            <span className="text-[10px] font-medium text-[#94A3B8] tracking-wider uppercase">
+
+            <p className="text-sidebar-muted text-xs uppercase">
               Pro Dashboard
-            </span>
+            </p>
           </div>
-        </div>
-
-        {/* Navigation Items Link Node Loop */}
-        <nav className="space-y-2 px-0.5">
-          {items.map((item) => {
-            const active = pathname === item.href;
-
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`group flex items-center gap-3 rounded-2xl px-3.5 py-2.5 text-sm font-medium tracking-wide transition-all duration-200 relative overflow-hidden active:scale-[0.97] cursor-pointer ${
-                  active
-                    ? "bg-gradient-to-r from-[#3B82F6] to-[#6366F1] text-white shadow-md shadow-[#3B82F6]/25 border border-white/30"
-                    : "text-[#334155] hover:text-[#0F172A] hover:bg-white hover:shadow-md hover:-translate-y-0.5 hover:border-[#CBD5E1] border border-transparent"
-                }`}
-              >
-                {/* Active link indicator line overlay */}
-                {active && (
-                  <div className="absolute left-0 top-1/4 h-1/2 w-1 rounded-full bg-white/90" />
-                )}
-
-                <item.icon
-                  size={18}
-                  className={`transition-transform duration-200 ${
-                    active
-                      ? "stroke-[2.25] text-white"
-                      : "text-[#64748B] group-hover:text-[#3B82F6] group-hover:scale-110 stroke-[1.75]"
-                  }`}
-                />
-
-                <span className={active ? "font-semibold" : ""}>
-                  {item.name}
-                </span>
-              </Link>
-            );
-          })}
-        </nav>
+        )}
       </div>
 
-      {/* Aesthetic Profile Status Banner Footer */}
-      <div className="relative z-10 p-2.5 bg-white/80 border border-[#E2E8F0] rounded-2xl flex items-center gap-3 mt-auto shadow-sm">
-        <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-[#DBEAFE] to-[#E0E7FF] border border-white/60 text-[#3B82F6] flex items-center justify-center font-mono font-bold text-xs shadow-inner">
-          QR
+      {/* Navigation */}
+
+      <nav className="flex-1 py-2">
+        {navigation.map((item) => (
+          <SidebarItem
+            key={item.id}
+            item={item}
+            collapsed={collapsed}
+            onClick={() => router.push(item.href)}
+          />
+        ))}
+      </nav>
+
+      {/* <div
+        className={clsx(
+          "border-white/10 border-t p-5",
+          collapsed ? "flex justify-center" : "",
+        )}
+      >
+        <div
+          className={clsx(
+            "overflow-hidden transition-all duration-300",
+            collapsed ? "w-0 opacity-0" : "w-auto opacity-100",
+          )}
+        >
+          <div className="bg-secondary flex h-10 w-10 items-center justify-center rounded-full font-semibold text-white shrink-0">
+            AU
+          </div>
+
+          {!collapsed && (
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium text-sidebar-text">
+                Aesthetic User
+              </p>
+
+              <p className="text-sidebar-muted truncate text-xs">
+                Premium Workspace
+              </p>
+            </div>
+          )}
         </div>
-        <div className="flex flex-col min-w-0">
-          <span className="text-xs font-semibold text-[#1E293B] truncate">
-            Aesthetic User
-          </span>
-          <span className="text-[10px] text-[#64748B] truncate">
-            Premium Workspace
-          </span>
-        </div>
-      </div>
+      </div> */}
     </aside>
   );
 }
