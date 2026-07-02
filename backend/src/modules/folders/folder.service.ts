@@ -135,6 +135,29 @@ export async function getFolder(id: number, workspaceId: number) {
   return folder;
 }
 
+export async function getFolderByName(name: string, workspaceId: number) {
+  const folder = await prisma.folder.findFirst({
+    where: {
+      name,
+      workspaceId,
+    },
+
+    include: {
+      _count: {
+        select: {
+          qrs: true,
+        },
+      },
+    },
+  });
+
+  if (!folder) {
+    throw new ApiError(404, "Folder not found");
+  }
+
+  return folder;
+}
+
 export async function updateFolder(
   id: number,
   workspaceId: number,

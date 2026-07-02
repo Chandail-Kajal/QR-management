@@ -4,7 +4,7 @@ import { z } from "zod";
 export const createQRSchema = z.object({
   name: z.string().min(1).max(100),
   type: z.nativeEnum(QRType),
-  content: z.record(z.any()),
+  content: z.record(z.any(), z.any()),
 
   folderId: z.number().int().positive().optional(),
 
@@ -34,7 +34,7 @@ export const updateQRSchema = z.object({
 
   status: z.nativeEnum(QRStatus).optional(),
 
-  content: z.record(z.any()),
+  content: z.record(z.any(), z.any()),
 
   folderId: z.number().int().positive().optional(),
 

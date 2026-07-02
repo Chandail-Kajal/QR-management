@@ -8,17 +8,20 @@ import { TQRDTO, QRStatus, TCreateQRDTO } from "@/types";
 import { DataTable, DataTableColumn } from "@/components/data-table"; // Path to your new component
 import { QRStatusBadge } from "./components/qr-status-badge";
 import { QRActionsDropdown } from "./components/qr-action-dropdown";
-import { useQRs } from "@/hooks/use-qrs";
+import { useFolderQRs, useQRs } from "@/hooks/use-qrs";
 import { QrModalForm } from "./components/add-update-modal";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createQR, updateQr } from "@/services/qr.service";
 import { toast } from "sonner";
 import { SegmentedControl } from "@/components/segmented-control";
 import { getQRTypeIcon } from "@/lib/preview-type-icon";
-import { QrCode } from "lucide-react";
+import { Folder, QrCode } from "lucide-react";
 import { Toolbar } from "@/components/toolbar";
 import { useUIStore } from "@/stores/ui.store";
-import { Breadcrumbs } from "@/components/bread-crumbs";
+import { useParams, useRouter } from "next/navigation";
+import { TFolderDTO } from "@/types/folder";
+import { getFolderByName } from "@/services/folder.service";
+import { useAuthStore } from "@/stores/auth.store";
 
 const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
   URL: { bg: "bg-primary/10", text: "text-primary" },
@@ -82,24 +85,55 @@ function getContentPreview(qr: TQRDTO) {
   }
 }
 
-export default function QRsPage() {
+export function QRsPage({ folderName }: { folderName: string }) {
   const { setBreadcrumbs } = useUIStore();
+  const { selectedWorkspaceId } = useAuthStore();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [status, setStatus] = useState<QRStatus | undefined>();
   const [debouncedSearch] = useDebounce(search, 500);
-  const { data, isLoading } = useQRs(page, debouncedSearch, status); // Note: Ensure your API/hook supports passing limit if necessary
   const [editValues, setEditValues] = useState<TQRDTO | null>(null);
   const queryClient = useQueryClient();
+
+  const router = useRouter();
+
+  const {
+    data: folder,
+    isLoading: folderLoading,
+    isError: folderError,
+  } = useQuery({
+    queryKey: [`folders/${folderName}`],
+    queryFn: async () => getFolderByName({ name: folderName }),
+  });
+
+  const { data, isLoading } = useFolderQRs(
+    {
+      page,
+      search: debouncedSearch,
+      status,
+    },
+    selectedWorkspaceId as number,
+    folder?.id as number,
+  );
+
+  useEffect(() => {
+    setBreadcrumbs([
+      { label: "Folders", href: "/admin/folders" },
+      { label: folderName as string },
+    ]);
+  }, [folderName, setBreadcrumbs]);
 
   const mutation = useMutation({
     mutationFn: async (formData: TCreateQRDTO) => {
       if (editValues) {
-        await updateQr(editValues.id, { ...formData });
+        await updateQr(editValues.id, {
+          ...formData,
+          folderId: folder?.id as number,
+        });
       } else {
-        await createQR(formData);
+        await createQR({ ...formData, folderId: folder?.id as number });
       }
     },
     onError: (err) => toast.error(`Error: ${err.message}`),
@@ -109,7 +143,7 @@ export default function QRsPage() {
       );
       setCreateOpen(false);
       setEditValues(null);
-      queryClient.invalidateQueries({ queryKey: ["qrs"] });
+      queryClient.invalidateQueries({ queryKey: [`qrs/${folder?.id}`] });
     },
   });
 
@@ -194,15 +228,18 @@ export default function QRsPage() {
       className: "pr-5 text-right w-14",
       render: (_, qr) => (
         <div className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-          <QRActionsDropdown qr={qr} onEdit={onEdit} onDelete={onDelete} />
+          <QRActionsDropdown
+            onAnalytics={() =>
+              router.push(`/admin/folders/${folderName}/analytics/${qr.id}`)
+            }
+            qr={qr}
+            onEdit={onEdit}
+            onDelete={onDelete}
+          />
         </div>
       ),
     },
   ];
-
-  useEffect(() => {
-    setBreadcrumbs([{ label: "Qr Codes", href: "/admin/qr-codes" }]);
-  }, [setBreadcrumbs]);
 
   if (isLoading) {
     return <div className="p-6 text-sm text-text-secondary">Loading...</div>;
@@ -216,8 +253,7 @@ export default function QRsPage() {
   };
 
   const emptyStatePlaceholder = (
-    <div className="relative overflow-hidden rounded-xl bg-surface p-12 text-center flex flex-col items-center justify-center min-h-70 group">
-      <Breadcrumbs />
+    <div className="relative overflow-hidden rounded-xl bg-surface p-12 text-center flex flex-col items-center justify-center min-h-[280px] group">
       <div className="flex h-14 w-14 items-center justify-center rounded-xl mb-4 bg-background-secondary border border-border text-secondary transition-transform duration-200 group-hover:scale-105">
         <QrCode className="h-6 w-6" strokeWidth={1.5} />
       </div>
@@ -232,7 +268,6 @@ export default function QRsPage() {
 
   return (
     <main className="flex-1 transition-colors duration-150 flex flex-col gap-4 pb-20">
-      <Breadcrumbs />
       <Toolbar
         bottomAddon={
           <SegmentedControl

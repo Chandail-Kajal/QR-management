@@ -2,10 +2,13 @@ import crypto from "crypto";
 import {
   EmailQRContent,
   FileQRContent,
+  GoogleReviewQRContent,
   PhoneQRContent,
   QRContent,
   SmsQRContent,
   SocialQRContent,
+  TextQRContent,
+  UrlQRContent,
   VCardQRContent,
   WhatsAppQRContent,
   WifiQRContent,
@@ -14,19 +17,22 @@ import { QRResponse } from "./public.types";
 import { ApiError } from "@/shared/utils";
 import { QRType } from "@/generated/prisma/enums";
 
-export function resolveQRDestination(content: QRContent,qrtype:QRType): QRResponse {
-  switch (qrtype) {
+export function resolveQRDestination(
+  content: QRContent,
+  qrType: QRType,
+): QRResponse {
+  switch (qrType) {
     case "URL":
       return {
         renderMode: "REDIRECT",
-        content: { destinationUrl: content.url },
+        content: { destinationUrl: (content as UrlQRContent).url },
       };
 
     case "TEXT":
       return {
         renderMode: "REDIRECT",
         content: {
-          destinationUrl: `data:text/plain,${encodeURIComponent(content.text)}`,
+          destinationUrl: `data:text/plain,${encodeURIComponent((content as TextQRContent).text)}`,
         },
       };
 
@@ -34,7 +40,7 @@ export function resolveQRDestination(content: QRContent,qrtype:QRType): QRRespon
       return {
         renderMode: "REDIRECT",
         content: {
-          destinationUrl: buildEmailUrl(content),
+          destinationUrl: buildEmailUrl(content as EmailQRContent),
         },
       };
 
@@ -42,27 +48,27 @@ export function resolveQRDestination(content: QRContent,qrtype:QRType): QRRespon
       return {
         renderMode: "REDIRECT",
         content: {
-          destinationUrl: buildPhoneUrl(content),
+          destinationUrl: buildPhoneUrl(content as PhoneQRContent),
         },
       };
 
     case "SMS":
       return {
         renderMode: "REDIRECT",
-        content: { destinationUrl: buildSmsUrl(content) },
+        content: { destinationUrl: buildSmsUrl(content as SmsQRContent) },
       };
 
     case "WIFI":
       return {
         renderMode: "WIFI",
-        content:content,
+        content: content as WifiQRContent,
       };
 
     case "FILE":
       return {
         renderMode: "REDIRECT",
         content: {
-          destinationUrl: buildFileUrl(content),
+          destinationUrl: buildFileUrl(content as FileQRContent),
         },
       };
 
@@ -71,14 +77,14 @@ export function resolveQRDestination(content: QRContent,qrtype:QRType): QRRespon
         renderMode: "VCARD",
         content: {
           ...content,
-        },
+        } as VCardQRContent,
       };
 
     case "WHATSAPP":
       return {
         renderMode: "REDIRECT",
         content: {
-          destinationUrl: buildWhatsAppUrl(content),
+          destinationUrl: buildWhatsAppUrl(content as WhatsAppQRContent),
         },
       };
 
@@ -86,7 +92,7 @@ export function resolveQRDestination(content: QRContent,qrtype:QRType): QRRespon
       return {
         renderMode: "REDIRECT",
         content: {
-          destinationUrl: content.reviewUrl,
+          destinationUrl: (content as GoogleReviewQRContent).reviewUrl,
         },
       };
 
@@ -99,7 +105,7 @@ export function resolveQRDestination(content: QRContent,qrtype:QRType): QRRespon
       return {
         renderMode: "REDIRECT",
         content: {
-          destinationUrl: content.url,
+          destinationUrl: (content as UrlQRContent).url,
         },
       };
 
@@ -178,18 +184,9 @@ export function buildSocialLandingUrl(content: SocialQRContent): string {
   return `/social/${encodeURIComponent(content.title ?? "profile")}`;
 }
 
-
 export function generateVisitorId(
   ipAddress?: string | null,
   userAgent?: string | null,
-
-
-
-
-
-
-
-  
 ) {
   const payload = `${ipAddress ?? "unknown"}|${userAgent ?? "unknown"}`;
 

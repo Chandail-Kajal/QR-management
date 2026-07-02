@@ -38,12 +38,12 @@ const navigation: NavItem[] = [
     icon: QrCode,
     href: "/admin/qr-codes",
   },
-  {
-    id: "analytics",
-    label: "Analytics",
-    icon: ChartColumn,
-    href: "/admin/analytics",
-  },
+  // {
+  //   id: "analytics",
+  //   label: "Analytics",
+  //   icon: ChartColumn,
+  //   href: "/admin/analytics",
+  // },
   {
     id: "folders",
     label: "Folders",

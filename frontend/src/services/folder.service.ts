@@ -19,6 +19,19 @@ export async function getFolders(
   return res.data.data;
 }
 
+export async function getFolderByName({
+  name,
+}: {
+  name: string;
+}): Promise<TFolderDTO | null> {
+  try {
+    const res = await api.get("/folders/by-name/" + name);
+    return res.data.data;
+  } catch (error) {
+    return null;
+  }
+}
+
 export async function createFolder(
   data: TCreateFolderDTO,
 ): Promise<TFolderDTO> {

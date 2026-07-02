@@ -45,6 +45,7 @@ export type TCreateQRDTO = {
   content: any;
   type: QRType;
   status: QRStatus;
+  folderId?: number;
 };
 
 export type TUpdateQRDTO = TCreateQRDTO;

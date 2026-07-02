@@ -1,7 +1,7 @@
 "use client";
-import { useState } from "react";
-import { FolderCard, NewFolderCard } from "@/components/folder-card";
-import { Grid, List, Search } from "lucide-react";
+import { useEffect, useState } from "react";
+import { FolderCard, NewFolderCard } from "./components/folder-card";
+import { Grid, List } from "lucide-react";
 import { SegmentedControl } from "@/components/segmented-control";
 import { useFolders } from "@/hooks/use-folders";
 import { FolderDialog } from "./components/add-update-modal";
@@ -10,8 +10,13 @@ import { toast } from "sonner";
 import { createFolder, updateFolder } from "@/services/folder.service";
 import { Toolbar } from "@/components/toolbar";
 import { useDebounce } from "use-debounce";
+import { useRouter } from "next/navigation";
+import { useUIStore } from "@/stores/ui.store";
+import { useAuthStore } from "@/stores/auth.store";
 
 export default function FoldersPage() {
+  const { setBreadcrumbs } = useUIStore();
+  const { selectedWorkspaceId } = useAuthStore();
   const [page] = useState(1);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchQuery, setSearchQuery] = useState("");
@@ -20,10 +25,16 @@ export default function FoldersPage() {
   const [editValues, setEditValues] = useState<{
     name: string;
     id?: string | number;
-  } | null>({ name: "" });
-  
-  const { data, isLoading, isError, error } = useFolders(page, debouncedSearch);
+  } | null>(null);
+
+  const { data, isLoading, isError, error } = useFolders(
+    page,
+    debouncedSearch,
+    selectedWorkspaceId as number,
+  );
   const queryClient = useQueryClient();
+
+  const router = useRouter();
 
   const folders = data?.items ?? [];
 
@@ -49,6 +60,10 @@ export default function FoldersPage() {
       queryClient.invalidateQueries({ queryKey: ["folders"] });
     },
   });
+
+  useEffect(() => {
+    setBreadcrumbs([{ label: "Folders", href: "/admin/folders" }]);
+  }, [setBreadcrumbs]);
 
   return (
     <main className="flex-1 transition-colors duration-150 flex flex-col gap-4">
@@ -101,7 +116,9 @@ export default function FoldersPage() {
                 setEditValues({ name: folder.name, id: folder.id });
                 setOpen(true);
               }}
-              onMore={() => {}}
+              onForward={() => {
+                router.push(`/admin/folders/${folder.name}`);
+              }}
             />
           ))}
           <NewFolderCard onClick={() => setOpen(true)} />
@@ -126,7 +143,6 @@ export default function FoldersPage() {
         onOpenChange={setOpen}
         initialName={editValues ? editValues.name : ""}
         onSubmit={async ({ name }) => {
-          console.log({ name });
           mutation.mutate({ name });
         }}
       />

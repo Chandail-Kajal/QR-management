@@ -14,7 +14,7 @@ export default function AdminLayout({
           <Sidebar />
         </div>
         <div className="flex w-full h-full flex-col">
-          <div className="flex flex-row w-full h-18">
+          <div className="flex flex-row w-full h-16">
             <Topbar />
           </div>
           <div className="h-full bg-background">

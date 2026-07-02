@@ -127,6 +127,12 @@
 
   --header-height: 72px;
   --sidebar-width: 235px;
+
+  --font-urbanist: var(--font-urbanist);
+}
+
+body {
+  font-family: var(--font-urbanist);
 }
 
 @keyframes shine {

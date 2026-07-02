@@ -2,6 +2,7 @@ import { createQRSchema, listQRSchema } from "./qr.validator";
 import { qrIdSchema, updateQRSchema } from "./qr.validator";
 import type { Request, Response, NextFunction } from "express";
 import * as service from "./qr.service";
+import { ApiError } from "@/shared/utils";
 
 export async function createQR(
   req: Request,
@@ -11,10 +12,8 @@ export async function createQR(
   try {
     const body = createQRSchema.parse(req.body);
 
-    console.log({body, ...req.auth, ...req.workspace})
-
     const data = await service.createQR(
-      body,
+      { ...body },
       req.workspace?.id as number,
       req.auth?.userId as number,
     );
@@ -52,8 +51,6 @@ export async function updateQR(
     const { id } = qrIdSchema.parse(req.params);
 
     const body = updateQRSchema.parse(req.body);
-    console.info(body);
-
     const qr = await service.updateQR(id, req.workspace!.id, body);
 
     return res.status(200).json({
@@ -67,7 +64,13 @@ export async function updateQR(
 export async function listQRs(req: Request, res: Response, next: NextFunction) {
   try {
     const query = listQRSchema.parse(req.query);
-    const data = await service.listQRs(query, req.workspace?.id as number);
+    const { folderId } = req.params;
+
+    const data = await service.listQRs(
+      query,
+      req.workspace?.id as number,
+      Number(folderId),
+    );
     return res.status(200).json({
       message: "QRs fetched successfully",
       data,

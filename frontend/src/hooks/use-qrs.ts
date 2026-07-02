@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getQRs } from "@/services/qr.service";
+import { getFolderQRs, getQRs } from "@/services/qr.service";
 
 export function useQRs(page: number, search: string, status?: string) {
   return useQuery({
@@ -11,5 +11,32 @@ export function useQRs(page: number, search: string, status?: string) {
         search,
         status,
       }),
+  });
+}
+
+export function useFolderQRs(
+  params: {
+    page: number;
+    search: string;
+    status?: string;
+    limit?: number;
+  },
+  workspaceId: number | string,
+  folderId: number | string,
+) {
+  return useQuery({
+    queryKey: [
+      `qrs/${folderId}`,
+      params.page,
+      params.search,
+      params.status,
+      folderId,
+      workspaceId,
+    ],
+    queryFn: () =>
+      getFolderQRs(
+        { ...params, limit: params.limit ? params.limit : 10 },
+        folderId,
+      ),
   });
 }

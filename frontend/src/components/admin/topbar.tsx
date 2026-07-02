@@ -33,37 +33,17 @@ export function Topbar() {
   }
 
   return (
-    <header className="flex h-full w-full py-1 items-center justify-between border-b border-border bg-surface px-6">
+    <header className="flex h-16 w-full py-1 items-center justify-between border-b border-border bg-surface px-6">
       <div className="flex items-center gap-5">
         <Button variant="ghost" size="icon" onClick={toggleSidebar}>
           <Menu className="h-5 w-5" />
         </Button>
 
-        <nav className="flex items-center gap-2 text-sm">
-          {breadcrumbs.map((item, index) => (
-            <div
-              key={`${item.label}-${index}`}
-              className="flex items-center gap-2"
-            >
-              {index !== 0 && (
-                <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
-              )}
-
-              {item.href ? (
-                <Link
-                  href={item.href}
-                  className="text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {item.label}
-                </Link>
-              ) : (
-                <span className="font-medium text-foreground">
-                  {item.label}
-                </span>
-              )}
-            </div>
-          ))}
-        </nav>
+        <div className="flex flex-col gap-0">
+          <span className="text-lg font-bold leading-tight">
+            {breadcrumbs?.[0]?.label}
+          </span>
+        </div>
       </div>
 
       <div className="flex items-center gap-2">
@@ -112,8 +92,12 @@ export function Topbar() {
             <div className="max-w-40 truncate text-sm font-medium">
               {user?.name ?? "User"}
             </div>
-
-            <div className="text-muted-foreground text-xs">Operator</div>
+            <div className="text-muted-foreground text-[10px]">
+              {workspaces
+                .find((ws) => selectedWorkspaceId === ws.id)
+                ?.role?.split("_")
+                .join(" ") || "Operator"}
+            </div>
           </div>
         </div>
 

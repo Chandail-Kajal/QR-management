@@ -25,7 +25,12 @@ export default function QRPage() {
 
     async function fetchQR() {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/public/qr/${token}`
+        `${process.env.NEXT_PUBLIC_API_URL}/public/qr/${token}`,
+        {
+          headers: {
+            "x-language": navigator.language,
+          },
+        },
       );
 
       if (!res.ok) {
@@ -48,10 +53,5 @@ export default function QRPage() {
     );
   }
 
-  return (
-    <QRRenderer
-      content={qr.content}
-      renderMode={qr.renderMode}
-    />
-  );
+  return <QRRenderer content={qr.content} renderMode={qr.renderMode} />;
 }

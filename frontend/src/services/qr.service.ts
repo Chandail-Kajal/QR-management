@@ -1,5 +1,11 @@
 import { api } from "@/lib/api";
-import { PaginatedDTO, TCreateQRDTO, TQRDTO, TUpdateQRDTO } from "@/types";
+import {
+  ApiResponse,
+  PaginatedDTO,
+  TCreateQRDTO,
+  TQRDTO,
+  TUpdateQRDTO,
+} from "@/types";
 
 interface Params {
   page: number;
@@ -13,6 +19,21 @@ export async function getQRs(params: Params): Promise<PaginatedDTO<TQRDTO[]>> {
     params,
   });
 
+  return res.data.data;
+}
+
+export async function getQRDetails(qrId: string): Promise<TQRDTO> {
+  const res = await api.get<ApiResponse<TQRDTO>>(`/qrs/${qrId}`);
+  return res.data.data;
+}
+
+export async function getFolderQRs(
+  params: Params,
+  folderId: number | string,
+): Promise<PaginatedDTO<TQRDTO[]>> {
+  const res = await api.get(`/qrs/folders/${folderId}`, {
+    params,
+  });
   return res.data.data;
 }
 

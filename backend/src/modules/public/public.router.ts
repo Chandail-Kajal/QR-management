@@ -3,6 +3,7 @@ import { findQr } from "./public.controller";
 import { generateVisitorId, resolveQRDestination } from "./public.utils";
 import { prisma } from "@/config/prisma";
 import { QRContent } from "@/types";
+import { UAParser } from "ua-parser-js";
 
 export const publicRouter = Router();
 
@@ -20,6 +21,9 @@ publicRouter.get("/qr/:token", async (req, res, next) => {
       req.headers["x-forwarded-for"]?.toString().split(",")[0] ||
       req.socket.remoteAddress;
     const userAgent = req.headers["user-agent"];
+    const parser = new UAParser(userAgent);
+    const result = parser.getResult();
+    const language = req.header("x-language");
 
     await prisma.$transaction([
       prisma.qR.update({
@@ -40,15 +44,24 @@ publicRouter.get("/qr/:token", async (req, res, next) => {
           userAgent,
           referer: req.headers["referer"],
           visitorId: generateVisitorId(ipAddress, userAgent),
+          browser: result.browser.name,
+          os: result.os.name,
+          device:
+            result.device.type === "mobile"
+              ? "Mobile"
+              : result.device.type === "tablet"
+                ? "Tablet"
+                : "Desktop",
+          language,
         },
       }),
     ]);
     const redirectContent = resolveQRDestination(
       qr.content as unknown as QRContent,
-      qr.type 
+      qr.type,
     );
     res.status(200).json({ ...redirectContent });
   } catch (error) {
     next(error);
   }
-})
+});

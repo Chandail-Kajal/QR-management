@@ -3,6 +3,7 @@ import crypto from "crypto";
 import { Prisma } from "@/generated/prisma/client";
 import { ApiError } from "@/shared/utils";
 import { ListQRInput, CreateQRInput, UpdateQRInput } from "./qr.validator";
+import { any } from "zod";
 
 export async function createQR(
   data: CreateQRInput,
@@ -13,18 +14,18 @@ export async function createQR(
 
   console.log({ data, token, workspaceId, userId });
 
- const qr = await prisma.qR.create({
-  data: {
-    token,
-    name: data.name,
-    type: data.type,
-    content: data.content as object ||{},
-    folderId: data.folderId,
-    workspaceId,
-    createdById: userId,
-    status: "ACTIVE",
-  },
-});
+  const qr = await prisma.qR.create({
+    data: {
+      token,
+      name: data.name,
+      type: data.type,
+      content: (data.content as object) || {},
+      folderId: data.folderId,
+      workspaceId,
+      createdById: userId,
+      status: "ACTIVE",
+    },
+  });
 
   return qr;
 }
@@ -54,18 +55,22 @@ export async function updateQR(
     where: {
       id,
     },
-    data,
+    data: data as any,
   });
 
   return qr;
 }
 
-export async function listQRs(query: ListQRInput, workspaceId: number) {
+export async function listQRs(
+  query: ListQRInput,
+  workspaceId: number,
+  folderId?: number,
+) {
   const { page, limit, search, status } = query;
 
   const where = {
     workspaceId,
-
+    ...(folderId && { folderId }),
     ...(search && {
       OR: [
         {
@@ -117,4 +122,3 @@ export async function listQRs(query: ListQRInput, workspaceId: number) {
     },
   };
 }
-

@@ -1,3 +1,10 @@
+export interface ApiResponse<T> {
+  message: string;
+  error?: string;
+  success: boolean;
+  data: T;
+}
+
 export interface PaginatedDTO<T> {
   items: T;
   pagination: {

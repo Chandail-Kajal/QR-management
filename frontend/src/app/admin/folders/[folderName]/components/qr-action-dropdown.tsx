@@ -24,10 +24,12 @@ export function QRActionsDropdown({
   qr,
   onEdit,
   onDelete,
+  onAnalytics,
 }: {
   qr: TQRDTO;
   onEdit: (qr: TQRDTO) => void;
   onDelete: (id: number | string) => void;
+  onAnalytics: (id: number | string) => void;
 }) {
   const router = useRouter();
 
@@ -96,9 +98,7 @@ export function QRActionsDropdown({
         </DropdownMenuItem>
 
         <DropdownMenuItem
-          onClick={() => {
-            router.push(`/admin/qr-codes/${qr.id}/analytics`);
-          }}
+          onClick={() => onAnalytics(qr.id)}
           className="flex items-center gap-2 px-2.5 py-1.5 rounded-sm text-sm text-text font-medium cursor-pointer outline-none transition-colors duration-150 focus:bg-surface-hover focus:text-secondary"
         >
           <BarChart className="h-4 w-4 shrink-0 text-text-secondary group-focus:text-secondary" />

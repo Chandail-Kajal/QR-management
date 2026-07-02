@@ -23,7 +23,7 @@ export function SegmentedControl<T extends string>({
   return (
     <div
       className={cn(
-        "inline-flex overflow-hidden rounded-sm border border-border bg-surface",
+        "inline-flex overflow-hidden rounded-sm border border-border bg-surface p-0.5 gap-0.5",
         className,
       )}
     >
@@ -36,10 +36,10 @@ export function SegmentedControl<T extends string>({
             type="button"
             onClick={() => onChange(option.value)}
             className={cn(
-              "flex items-center gap-2 p-2 text-sm font-medium transition-colors",
-              index !== 0 && "border-l border-border",
+              "flex items-center gap-2 p-2 text-sm rounded-sm font-medium transition-colors",
+              // index !== 0 && "border-l border-border",
               active
-                ? "bg-primary text-white"
+                ? "bg-linear-120 from-purple-700 to-purple-500 text-white"
                 : "text-text-secondary hover:bg-primary/5 hover:text-text",
             )}
           >

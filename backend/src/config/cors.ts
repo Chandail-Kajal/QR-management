@@ -5,6 +5,11 @@ export const corsConfig: CorsOptions = {
   origin: env.ALLOWED_ORIGINS,
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Workspace-Id"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "X-Workspace-Id",
+    "X-Language",
+  ],
   exposedHeaders: ["Content-Disposition"],
 };

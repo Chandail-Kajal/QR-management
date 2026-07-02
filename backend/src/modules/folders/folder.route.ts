@@ -3,71 +3,51 @@ import express from "express";
 import {
   createFolder,
   listFolders,
-  getFolder,
+  getFolderById,
   updateFolder,
   deleteFolder,
+  getFolderByName,
 } from "./folder.controller";
 
-import {
-  auth,
-  workspace,
-  allowRoles,
-} from "@/middlewares";
+import { auth, workspace, allowRoles } from "@/middlewares";
 
-export const folderRouter =
-  express.Router();
+export const folderRouter = express.Router();
 
 folderRouter.use(auth);
 folderRouter.use(workspace);
 
 folderRouter.get(
   "/",
-  allowRoles(
-    "SUPER_ADMIN",
-    "ADMIN",
-    "MEMBER",
-    "VIEWER",
-  ),
+  allowRoles("SUPER_ADMIN", "ADMIN", "MEMBER", "VIEWER"),
   listFolders,
 );
 
 folderRouter.post(
   "/",
-  allowRoles(
-    "SUPER_ADMIN",
-    "ADMIN",
-    "MEMBER",
-  ),
+  allowRoles("SUPER_ADMIN", "ADMIN", "MEMBER"),
   createFolder,
 );
 
 folderRouter.get(
   "/:id",
-  allowRoles(
-    "SUPER_ADMIN",
-    "ADMIN",
-    "MEMBER",
-    "VIEWER",
-  ),
-  getFolder,
+  allowRoles("SUPER_ADMIN", "ADMIN", "MEMBER", "VIEWER"),
+  getFolderById,
+);
+
+folderRouter.get(
+  "/by-name/:name",
+  allowRoles("SUPER_ADMIN", "ADMIN", "MEMBER", "VIEWER"),
+  getFolderByName,
 );
 
 folderRouter.patch(
   "/:id",
-  allowRoles(
-    "SUPER_ADMIN",
-    "ADMIN",
-    "MEMBER",
-  ),
+  allowRoles("SUPER_ADMIN", "ADMIN", "MEMBER"),
   updateFolder,
 );
 
 folderRouter.delete(
   "/:id",
-  allowRoles(
-    "SUPER_ADMIN",
-    "ADMIN",
-    "MEMBER",
-  ),
+  allowRoles("SUPER_ADMIN", "ADMIN", "MEMBER"),
   deleteFolder,
 );
