@@ -66,10 +66,11 @@ export async function listQRs(
   workspaceId: number,
   folderId?: number,
 ) {
-  const { page, limit, search, status } = query;
+  const { page, limit, search, status, type } = query;
 
   const where = {
     workspaceId,
+    ...(type && { type }),
     ...(folderId && { folderId }),
     ...(search && {
       OR: [
@@ -87,7 +88,6 @@ export async function listQRs(
         },
       ],
     }),
-
     ...(status && {
       status,
     }),

@@ -13,12 +13,10 @@ export const createQRSchema = z.object({
 
 export const listQRSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
-
   limit: z.coerce.number().int().min(1).max(100).default(10),
-
   search: z.string().optional(),
-
   status: z.nativeEnum(QRStatus).optional(),
+  type: z.nativeEnum(QRType).optional()
 });
 
 export type CreateQRInput = z.infer<typeof createQRSchema>;

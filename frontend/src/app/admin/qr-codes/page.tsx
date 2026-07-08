@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useDebounce } from "use-debounce";
 import { TQRDTO, QRStatus, TCreateQRDTO } from "@/types";
 
 import { DataTable, DataTableColumn } from "@/components/data-table"; // Path to your new component
 import { QRStatusBadge } from "./components/qr-status-badge";
 import { QRActionsDropdown } from "./components/qr-action-dropdown";
-import { useQRs } from "@/hooks/use-qrs";
+import { useQRs, useQrTypeCounts } from "@/hooks/use-qrs";
 import { QrModalForm } from "./components/add-update-modal";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createQR, updateQr } from "@/services/qr.service";
@@ -19,6 +19,7 @@ import { QrCode } from "lucide-react";
 import { Toolbar } from "@/components/toolbar";
 import { useUIStore } from "@/stores/ui.store";
 import { Breadcrumbs } from "@/components/bread-crumbs";
+import { string } from "zod";
 
 const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
   URL: { bg: "bg-primary/10", text: "text-primary" },
@@ -88,9 +89,10 @@ export default function QRsPage() {
   const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
-  const [status, setStatus] = useState<QRStatus | undefined>();
+  const [type, setType] = useState<string | undefined>(undefined);
   const [debouncedSearch] = useDebounce(search, 500);
-  const { data, isLoading } = useQRs(page, debouncedSearch, status); // Note: Ensure your API/hook supports passing limit if necessary
+  const { data, isLoading } = useQRs({ page, search: debouncedSearch, ...(type != "all" && { type }) }); // Note: Ensure your API/hook supports passing limit if necessary
+  const { data: typeCountArray, } = useQrTypeCounts();
   const [editValues, setEditValues] = useState<TQRDTO | null>(null);
   const queryClient = useQueryClient();
 
@@ -110,6 +112,7 @@ export default function QRsPage() {
       setCreateOpen(false);
       setEditValues(null);
       queryClient.invalidateQueries({ queryKey: ["qrs"] });
+      queryClient.invalidateQueries({ queryKey: ["qr-type-with-counts"] });
     },
   });
 
@@ -118,8 +121,8 @@ export default function QRsPage() {
     setCreateOpen(true);
   };
 
-  const onDelete = (id: string | number) => {};
-
+  const onDelete = (id: string | number) => { };
+  //  
   const columns: DataTableColumn<TQRDTO>[] = [
     {
       label: "QR Details",
@@ -230,22 +233,21 @@ export default function QRsPage() {
     </div>
   );
 
+  const totalCount = typeCountArray?.reduce((acc, curr) => acc + curr.count, 0)
+
   return (
     <main className="flex-1 transition-colors duration-150 flex flex-col gap-4 pb-20">
       <Breadcrumbs />
       <Toolbar
         bottomAddon={
           <SegmentedControl
-            options={[
-              ...(["ACTIVE", "ARCHIVED", "PAUSED"] as QRStatus[]).map(
-                (statusValue) => ({
-                  label: <span className="text-xs">{statusValue}</span>,
-                  value: statusValue,
-                }),
-              ),
-            ]}
-            value={status ?? "ACTIVE"}
-            onChange={(val) => setStatus(val as QRStatus)}
+            maxItems={6}
+            options={[{ label: <SegmentLabel label="All" count={totalCount || 0} isActive={type === "all"} />, value: "all" }, ...typeCountArray?.map(ob => ({
+              label: <SegmentLabel label={ob.type} count={ob.count} isActive={type === ob.type} />,
+              value: ob.type
+            })) as { label: string | React.ReactElement, value: string }[]]}
+            value={type ?? "all"}
+            onChange={(val) => setType(val as QRStatus)}
           />
         }
         createLabel="New QR"
@@ -276,16 +278,23 @@ export default function QRsPage() {
         initialData={
           editValues
             ? {
-                name: editValues.name,
-                content: editValues.content,
-                status: editValues.status,
-                type: editValues.type,
-                scanLimit: editValues.scanCount || undefined,
-              }
+              name: editValues.name,
+              content: editValues.content,
+              status: editValues.status,
+              type: editValues.type,
+              scanLimit: editValues.scanCount || undefined,
+            }
             : undefined
         }
         onSubmit={mutation.mutate}
       />
     </main>
   );
+}
+
+const SegmentLabel = (props: { label: string, count: number, isActive: boolean }) => {
+  return (<div className="flex w-full flex-row gap-1 justify-between items-center px-3">
+    {props.label}
+    <span className={`h-5 w-5  flex items-center justify-center text-xs rounded-full bg-purple-400 ${props.isActive ? "text-white font-semibold" : "text-purple-600"}`}>{props.count}
+    </span></div>)
 }

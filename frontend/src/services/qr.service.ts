@@ -12,6 +12,7 @@ interface Params {
   limit: number;
   search?: string;
   status?: string;
+  type?: string
 }
 
 export async function getQRs(params: Params): Promise<PaginatedDTO<TQRDTO[]>> {
@@ -35,6 +36,14 @@ export async function getFolderQRs(
     params,
   });
   return res.data.data;
+}
+
+export async function getQrTypeCounts(
+  folderId?: number | string,
+): Promise<{ type: string, count: number }[]> {
+  const res = await api.get(`/qrs/type-counts`, { params: { folderId } });
+  const result = res.data.data || [];
+  return result
 }
 
 export async function createQR(data: TCreateQRDTO): Promise<TQRDTO> {

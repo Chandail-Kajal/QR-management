@@ -7,6 +7,7 @@ import {
   updateFolder,
   deleteFolder,
   getFolderByName,
+  getFolderOptions,
 } from "./folder.controller";
 
 import { auth, workspace, allowRoles } from "@/middlewares";
@@ -20,6 +21,12 @@ folderRouter.get(
   "/",
   allowRoles("SUPER_ADMIN", "ADMIN", "MEMBER", "VIEWER"),
   listFolders,
+);
+
+folderRouter.get(
+  "/options",
+  allowRoles("SUPER_ADMIN", "ADMIN", "MEMBER", "VIEWER"),
+  getFolderOptions,
 );
 
 folderRouter.post(

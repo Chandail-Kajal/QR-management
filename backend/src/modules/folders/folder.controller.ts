@@ -8,6 +8,7 @@ import {
   folderIdSchema,
 } from "./folder.validator";
 import { ApiError } from "@/shared/utils";
+import { prisma } from "@/config/prisma";
 
 export async function createFolder(
   req: Request,
@@ -16,15 +17,36 @@ export async function createFolder(
 ) {
   try {
     const body = createFolderSchema.parse(req.body);
-
     const folder = await service.createFolder(req.workspace!.id, body.name);
-
     return res.status(201).json({
       message: "Folder created successfully",
       data: folder,
     });
   } catch (error) {
     next(error);
+  }
+}
+
+export async function getFolderOptions(req: Request, res: Response, next: NextFunction) {
+  try {
+    const { search = "" } = req.query
+    const folders = await prisma.folder.findMany({
+      where: {
+        name: {
+          contains: search as string,
+          mode: "insensitive" as const,
+        },
+      },
+      select: {
+        name: true,
+        id: true
+      },
+      take: 10,
+    })
+    const folderOptions = folders.map(f => ({ label: f.name, value: f.id }))
+    res.status(200).json({ data: folderOptions, message: "Options fetched successfully." })
+  } catch (error) {
+    next(error)
   }
 }
 

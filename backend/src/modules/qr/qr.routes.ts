@@ -2,7 +2,7 @@ import express from "express";
 
 import { auth, workspace, allowRoles } from "@/middlewares";
 
-import { createQR, listQRs, updateQR, getQR } from "./qr.controller";
+import { createQR, listQRs, updateQR, getQR, getQrTypesWithCount } from "./qr.controller";
 
 export const qrRouter = express.Router();
 
@@ -20,6 +20,11 @@ qrRouter.get(
   allowRoles("SUPER_ADMIN", "ADMIN", "MEMBER", "VIEWER"),
   listQRs,
 );
+
+qrRouter.get("/type-counts",
+  allowRoles("ADMIN", "SUPER_ADMIN", "VIEWER", "MEMBER"),
+  getQrTypesWithCount
+)
 
 qrRouter.post("/", allowRoles("SUPER_ADMIN", "ADMIN", "MEMBER"), createQR);
 

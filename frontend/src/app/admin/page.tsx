@@ -115,7 +115,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="space-y-6 p-1 relative overflow-hidden select-none bg-gradient-to-b from-[#F8FAFC] via-[#F1F5F9] to-[#EEF2F7] text-[#1E293B] min-h-screen rounded-2xl">
+    <div className="space-y-6 p-1 relative overflow-hidden select-none bg-linear-to-b from-[#F8FAFC] via-[#F1F5F9] to-[#EEF2F7] text-[#1E293B] min-h-screen rounded-2xl">
       {/* Background Decorative Ambient Flares */}
       <div className="absolute top-0 right-12 h-40 w-40 rounded-full bg-[#60A5FA]/15 blur-3xl pointer-events-none" />
       <div className="absolute -bottom-10 left-10 h-32 w-32 rounded-full bg-[#34D399]/10 blur-2xl pointer-events-none" />
@@ -123,7 +123,7 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex flex-col gap-2 relative z-10 p-6 pb-0">
         <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div className="flex items-center gap-1.5 text-white font-bold text-[10px] tracking-widest uppercase bg-gradient-to-r from-[#3B82F6] to-[#6366F1] rounded-full px-3 py-1.5 w-fit shadow-md shadow-[#3B82F6]/30">
+          <div className="flex items-center gap-1.5 text-white font-bold text-[10px] tracking-widest uppercase bg-linear-to-r from-[#3B82F6] to-[#6366F1] rounded-full px-3 py-1.5 w-fit shadow-md shadow-[#3B82F6]/30">
             <Sparkles className="h-3 w-3 animate-spin duration-3000" />
             <span>Workspace Overview</span>
           </div>
@@ -136,7 +136,7 @@ export default function DashboardPage() {
               Last 30 days
               <ChevronDown className="h-3 w-3" />
             </button>
-            <button className="flex items-center gap-1.5 text-xs font-semibold text-white bg-gradient-to-r from-[#3B82F6] to-[#6366F1] rounded-lg px-3 py-2 hover:shadow-lg hover:shadow-[#3B82F6]/35 hover:-translate-y-0.5 active:scale-95 transition-all duration-200">
+            <button className="flex items-center gap-1.5 text-xs font-semibold text-white bg-linear-to-r from-[#3B82F6] to-[#6366F1] rounded-lg px-3 py-2 hover:shadow-lg hover:shadow-[#3B82F6]/35 hover:-translate-y-0.5 active:scale-95 transition-all duration-200">
               <Plus className="h-3.5 w-3.5" />
               Create QR
             </button>
@@ -217,7 +217,7 @@ export default function DashboardPage() {
         <div className="rounded-2xl border border-[#E2E8F0] bg-white shadow-sm hover:shadow-md transition-shadow duration-300 p-5">
           <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
             <div className="text-sm font-semibold text-[#1E293B] flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-gradient-to-r from-[#3B82F6] to-[#6366F1] animate-pulse" />
+              <span className="h-2 w-2 rounded-full bg-linear-to-r from-[#3B82F6] to-[#6366F1] animate-pulse" />
               Scan volume
             </div>
             <div className="flex items-center gap-3">
@@ -236,7 +236,7 @@ export default function DashboardPage() {
                     onClick={() => setRange(r)}
                     className={`text-[11px] px-3 py-1.5 rounded-md font-medium transition-all duration-200 active:scale-95 ${
                       range === r
-                        ? "bg-gradient-to-r from-[#3B82F6] to-[#6366F1] text-white shadow-sm"
+                        ? "bg-linear-to-r from-[#3B82F6] to-[#6366F1] text-white shadow-sm"
                         : "text-[#64748B] hover:text-[#1E293B] hover:bg-white"
                     }`}
                   >
@@ -268,7 +268,7 @@ export default function DashboardPage() {
         {/* Device donut, clickable legend */}
         <div className="rounded-2xl border border-[#E2E8F0] bg-white shadow-sm hover:shadow-md transition-shadow duration-300 p-5 flex flex-col">
           <div className="text-sm font-semibold text-[#1E293B] mb-4 flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-gradient-to-r from-[#F59E0B] to-[#F97316] animate-pulse" />
+            <span className="h-2 w-2 rounded-full bg-linear-to-r from-[#F59E0B] to-[#F97316] animate-pulse" />
             Device breakdown
           </div>
           <div className="h-35 relative">
@@ -326,7 +326,7 @@ export default function DashboardPage() {
       <div className="rounded-2xl border border-[#E2E8F0] bg-white shadow-sm hover:shadow-md transition-shadow duration-300 p-5 mx-6">
         <div className="flex items-center justify-between mb-3">
           <div className="text-sm font-semibold text-[#1E293B] flex items-center gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-gradient-to-r from-[#22C55E] to-[#16A34A] animate-pulse" />
+            <span className="h-2 w-2 rounded-full bg-linear-to-r from-[#22C55E] to-[#16A34A] animate-pulse" />
             Recent activity
           </div>
           <button
@@ -361,7 +361,7 @@ export default function DashboardPage() {
       {/* Placeholder hint */}
       <div className="overflow-hidden border border-[#E2E8F0] rounded-2xl bg-white hover:shadow-md p-8 mx-6 mb-6 text-center shadow-sm transition-shadow duration-300 relative flex flex-col items-center justify-center">
         <div className="absolute inset-0 bg-linear-to-b from-[#3B82F6]/5 via-[#6366F1]/5 to-transparent pointer-events-none" />
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#3B82F6] to-[#6366F1] text-white mb-4 shadow-lg shadow-[#3B82F6]/30">
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-linear-to-br from-[#3B82F6] to-[#6366F1] text-white mb-4 shadow-lg shadow-[#3B82F6]/30">
           <Zap className="h-5 w-5 stroke-2 animate-bounce" />
         </div>
         <p className="text-xs font-medium text-[#64748B] max-w-sm leading-relaxed tracking-wide">

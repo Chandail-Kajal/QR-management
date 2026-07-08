@@ -3,6 +3,7 @@ import { qrIdSchema, updateQRSchema } from "./qr.validator";
 import type { Request, Response, NextFunction } from "express";
 import * as service from "./qr.service";
 import { ApiError } from "@/shared/utils";
+import { prisma } from "@/config/prisma";
 
 export async function createQR(
   req: Request,
@@ -37,6 +38,32 @@ export async function getQR(req: Request, res: Response, next: NextFunction) {
       message: "QR fetched successfully",
       data: qr,
     });
+  } catch (error) {
+    next(error);
+  }
+}
+
+
+export async function getQrTypesWithCount(req: Request, res: Response, next: NextFunction) {
+  try {
+    const folderId = req.query?.folderId || undefined
+    const result = await prisma.qR.groupBy({
+      by: ["type"],
+      _count: {
+        type: true,
+      },
+      ...(folderId && {
+        where: {
+          folderId: Number(folderId)
+        }
+      })
+    });
+
+    const data = result.map((item) => ({
+      type: item.type,
+      count: item._count.type, // or item._count._all
+    }));
+    return res.status(200).json({ data, message: "Type count fetched successfully!" });
   } catch (error) {
     next(error);
   }

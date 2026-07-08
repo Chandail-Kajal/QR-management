@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
 import { ChevronRight, LogOut, Menu, User } from "lucide-react";
