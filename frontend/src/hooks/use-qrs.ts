@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { getFolderQRs, getQRs, getQrTypeCounts } from "@/services/qr.service";
 
-export function useQRs(param: { page: number, search: string, status?: string, type?: string }) {
+export function useQRs(param: { page: number, search: string, status?: string, type?: string }, enabled: boolean = true) {
   return useQuery({
     queryKey: ["qrs", param.page, param.search, param.status, param.type],
     queryFn: () =>
@@ -12,6 +12,7 @@ export function useQRs(param: { page: number, search: string, status?: string, t
         status: param.status,
         type: param.type
       }),
+    enabled
   });
 }
 
@@ -21,23 +22,28 @@ export function useFolderQRs(
     search: string;
     status?: string;
     limit?: number;
+    type?: string
   },
-  workspaceId: number | string,
-  folderId: number | string,
+  meta: {
+    workspaceId: number | string,
+    folderId: number | string,
+  },
+  enabled = true
 ) {
   return useQuery({
     queryKey: [
-      `qrs/${folderId}`,
+      `qrs/${meta.folderId}`,
       params.page,
       params.search,
       params.status,
-      folderId,
-      workspaceId,
+      meta.folderId,
+      meta.workspaceId,
+      params.type
     ],
     queryFn: () =>
       getFolderQRs(
-        { ...params, limit: params.limit ? params.limit : 10 },
-        folderId,
+        { ...params, limit: params.limit ? params.limit : 10, type: params.type },
+        meta.folderId,
       ),
   });
 }

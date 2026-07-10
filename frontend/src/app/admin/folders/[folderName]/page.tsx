@@ -1,4 +1,4 @@
-import { QRsPage } from "./client";
+import { QRsPage } from "@/components/qr-code-page/client";
 
 export default async function FolderContents({
   params,

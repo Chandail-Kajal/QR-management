@@ -8,18 +8,17 @@ import { TQRDTO, QRStatus, TCreateQRDTO } from "@/types";
 import { DataTable, DataTableColumn } from "@/components/data-table"; // Path to your new component
 import { QRStatusBadge } from "./components/qr-status-badge";
 import { QRActionsDropdown } from "./components/qr-action-dropdown";
-import { useFolderQRs, useQRs } from "@/hooks/use-qrs";
+import { useFolderQRs, useQRs, useQrTypeCounts } from "@/hooks/use-qrs";
 import { QrModalForm } from "./components/add-update-modal";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createQR, updateQr } from "@/services/qr.service";
 import { toast } from "sonner";
 import { SegmentedControl } from "@/components/segmented-control";
 import { getQRTypeIcon } from "@/lib/preview-type-icon";
-import { Folder, QrCode } from "lucide-react";
+import { QrCode } from "lucide-react";
 import { Toolbar } from "@/components/toolbar";
 import { useUIStore } from "@/stores/ui.store";
-import { useParams, useRouter } from "next/navigation";
-import { TFolderDTO } from "@/types/folder";
+import { useRouter } from "next/navigation";
 import { getFolderByName } from "@/services/folder.service";
 import { useAuthStore } from "@/stores/auth.store";
 
@@ -85,15 +84,16 @@ function getContentPreview(qr: TQRDTO) {
   }
 }
 
-export function QRsPage({ folderName }: { folderName: string }) {
+export function QRsPage({ folderName }: { folderName?: string }) {
   const { setBreadcrumbs } = useUIStore();
   const { selectedWorkspaceId } = useAuthStore();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
-  const [status, setStatus] = useState<QRStatus | undefined>();
+  const [type, setType] = useState<string | undefined>(undefined);
   const [debouncedSearch] = useDebounce(search, 500);
+  const { data: typeCountArray, } = useQrTypeCounts();
   const [editValues, setEditValues] = useState<TQRDTO | null>(null);
   const queryClient = useQueryClient();
 
@@ -101,28 +101,48 @@ export function QRsPage({ folderName }: { folderName: string }) {
 
   const {
     data: folder,
-    isLoading: folderLoading,
-    isError: folderError,
+    isLoading: _,
+    isError: __,
   } = useQuery({
     queryKey: [`folders/${folderName}`],
-    queryFn: async () => getFolderByName({ name: folderName }),
+    queryFn: async () => getFolderByName({ name: folderName as string }),
+    enabled: !!folderName
   });
 
-  const { data, isLoading } = useFolderQRs(
+  const folderQRs = useFolderQRs(
     {
       page,
       search: debouncedSearch,
-      status,
+      type
     },
-    selectedWorkspaceId as number,
-    folder?.id as number,
+    {
+      workspaceId: selectedWorkspaceId as number,
+      folderId: folder?.id as number,
+    },
+    !!folderName
   );
 
+  const allQRs = useQRs(
+    {
+      page,
+      search: debouncedSearch,
+      ...(type != "all" && { type })
+    },
+    !folderName
+  );
+
+
+  const { data, isLoading } = folderName ? folderQRs : allQRs;
+
   useEffect(() => {
-    setBreadcrumbs([
+    const crumbs = [
       { label: "Folders", href: "/admin/folders" },
-      { label: folderName as string },
-    ]);
+    ]
+    if (folderName) {
+      crumbs.push({ label: folderName as string, href: "" })
+    }
+
+    setBreadcrumbs(crumbs);
   }, [folderName, setBreadcrumbs]);
 
   const mutation = useMutation({
@@ -130,10 +150,10 @@ export function QRsPage({ folderName }: { folderName: string }) {
       if (editValues) {
         await updateQr(editValues.id, {
           ...formData,
-          folderId: folder?.id as number,
+          ...(folderName && { folderId: folder?.id as number }),
         });
       } else {
-        await createQR({ ...formData, folderId: folder?.id as number });
+        await createQR({ ...formData, ...(folderName && { folderId: folder?.id as number }), });
       }
     },
     onError: (err) => toast.error(`Error: ${err.message}`),
@@ -152,7 +172,7 @@ export function QRsPage({ folderName }: { folderName: string }) {
     setCreateOpen(true);
   };
 
-  const onDelete = (id: string | number) => {};
+  const onDelete = (id: string | number) => { };
 
   const columns: DataTableColumn<TQRDTO>[] = [
     {
@@ -266,21 +286,20 @@ export function QRsPage({ folderName }: { folderName: string }) {
     </div>
   );
 
+  const totalCount = typeCountArray?.reduce((acc, curr) => acc + curr.count, 0)
+
   return (
     <main className="flex-1 transition-colors duration-150 flex flex-col gap-4 pb-20">
       <Toolbar
         bottomAddon={
           <SegmentedControl
-            options={[
-              ...(["ACTIVE", "ARCHIVED", "PAUSED"] as QRStatus[]).map(
-                (statusValue) => ({
-                  label: <span className="text-xs">{statusValue}</span>,
-                  value: statusValue,
-                }),
-              ),
-            ]}
-            value={status ?? "ACTIVE"}
-            onChange={(val) => setStatus(val as QRStatus)}
+            maxItems={6}
+            options={[{ label: <SegmentLabel label="All" count={totalCount || 0} isActive={type === "all"} />, value: "all" }, ...typeCountArray?.map(ob => ({
+              label: <SegmentLabel label={ob.type} count={ob.count} isActive={type === ob.type} />,
+              value: ob.type
+            })) as { label: string | React.ReactElement, value: string }[]]}
+            value={type ?? "all"}
+            onChange={(val) => setType(val as QRStatus)}
           />
         }
         createLabel="New QR"
@@ -311,16 +330,24 @@ export function QRsPage({ folderName }: { folderName: string }) {
         initialData={
           editValues
             ? {
-                name: editValues.name,
-                content: editValues.content,
-                status: editValues.status,
-                type: editValues.type,
-                scanLimit: editValues.scanCount || undefined,
-              }
+              name: editValues.name,
+              content: editValues.content,
+              status: editValues.status,
+              type: editValues.type,
+              scanLimit: editValues.scanCount || undefined,
+            }
             : undefined
         }
         onSubmit={mutation.mutate}
       />
     </main>
   );
+}
+
+
+const SegmentLabel = (props: { label: string, count: number, isActive: boolean }) => {
+  return (<div className="flex w-full flex-row gap-1 justify-between items-center px-3">
+    {props.label}
+    <span className={`h-5 w-5  flex items-center justify-center text-xs rounded-full bg-purple-400 ${props.isActive ? "text-white font-semibold" : "text-purple-600"}`}>{props.count}
+    </span></div>)
 }
