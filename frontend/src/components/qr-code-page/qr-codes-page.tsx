@@ -21,6 +21,7 @@ import { useUIStore } from "@/stores/ui.store";
 import { useRouter } from "next/navigation";
 import { getFolderByName } from "@/services/folder.service";
 import { useAuthStore } from "@/stores/auth.store";
+import { Breadcrumbs } from "../bread-crumbs";
 
 const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
   URL: { bg: "bg-primary/10", text: "text-primary" },
@@ -93,7 +94,7 @@ export function QRsPage({ folderName }: { folderName?: string }) {
   const [createOpen, setCreateOpen] = useState(false);
   const [type, setType] = useState<string | undefined>(undefined);
   const [debouncedSearch] = useDebounce(search, 500);
-  const { data: typeCountArray, } = useQrTypeCounts();
+  const { data: typeCountArray = [], } = useQrTypeCounts();
   const [editValues, setEditValues] = useState<TQRDTO | null>(null);
   const queryClient = useQueryClient();
 
@@ -132,14 +133,16 @@ export function QRsPage({ folderName }: { folderName?: string }) {
   );
 
 
-  const { data, isLoading } = folderName ? folderQRs : allQRs;
+  const { data, isLoading } = (folderName ? folderQRs : allQRs)||[];
 
   useEffect(() => {
-    const crumbs = [
-      { label: "Folders", href: "/admin/folders" },
-    ]
+
+    const crumbs = []
     if (folderName) {
+      crumbs.push({ label: "Folders", href: "/admin/folders" },)
       crumbs.push({ label: folderName as string, href: "" })
+    } else {
+      crumbs.push({ label: "Qr Codes", href: "/admin/qr-codes" })
     }
 
     setBreadcrumbs(crumbs);
@@ -250,7 +253,7 @@ export function QRsPage({ folderName }: { folderName?: string }) {
         <div className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-150">
           <QRActionsDropdown
             onAnalytics={() =>
-              router.push(`/admin/folders/${folderName}/analytics/${qr.id}`)
+              router.push(folderName ? `/admin/folders/${folderName}/analytics/${qr.id}` : `/admin/qr-codes/${qr.id}/analytics`)
             }
             qr={qr}
             onEdit={onEdit}
@@ -290,6 +293,7 @@ export function QRsPage({ folderName }: { folderName?: string }) {
 
   return (
     <main className="flex-1 transition-colors duration-150 flex flex-col gap-4 pb-20">
+      <Breadcrumbs />
       <Toolbar
         bottomAddon={
           <SegmentedControl
@@ -348,6 +352,6 @@ export function QRsPage({ folderName }: { folderName?: string }) {
 const SegmentLabel = (props: { label: string, count: number, isActive: boolean }) => {
   return (<div className="flex w-full flex-row gap-1 justify-between items-center px-3">
     {props.label}
-    <span className={`h-5 w-5  flex items-center justify-center text-xs rounded-full bg-purple-400 ${props.isActive ? "text-white font-semibold" : "text-purple-600"}`}>{props.count}
+    <span className={`h-5 w-5  flex items-center justify-center text-xs rounded-full bg-purple-400 text-white ${props.isActive ? " font-semibold" : "font-thin"}`}>{props.count}
     </span></div>)
 }

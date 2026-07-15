@@ -65,6 +65,8 @@ export default function FoldersPage() {
     setBreadcrumbs([{ label: "Folders", href: "/admin/folders" }]);
   }, [setBreadcrumbs]);
 
+  
+
   return (
     <main className="flex-1 transition-colors duration-150 flex flex-col gap-4">
       <Toolbar

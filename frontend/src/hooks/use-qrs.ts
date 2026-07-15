@@ -45,6 +45,7 @@ export function useFolderQRs(
         { ...params, limit: params.limit ? params.limit : 10, type: params.type },
         meta.folderId,
       ),
+      enabled 
   });
 }
 

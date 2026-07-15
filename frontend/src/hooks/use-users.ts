@@ -1,4 +1,4 @@
-import { getUsers, createUser, updateUser } from "@/services/user.service";
+import { getUsers, createUser, updateUser, deleteUser } from "@/services/user.service";
 import { TUpdateUserDTO } from "@/types/user";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 
@@ -37,6 +37,25 @@ export const useUpdateUser = () => {
             id: number;
             data: TUpdateUserDTO;
         }) => updateUser(id, data),
+
+        onSuccess: () => {
+            queryClient.invalidateQueries({
+                queryKey: ["users"],
+            });
+        },
+    });
+};
+
+export const useDeleteUser = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({
+            id,
+        }: {
+            id: number;
+            data: TUpdateUserDTO;
+        }) => deleteUser(id),
 
         onSuccess: () => {
             queryClient.invalidateQueries({

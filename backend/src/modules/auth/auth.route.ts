@@ -8,6 +8,7 @@ import {
 import { AuthJwtPayload } from "@/types";
 import express, { NextFunction, Request, Response } from "express";
 import { getUser, login } from "./auth.controller";
+import { CreateUserDTO } from "../users/users.dto";
 
 export const authRouter = express.Router();
 
@@ -121,6 +122,17 @@ authRouter.post(
   },
 );
 
+authRouter.post(
+  "/signup",
+  async(req:Request,res:Response,next:NextFunction)=>{
+    try {
+      const {email, name, password} = req.body as CreateUserDTO //
+    } catch (error) {
+      next(error);
+    }
+  }
+)
+
 /* ===================== LOGOUT ===================== */
 authRouter.post(
   "/logout",
@@ -138,3 +150,7 @@ authRouter.post(
     }
   },
 );
+// 
+
+
+

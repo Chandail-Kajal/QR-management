@@ -1,4 +1,5 @@
-import { QRAnalyticsPage } from "./client";
+import { QRAnalyticsPage } from "@/components/analytics/analytics-page";
+
 
 export default async function name({
   params,

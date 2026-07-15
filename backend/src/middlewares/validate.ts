@@ -7,7 +7,7 @@ export const validate =
     (schema: AnyObject, source: "body" | "query" = "body") =>
         (req: Request, res: Response, next: NextFunction) => {
             try {
-                req[source] = schema.parse(req[source]);
+                schema.parse(req[source]);
 
                 next();
             } catch (error) {

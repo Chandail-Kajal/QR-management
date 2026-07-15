@@ -51,10 +51,10 @@ const navigation: NavItem[] = [
     href: "/admin/folders",
   },
   {
-    id: "teams",
-    label: "Team",
+    id: "users",
+    label: "Users",
     icon: Users,
-    href: "/admin/teams",
+    href: "/admin/users",
   },
   {
     id: "billing",

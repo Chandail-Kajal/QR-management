@@ -63,6 +63,7 @@ model User {
   workspaceMembers WorkspaceMember[]
   qrs              QR[]
   files            File[]
+  
 }
 
 model Workspace {

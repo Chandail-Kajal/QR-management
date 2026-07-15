@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/static-components */
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import {
   Area,
   AreaChart,
@@ -20,52 +20,59 @@ import { Activity, Users, ScanLine, Clock, Dot } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useQuery } from "@tanstack/react-query";
 import { getQRAnalytics } from "@/services/analytics.service";
-import { useUIStore } from "@/stores/ui.store";
 import { getQRDetails } from "@/services/qr.service";
+import { useUIStore } from "@/stores/ui.store";
 import { useAuthStore } from "@/stores/auth.store";
 import { Breadcrumbs } from "@/components/bread-crumbs";
-import { QRStatusBadge } from "../../components/qr-status-badge";
-import { QRStatus, QRType } from "@/types/qr";
 import { getQRTypeIcon } from "@/lib/preview-type-icon";
-export function QRAnalyticsPage({
-  qrId,
-  folderName,
-}: {
-  qrId: string;
-  folderName: string;
-}) {
+import { QRStatus, QRType } from "@/types";
+import { QRStatusBadge } from "../qr-code-page/components/qr-status-badge";
+
+type Props = {
+  qrId: string,
+  folderName?: string
+};
+
+export function QRAnalyticsPage(props: Props) {
+  const qrId = props.qrId;
+  const folderName = props.folderName;
   const { setBreadcrumbs } = useUIStore();
   const { selectedWorkspaceId } = useAuthStore();
 
   const { data: analytics, isLoading } = useQuery({
-    queryKey: [`analytics/${qrId}`],
+    queryKey: [`analytics/${qrId}`, selectedWorkspaceId],
     queryFn: async () => getQRAnalytics(qrId, { days: 30 }),
   });
 
   const { data: qrData } = useQuery({
-    queryKey: [`analytics/${qrId}/details`, qrId, selectedWorkspaceId],
+    queryKey: [`analytics/${qrId}/details`, selectedWorkspaceId],
     queryFn: async () => getQRDetails(qrId),
   });
 
+  // useEffect(()=>{},[])
+
   useEffect(() => {
-    setBreadcrumbs([
-      { label: "Folders", href: "/admin/folders" },
-      {
-        label: folderName,
-        href: `/admin/folders/${folderName}`,
-      },
-      {
+    const crumbs = []
+    if (folderName) {
+      crumbs.push({ label: "Folder", href: "/admin/folders" })
+      crumbs.push({ label: folderName, href: `/admin/folders/${folderName}` })
+      crumbs.push({ label: qrData?.name || "Qr", })
+    } else {
+      crumbs.push({ label: "Qr-Codes", href: "/admin/qr-codes" })
+      crumbs.push({
         label: qrData?.name || "Qr",
-        href: `/admin/folders/${folderName}/analytics/${qrId}`,
-      },
-    ]);
-  }, [folderName, qrId, qrData?.name]);
+        href: `/admin/qr-codes/${qrId}/analytics`,
+      })
+    }
+    setBreadcrumbs(crumbs);
+  }, [qrId, qrData?.name, folderName]);
 
   if (isLoading || !analytics) {
     return <div className="p-10">Loading...</div>;
   }
 
   const { overview, scanTrend, scanTime } = analytics;
+
   const Icon = getQRTypeIcon(qrData?.type as QRType);
 
   return (

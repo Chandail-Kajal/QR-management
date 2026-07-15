@@ -81,11 +81,11 @@ export function DataTable<T extends { id: string | number }>({
   const { page, totalPages, limit, totalItems } = pagination;
 
   return (
-    <div className="flex flex-col gap-3 w-full">
-      <div className="overflow-hidden rounded-xl border border-border/60 bg-surface shadow-xs">
-        <Table>
+    <div className="flex flex-col w-full border-border/60 bg-surface shadow-xs rounded-xl border overflow-hidden">
+      <div className="min-h-[75vh] ">
+        <Table className="" >
           <TableHeader>
-            <TableRow className="border-b border-border-light bg-background-secondary hover:bg-background-secondary">
+            <TableRow className="border-b border-border-light bg-accent/20 hover:bg-background-secondary">
               {columns.map((col, idx) => (
                 <TableHead
                   key={String(col.dataIndex) + idx}
@@ -113,9 +113,9 @@ export function DataTable<T extends { id: string | number }>({
             </TableRow>
           </TableHeader>
 
-          <TableBody>
+          <TableBody className="h-fit" >
             {data.length === 0 ? (
-              <TableRow>
+              <TableRow className="h-fit" >
                 <TableCell colSpan={columns.length} className="p-0">
                   {emptyState ?? (
                     <div className="p-12 text-center text-text-secondary text-sm">
@@ -160,7 +160,7 @@ export function DataTable<T extends { id: string | number }>({
       </div>
 
       {totalPages > 0 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-3 py-1 px-1">
+        <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-3 py-2 px-4 border-t border-border">
           {/* Row count limiter */}
           <div className="flex items-center gap-2 text-xs text-text-secondary flex-row justify-start">
             <span>Rows</span>

@@ -16,11 +16,10 @@ interface Params {
 export async function getUsers(
     params: Params,
 ): Promise<PaginatedDTO<TUserDTO[]>> {
-    const res = await api.get("/users", {
+    const res = await api.get<PaginatedDTO<TUserDTO[]>>("/users", {
         params,
     });
-
-    return res.data.data;
+    return res.data;
 }
 
 export async function getUserById(

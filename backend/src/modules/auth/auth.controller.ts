@@ -2,6 +2,7 @@ import { prisma } from "@/config/prisma";
 import { ApiError } from "@/shared/utils";
 import bcrypt from "bcrypt";
 import { Role } from "@/generated/prisma/client";
+import { CreateUserDTO } from "../users/user.validations";
 
 export interface AuthUser {
   id: number;
@@ -113,3 +114,51 @@ export const login = async (
 
   return profile;
 };
+
+export async function createUser(dto: CreateUserDTO) {
+  const existing = await prisma.user.findUnique({
+    where: {
+      email: dto.email,
+    },
+  });
+
+  if (existing) {
+    throw new ApiError(400, "Email already exists");
+  }
+
+  const hashedPassword = await bcrypt.hash(
+    dto.password,
+    10
+  );
+
+  return prisma.$transaction(async (tx) => {
+    const user = await tx.user.create({
+      data: {
+        name: dto.name,
+        email: dto.email,
+        password: hashedPassword,
+      },
+    });
+
+    await tx.workspace.create({
+      data: {
+        name: `${dto.name}'s Workspace`,
+        slug: `workspace-${user.id}`,
+        createdById: user.id,
+
+        members: {
+          create: {
+            userId: user.id,
+            role: "SUPER_ADMIN",
+          },
+        },
+      },
+    });
+
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+    };
+  });
+}
