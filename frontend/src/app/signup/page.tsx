@@ -13,6 +13,7 @@ import { ApiResponse } from "@/types";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { AxiosError } from "axios";
 import { UserPlus } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
@@ -124,6 +125,12 @@ export default function SignupPage() {
                 <UserPlus className="mr-2 h-4 w-4" />
                 {loading ? "Creating Account..." : "Sign Up"}
               </Button>
+              <Link
+                href={"/login"}
+                className="text-sm w-full text-right cursor-pointer text-primary font-medium"
+              >
+                Already have account? login now.
+              </Link>
             </form>
           </CardContent>
         </FormProvider>

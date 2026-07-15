@@ -16,11 +16,12 @@ import { useState } from "react";
 import { api } from "@/lib/axios";
 import { LogIn } from "lucide-react";
 import { LoginResponseDTO } from "@/types";
+import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
   const setAuth = useAuthStore((state) => state.setAuth);
-  const setWorkspaceId=useAuthStore((state)=>state.setWorkspace);
+  const setWorkspaceId = useAuthStore((state) => state.setWorkspace);
   const [loading, setLoading] = useState(false);
 
   const methods = useForm<LoginFormValues>({
@@ -110,6 +111,12 @@ export default function LoginPage() {
                 <LogIn />
                 {loading ? "Signing in..." : "Login"}
               </Button>
+              <Link
+                href={"/signup"}
+                className="text-sm w-full text-right cursor-pointer text-primary font-medium"
+              >
+                Don't have account? signup now.
+              </Link>
             </form>
           </CardContent>
         </FormProvider>
