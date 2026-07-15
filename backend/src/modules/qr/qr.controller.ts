@@ -2,8 +2,8 @@ import { createQRSchema, listQRSchema } from "./qr.validator";
 import { qrIdSchema, updateQRSchema } from "./qr.validator";
 import type { Request, Response, NextFunction } from "express";
 import * as service from "./qr.service";
-import { ApiError } from "@/shared/utils";
 import { prisma } from "@/config/prisma";
+import { QRType } from "@/generated/prisma/enums";
 
 export async function createQR(
   req: Request,
@@ -43,27 +43,43 @@ export async function getQR(req: Request, res: Response, next: NextFunction) {
   }
 }
 
-
-export async function getQrTypesWithCount(req: Request, res: Response, next: NextFunction) {
+export async function getQrTypesWithCount(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   try {
-    const folderId = req.query?.folderId || undefined
+    const folderId = req.query?.folderId || undefined;
+    const workspaceId = req.workspace?.id;
+    const where: Record<string, number> = {};
+    if (folderId) {
+      where.folderId = Number(folderId);
+    }
+
+    if (workspaceId) {
+      where.workspaceId = workspaceId;
+    }
+
     const result = await prisma.qR.groupBy({
       by: ["type"],
       _count: {
         type: true,
       },
-      ...(folderId && {
-        where: {
-          folderId: Number(folderId)
-        }
-      })
+      where: {
+        ...where,
+      },
     });
 
-    const data = result.map((item) => ({
-      type: item.type,
-      count: item._count.type, // or item._count._all
-    }));
-    return res.status(200).json({ data, message: "Type count fetched successfully!" });
+    const data =
+      result.length === 0
+        ? Object.keys(QRType).map((i) => ({ type: i, count: 0 }))
+        : result.map((item) => ({
+            type: item.type,
+            count: item._count.type,
+          }));
+    return res
+      .status(200)
+      .json({ data, message: "Type count fetched successfully!" });
   } catch (error) {
     next(error);
   }

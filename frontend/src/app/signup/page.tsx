@@ -1,19 +1,22 @@
 "use client";
 
-import { FormProvider, useForm } from "react-hook-form";
-import { yupResolver } from "@hookform/resolvers/yup";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Field, FieldLabel, FieldError } from "@/components/ui/field";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { api } from "@/lib/axios";
 import {
   SignUpFormValues,
   signUpSchema,
 } from "@/lib/validators/auth.validator";
+import { ApiResponse } from "@/types";
+import { yupResolver } from "@hookform/resolvers/yup";
+import { AxiosError } from "axios";
+import { UserPlus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { api } from "@/lib/axios";
-import { UserPlus } from "lucide-react";
+import { FormProvider, useForm } from "react-hook-form";
+import { toast } from "sonner";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -22,6 +25,7 @@ export default function SignupPage() {
   const methods = useForm<SignUpFormValues>({
     resolver: yupResolver(signUpSchema),
     defaultValues: {
+      name: "",
       email: "",
       password: "",
       confirmPassword: "",
@@ -31,7 +35,6 @@ export default function SignupPage() {
   const {
     register,
     handleSubmit,
-    setError,
     formState: { errors },
   } = methods;
 
@@ -39,20 +42,22 @@ export default function SignupPage() {
     try {
       setLoading(true);
 
-      // Send only the required fields to the backend
       await api.post("/auth/signup", {
+        name: values.name,
         email: values.email,
         password: values.password,
       });
 
-      // Redirect to login page after successful signup
-      router.push("/login");
-    } catch (error) {
-      console.error("Signup failed:", error);
+      toast.success("Account created successfully!");
 
-      setError("root", {
-        message: "Unable to create account. Please try again.",
-      });
+      router.push("/login");
+    } catch (error: unknown) {
+      console.error(error);
+
+      toast.error(
+        (error as AxiosError<ApiResponse<{ data: unknown }>>)?.response?.data
+          ?.message ?? "Unable to create account. Please try again.",
+      );
     } finally {
       setLoading(false);
     }
@@ -67,15 +72,16 @@ export default function SignupPage() {
 
         <FormProvider {...methods}>
           <CardContent>
-            <form
-              onSubmit={handleSubmit(onSubmit)}
-              className="space-y-5"
-            >
-              {errors.root && (
-                <p className="text-sm font-medium text-destructive">
-                  {errors.root.message}
-                </p>
-              )}
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+              <Field>
+                <FieldLabel>Name</FieldLabel>
+                <Input
+                  {...register("name")}
+                  placeholder="Enter your name"
+                  disabled={loading}
+                />
+                <FieldError>{errors.name?.message}</FieldError>
+              </Field>
 
               <Field>
                 <FieldLabel>Email</FieldLabel>
@@ -84,9 +90,7 @@ export default function SignupPage() {
                   placeholder="Enter your email"
                   disabled={loading}
                 />
-                {errors.email && (
-                  <FieldError>{errors.email.message}</FieldError>
-                )}
+                <FieldError>{errors.email?.message}</FieldError>
               </Field>
 
               <Field>
@@ -97,9 +101,7 @@ export default function SignupPage() {
                   placeholder="Create a password"
                   disabled={loading}
                 />
-                {errors.password && (
-                  <FieldError>{errors.password.message}</FieldError>
-                )}
+                <FieldError>{errors.password?.message}</FieldError>
               </Field>
 
               <Field>
@@ -110,16 +112,12 @@ export default function SignupPage() {
                   placeholder="Confirm your password"
                   disabled={loading}
                 />
-                {errors.confirmPassword && (
-                  <FieldError>
-                    {errors.confirmPassword.message}
-                  </FieldError>
-                )}
+                <FieldError>{errors.confirmPassword?.message}</FieldError>
               </Field>
 
               <Button
                 type="submit"
-                className="w-full h-10"
+                className="h-10 w-full"
                 size="lg"
                 disabled={loading}
               >
