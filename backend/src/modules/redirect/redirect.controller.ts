@@ -23,7 +23,7 @@ export async function redirect(
 
     const destination =
       await service.resolveRedirect(
-        token,
+        token as string,
         {
           ipAddress,
           userAgent: req.headers["user-agent"],

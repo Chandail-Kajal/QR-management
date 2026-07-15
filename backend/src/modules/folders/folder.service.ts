@@ -69,6 +69,7 @@ export async function listFolders(query: ListFolderQuery, workspaceId: number) {
 
     prisma.qR.groupBy({
       by: ["folderId"],
+      
       where: {
         workspaceId,
         folderId: {
@@ -78,13 +79,16 @@ export async function listFolders(query: ListFolderQuery, workspaceId: number) {
       _sum: {
         scanCount: true,
       },
+      orderBy: {
+    folderId: 'asc', // Add this line to satisfy the required property
+  },
     }),
   ]);
 
   const scanMap = new Map<number, number>(
     scans
       .filter((s): s is typeof s & { folderId: number } => s.folderId !== null)
-      .map((s) => [s.folderId, s._sum.scanCount ?? 0]),
+      .map((s) => [s.folderId, s?._sum?.scanCount ?? 0]),
   );
 
   return {

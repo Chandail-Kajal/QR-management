@@ -34,7 +34,7 @@ export async function getFolderOptions(req: Request, res: Response, next: NextFu
       where: {
         name: {
           contains: search as string,
-          mode: "insensitive" as const,
+          //mode: "insensitive" as const,
         },
       },
       select: {
