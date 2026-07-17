@@ -7,12 +7,13 @@ import { useFolders } from "@/hooks/use-folders";
 import { FolderDialog } from "./components/add-update-modal";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { createFolder, updateFolder } from "@/services/folder.service";
+import { createFolder, deleteFolder, updateFolder } from "@/services/folder.service";
 import { Toolbar } from "@/components/toolbar";
 import { useDebounce } from "use-debounce";
 import { useRouter } from "next/navigation";
 import { useUIStore } from "@/stores/ui.store";
 import { useAuthStore } from "@/stores/auth.store";
+import { id } from "zod/v4/locales";
 
 export default function FoldersPage() {
   const { setBreadcrumbs } = useUIStore();
@@ -61,14 +62,27 @@ export default function FoldersPage() {
     },
   });
 
+  const deleteMutation =useMutation({
+    
+    onSuccess:()=>{
+      toast.success("Folder deleted Succesfully");
+      queryClient.invalidateQueries({ queryKey: ["folders"] });
+    },
+    onError:(error)=>{
+      toast.error(error.message);
+    },
+    
+    mutationFn:deleteFolder
+  })
+
   useEffect(() => {
     setBreadcrumbs([{ label: "Folders", href: "/admin/folders" }]);
   }, [setBreadcrumbs]);
 
-  
+
 
   return (
-    <main className="flex-1 transition-colors duration-150 flex flex-col gap-4">
+    <main className="flex-1 transition-colors duration-150 flex flex-col gap-4 font-bold">
       <Toolbar
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
@@ -103,13 +117,13 @@ export default function FoldersPage() {
         }
       />
       <div className="flex items-center justify-between ">
-        <div className="text-[11px] font-medium  tracking-wider">
+        <div className="text-[21px] font-bold  tracking-wider ">
           ALL FOLDERS · {folders.length}
         </div>
       </div>
 
       {viewMode === "grid" ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 mb-7">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 mb-7 font-bold">
           {folders.map((folder) => (
             <FolderCard
               key={folder.id}
@@ -121,19 +135,22 @@ export default function FoldersPage() {
               onForward={() => {
                 router.push(`/admin/folders/${folder.name}`);
               }}
+              onDelete={(folder)=>{
+                deleteMutation.mutate(folder.id)
+              }}
             />
           ))}
           <NewFolderCard onClick={() => setOpen(true)} />
         </div>
       ) : (
-        <div className="flex flex-col gap-2 ">
+        <div className="flex flex-col gap-2 font-bold text-lg">
           {folders.map((folder, idx) => (
             <div
               key={idx}
-              className=" p-3 border  rounded-md flex items-center justify-between"
+              className=" p-3 border  rounded-md flex items-center justify-between "
             >
-              <span className="font-medium text-xs">{folder.name}</span>
-              <span className="text-[11px]">{folder.qrCount} items</span>
+              <span className="font-bold text-2xl">{folder.name}</span>
+              <span className="text-2xl font-bold">{folder.qrCount} items</span>
             </div>
           ))}
         </div>

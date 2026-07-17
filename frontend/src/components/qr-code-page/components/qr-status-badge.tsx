@@ -15,11 +15,13 @@ const variants: Record<QRStatus, "default" | "secondary" | "destructive"> = {
 
 const styles: Record<QRStatus, string> = {
   ACTIVE:
-    "!bg-[#1D9E75]/15 !text-[#4FD8A8] !border-[#1D9E75]/25 [&_svg]:!text-[#4FD8A8]",
-  PAUSED:
-    "!bg-[#EF9F27]/15 !text-[#FFC470] !border-[#EF9F27]/25 [&_svg]:!text-[#FFC470]",
-  ARCHIVED:
-    "!bg-[#FF6B6B]/15 !text-[#FF6B6B] !border-[#FF6B6B]/25 [&_svg]:!text-[#FF6B6B]",
+  "!bg-[#166534] !text-white !border-[#14532D] [&_svg]:!text-white",
+
+PAUSED:
+  "!bg-[#92400E] !text-white !border-[#78350F] [&_svg]:!text-white",
+
+ARCHIVED:
+  "!bg-[#991B1B] !text-white !border-[#7F1D1D] [&_svg]:!text-white",
 };
 
 const dotColors: Record<QRStatus, string> = {

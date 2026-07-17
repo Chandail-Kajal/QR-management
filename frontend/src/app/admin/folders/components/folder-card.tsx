@@ -1,5 +1,5 @@
 "use client";
-import { Edit2, Forward, QrCode, Scan } from "lucide-react";
+import { Edit2, Forward, QrCode, Scan, Trash2 } from "lucide-react";
 import { FolderPlus } from "lucide-react";
 import { TFolderDTO } from "@/types/folder";
 import { getQRTypeIcon } from "@/lib/preview-type-icon";
@@ -8,9 +8,10 @@ interface FolderCardProps {
   folder: TFolderDTO;
   onEdit?: (folder: TFolderDTO) => void;
   onForward?: (folder: TFolderDTO) => void;
+  onDelete?:(folder:TFolderDTO)=>void;
 }
 
-export function FolderCard({ folder, onEdit, onForward }: FolderCardProps) {
+export function FolderCard({ folder, onEdit, onForward,onDelete }: FolderCardProps) {
   return (
     <div className="group overflow-hidden rounded-lg border border-border bg-surface transition-all hover:border-secondary">
       <div className="flex h-20 items-center justify-center bg-secondary/10">
@@ -55,6 +56,16 @@ export function FolderCard({ folder, onEdit, onForward }: FolderCardProps) {
               className="flex h-7 w-7 items-center justify-center rounded-md border border-border hover:bg-muted"
             >
               <Edit2 size={14} />
+            </button>
+
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete?.(folder);
+              }}
+              className="flex h-7 w-7 items-center justify-center rounded-md border border-red-500 hover:bg-muted text-red-500"
+            >
+              <Trash2 size={14} />
             </button>
             <button
               onClick={(e) => {

@@ -74,9 +74,9 @@ export async function getQrTypesWithCount(
       result.length === 0
         ? Object.keys(QRType).map((i) => ({ type: i, count: 0 }))
         : result.map((item) => ({
-            type: item.type,
-            count: item._count.type,
-          }));
+          type: item.type,
+          count: item._count.type,
+        }));
     return res
       .status(200)
       .json({ data, message: "Type count fetched successfully!" });
@@ -117,6 +117,19 @@ export async function listQRs(req: Request, res: Response, next: NextFunction) {
     return res.status(200).json({
       message: "QRs fetched successfully",
       data,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function deleteQR(req: Request, res: Response, next: NextFunction) {
+  try {
+    const id = req.params.id
+    await service.deleteQR(Number(id))
+    return res.status(200).json({
+      message:"QR deleted successfully",
+      data:null,
     });
   } catch (error) {
     next(error);

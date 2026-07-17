@@ -19,6 +19,7 @@ interface SegmentedControlProps<T extends string> {
   className?: string;
 }
 
+
 export function SegmentedControl<T extends string>({
   value,
   onChange,

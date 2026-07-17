@@ -58,3 +58,8 @@ export async function updateQr(
   const res = await api.patch("/qrs/" + id, data);
   return res.data.data;
 }
+
+export async function deleteQR(id:number|string){
+  await api.delete("/qrs/" +id,);
+  
+}

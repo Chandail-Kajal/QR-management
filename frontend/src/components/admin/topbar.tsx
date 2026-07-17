@@ -34,14 +34,14 @@ export function Topbar() {
   }
 
   return (
-    <header className="flex h-16 w-full py-1 items-center justify-between border-b border-border bg-surface px-6">
+    <header className="flex h-16 w-full py-1 items-center justify-between border-b border-border bg-surface px-6 bg-linear-120 from-purple-900 to-purple-700">
       <div className="flex items-center gap-5">
         <Button variant="ghost" size="icon" onClick={toggleSidebar}>
-          <Menu className="h-5 w-5" />
+          <Menu className="h-5 w-5 text-white" />
         </Button>
 
         <div className="flex flex-col gap-0">
-          <span className="text-lg font-bold leading-tight">
+          <span className="text-lg font-bold text-white leading-tight">
             {breadcrumbs?.[0]?.label}
           </span>
         </div>

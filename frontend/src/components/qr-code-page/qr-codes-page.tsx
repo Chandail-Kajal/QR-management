@@ -11,7 +11,7 @@ import { QRActionsDropdown } from "./components/qr-action-dropdown";
 import { useFolderQRs, useQRs, useQrTypeCounts } from "@/hooks/use-qrs";
 import { QrModalForm } from "./components/add-update-modal";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createQR, updateQr } from "@/services/qr.service";
+import { createQR, deleteQR, updateQr } from "@/services/qr.service";
 import { toast } from "sonner";
 import { SegmentedControl } from "@/components/segmented-control";
 import { getQRTypeIcon } from "@/lib/preview-type-icon";
@@ -133,7 +133,7 @@ export function QRsPage({ folderName }: { folderName?: string }) {
   );
 
 
-  const { data, isLoading } = (folderName ? folderQRs : allQRs)||[];
+  const { data, isLoading } = (folderName ? folderQRs : allQRs) || [];
 
   useEffect(() => {
 
@@ -149,203 +149,219 @@ export function QRsPage({ folderName }: { folderName?: string }) {
   }, [folderName, setBreadcrumbs]);
 
   const mutation = useMutation({
-    mutationFn: async (formData: TCreateQRDTO) => {
-      if (editValues) {
-        await updateQr(editValues.id, {
-          ...formData,
-          ...(folderName && { folderId: folder?.id as number }),
-        });
-      } else {
-        await createQR({ ...formData, ...(folderName && { folderId: folder?.id as number }), });
-      }
-    },
-    onError: (err) => toast.error(`Error: ${err.message}`),
+    mutationFn: async( formData: TCreateQRDTO) => {
+    if (editValues) {
+      await updateQr(editValues.id, {
+        ...formData,
+        ...(folderName && { folderId: folder?.id as number }),
+      });
+    } else {
+      await createQR({ ...formData, ...(folderName && { folderId: folder?.id as number }), });
+    } 
+  },
+  onError: (err) => toast.error(`Error: ${err.message}`),
     onSuccess: () => {
       toast.success(
         editValues ? "QR updated successfully" : "QR created successfully",
       );
       setCreateOpen(false);
       setEditValues(null);
-      queryClient.invalidateQueries({ queryKey: [`qrs/${folder?.id}`] });
+      queryClient.invalidateQueries({ queryKey: [folderName?`qrs/${folder?.id}`:"qrs"] });
+      queryClient.invalidateQueries({ queryKey: ["qr-type-with-counts"] });
     },
   });
 
-  const onEdit = (qr: TQRDTO) => {
-    setEditValues(qr);
-    setCreateOpen(true);
-  };
+   const deleteMutation = useMutation({
+    mutationFn:deleteQR,
+  onError: (err) => toast.error(`Error: ${err.message}`),
+    onSuccess: () => {
+      toast.success(
+         "QR Deleted successfully" ,
+      );
+      setCreateOpen(false);
+      queryClient.invalidateQueries({ queryKey: [folderName?`qrs/${folder?.id}`:"qrs"] });
+      queryClient.invalidateQueries({ queryKey: ["qr-type-with-counts"] });
+    },
+  });
 
-  const onDelete = (id: string | number) => { };
+const onEdit = (qr: TQRDTO) => {
+  setEditValues(qr);
+  setCreateOpen(true);
+};
 
-  const columns: DataTableColumn<TQRDTO>[] = [
-    {
-      label: "QR Details",
-      dataIndex: "name",
-      className: "pl-5",
-      render: (_, qr) => {
-        const colors = getTypeColors(qr.type);
-        const Icon = getQRTypeIcon(qr.type);
-        return (
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-3">
-              <div
-                className={`flex h-9 w-9 items-center justify-center rounded-lg shrink-0 ${colors.bg} ${colors.text}`}
-              >
-                <Icon size={20} />
-              </div>
-              <div>
-                <p className="text-text font-semibold text-sm tracking-tight">
-                  {qr.name}
-                </p>
-                <p className="text-text-muted text-[10px] uppercase tracking-wider mt-0.5">
-                  {qr.type.replaceAll("_", " ")}
-                </p>
-              </div>
+const onDelete = (id: string | number) => {
+   deleteMutation.mutate(id);
+};
+
+const columns: DataTableColumn<TQRDTO>[] = [
+  {
+    label: "QR Details",
+    dataIndex: "name",
+    className: "pl-5",
+    render: (_, qr) => {
+      const colors = getTypeColors(qr.type);
+      const Icon = getQRTypeIcon(qr.type);
+      return (
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-3">
+            <div
+              className={`flex h-9 w-9 items-center justify-center rounded-lg shrink-0 ${colors.bg} ${colors.text}`}
+            >
+              <Icon size={20} />
             </div>
-            <p className="text-text-secondary max-w-87.5 truncate text-xs">
-              {getContentPreview(qr)}
-            </p>
-            <div className="inline-flex w-fit rounded-md px-2 py-0.5 bg-background-secondary border border-border-light">
-              <span className="text-text-secondary font-mono text-[10px] uppercase tracking-wider">
-                {qr.token}
-              </span>
+            <div>
+              <p className="text-text font-semibold text-sm tracking-tight">
+                {qr.name}
+              </p>
+              <p className="text-text-muted text-[10px] uppercase tracking-wider mt-0.5">
+                {qr.type.replaceAll("_", " ")}
+              </p>
             </div>
           </div>
-        );
-      },
-    },
-    {
-      label: "Status",
-      dataIndex: "status",
-      render: (status) => (
-        <div className="inline-flex">
-          <QRStatusBadge status={status} />
+          <p className="text-text-secondary max-w-87.5 truncate text-xs">
+            {getContentPreview(qr)}
+          </p>
+          <div className="inline-flex w-fit rounded-md px-2 py-0.5 bg-background-secondary border border-border-light">
+            <span className="text-text-secondary font-mono text-[10px] uppercase tracking-wider">
+              {qr.token}
+            </span>
+          </div>
         </div>
-      ),
+      );
     },
-    {
-      label: "Scans",
-      dataIndex: "scanCount",
-      render: (count) => (
-        <span className="text-sm font-bold font-mono text-success">
-          {Number(count).toLocaleString()}
-        </span>
-      ),
-    },
-    {
-      label: "Created",
-      dataIndex: "createdAt",
-      render: (date) => (
-        <span className="text-xs font-semibold text-text-secondary">
-          {new Date(date).toLocaleDateString(undefined, {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-          })}
-        </span>
-      ),
-    },
-    {
-      label: "",
-      dataIndex: "actions",
-      className: "pr-5 text-right w-14",
-      render: (_, qr) => (
-        <div className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-          <QRActionsDropdown
-            onAnalytics={() =>
-              router.push(folderName ? `/admin/folders/${folderName}/analytics/${qr.id}` : `/admin/qr-codes/${qr.id}/analytics`)
-            }
-            qr={qr}
-            onEdit={onEdit}
-            onDelete={onDelete}
-          />
-        </div>
-      ),
-    },
-  ];
-
-  if (isLoading) {
-    return <div className="p-6 text-sm text-text-secondary">Loading...</div>;
-  }
-
-  const paginationInfo = {
-    page: page,
-    limit: limit,
-    totalItems: data?.pagination?.totalItems ?? data?.items?.length ?? 0,
-    totalPages: data?.pagination?.totalPages ?? 1,
-  };
-
-  const emptyStatePlaceholder = (
-    <div className="relative overflow-hidden rounded-xl bg-surface p-12 text-center flex flex-col items-center justify-center min-h-[280px] group">
-      <div className="flex h-14 w-14 items-center justify-center rounded-xl mb-4 bg-background-secondary border border-border text-secondary transition-transform duration-200 group-hover:scale-105">
-        <QrCode className="h-6 w-6" strokeWidth={1.5} />
+  },
+  {
+    label: "Status",
+    dataIndex: "status",
+    render: (status) => (
+      <div className="inline-flex">
+        <QRStatusBadge status={status} />
       </div>
-      <h3 className="text-text text-sm font-semibold tracking-tight mb-1.5">
-        No codes generated yet
-      </h3>
-      <p className="text-text-secondary text-xs max-w-60 leading-relaxed">
-        Create your first QR code to start tracking scans and analytics.
-      </p>
-    </div>
-  );
-
-  const totalCount = typeCountArray?.reduce((acc, curr) => acc + curr.count, 0)
-
-  return (
-    <main className="flex-1 transition-colors duration-150 flex flex-col gap-4 pb-20">
-      <Breadcrumbs />
-      <Toolbar
-        bottomAddon={
-          <SegmentedControl
-            maxItems={6}
-            options={[{ label: <SegmentLabel label="All" count={totalCount || 0} isActive={type === "all"} />, value: "all" }, ...typeCountArray?.map(ob => ({
-              label: <SegmentLabel label={ob.type} count={ob.count} isActive={type === ob.type} />,
-              value: ob.type
-            })) as { label: string | React.ReactElement, value: string }[]]}
-            value={type ?? "all"}
-            onChange={(val) => setType(val as QRStatus)}
-          />
-        }
-        createLabel="New QR"
-        searchQuery={search}
-        onSearchChange={setSearch}
-        onCreate={() => setCreateOpen(true)}
-      />
-
-      <DataTable
-        columns={columns}
-        data={data?.items ?? []}
-        pagination={paginationInfo}
-        onNext={setPage}
-        onPrev={setPage}
-        onLimitChange={setLimit}
-        emptyState={emptyStatePlaceholder}
-      />
-
-      <QrModalForm
-        open={createOpen}
-        onOpenChange={(val) => {
-          if (!val) {
-            setCreateOpen(false);
-            setEditValues(null);
+    ),
+  },
+  {
+    label: "Scans",
+    dataIndex: "scanCount",
+    render: (count) => (
+      <span className="text-sm font-bold font-mono text-success">
+        {Number(count).toLocaleString()}
+      </span>
+    ),
+  },
+  {
+    label: "Created",
+    dataIndex: "createdAt",
+    render: (date) => (
+      <span className="text-xs font-semibold text-text-secondary">
+        {new Date(date).toLocaleDateString(undefined, {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        })}
+      </span>
+    ),
+  },
+  {
+    label: "",
+    dataIndex: "actions",
+    className: "pr-5 text-right w-14",
+    render: (_, qr) => (
+      <div className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+        <QRActionsDropdown
+          onAnalytics={() =>
+            router.push(folderName ? `/admin/folders/${folderName}/analytics/${qr.id}` : `/admin/qr-codes/${qr.id}/analytics`)
           }
-        }}
-        mode={editValues ? "edit" : "create"}
-        initialData={
-          editValues
-            ? {
-              name: editValues.name,
-              content: editValues.content,
-              status: editValues.status,
-              type: editValues.type,
-              scanLimit: editValues.scanCount || undefined,
-            }
-            : undefined
+          qr={qr}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />
+      </div>
+    ),
+  },
+];
+
+if (isLoading) {
+  return <div className="p-6 text-sm text-text-secondary">Loading...</div>;
+}
+
+const paginationInfo = {
+  page: page,
+  limit: limit,
+  totalItems: data?.pagination?.totalItems ?? data?.items?.length ?? 0,
+  totalPages: data?.pagination?.totalPages ?? 1,
+};
+
+const emptyStatePlaceholder = (
+  <div className="relative overflow-hidden rounded-xl bg-surface p-12 text-center flex flex-col items-center justify-center min-h-[280px] group">
+    <div className="flex h-14 w-14 items-center justify-center rounded-xl mb-4 bg-background-secondary border border-border text-secondary transition-transform duration-200 group-hover:scale-105">
+      <QrCode className="h-6 w-6" strokeWidth={1.5} />
+    </div>
+    <h3 className="text-text text-sm font-semibold tracking-tight mb-1.5">
+      No codes generated yet
+    </h3>
+    <p className="text-text-secondary text-xs max-w-60 leading-relaxed">
+      Create your first QR code to start tracking scans and analytics.
+    </p>
+  </div>
+);
+
+const totalCount = typeCountArray?.reduce((acc, curr) => acc + curr.count, 0)
+
+return (
+  <main className="flex-1 transition-colors duration-150 flex flex-col gap-4 pb-20">
+    <Breadcrumbs />
+    <Toolbar
+      bottomAddon={
+        <SegmentedControl
+          maxItems={6}
+          options={[{ label: <SegmentLabel label="All" count={totalCount || 0} isActive={type === "all"} />, value: "all" }, ...typeCountArray?.map(ob => ({
+            label: <SegmentLabel label={ob.type} count={ob.count} isActive={type === ob.type} />,
+            value: ob.type
+          })) as { label: string | React.ReactElement, value: string }[]]}
+          value={type ?? "all"}
+          onChange={(val) => setType(val as QRStatus)}
+        />
+      }
+      createLabel="New QR"
+      searchQuery={search}
+      onSearchChange={setSearch}
+      onCreate={() => setCreateOpen(true)}
+    />
+
+    <DataTable
+      columns={columns}
+      data={data?.items ?? []}
+      pagination={paginationInfo}
+      onNext={setPage}
+      onPrev={setPage}
+      onLimitChange={setLimit}
+      emptyState={emptyStatePlaceholder}
+    />
+
+    <QrModalForm
+      open={createOpen}
+      onOpenChange={(val) => {
+        if (!val) {
+          setCreateOpen(false);
+          setEditValues(null);
         }
-        onSubmit={mutation.mutate}
-      />
-    </main>
-  );
+      }}
+      mode={editValues ? "edit" : "create"}
+      initialData={
+        editValues
+          ? {
+            name: editValues.name,
+            content: editValues.content,
+            status: editValues.status,
+            type: editValues.type,
+            scanLimit: editValues.scanCount || undefined,
+          }
+          : undefined
+      }
+      onSubmit={mutation.mutate}
+    />
+  </main>
+);
 }
 
 

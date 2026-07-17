@@ -2,7 +2,7 @@ import express from "express";
 
 import { auth, workspace, allowRoles } from "@/middlewares";
 
-import { createQR, listQRs, updateQR, getQR, getQrTypesWithCount } from "./qr.controller";
+import { createQR, listQRs, updateQR, getQR, getQrTypesWithCount, deleteQR } from "./qr.controller";
 
 export const qrRouter = express.Router();
 
@@ -35,3 +35,5 @@ qrRouter.get(
 );
 
 qrRouter.patch("/:id", allowRoles("SUPER_ADMIN", "ADMIN", "MEMBER"), updateQR);
+
+qrRouter.delete("/:id",allowRoles("SUPER_ADMIN","ADMIN","MEMBER"),deleteQR);

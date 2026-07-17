@@ -116,7 +116,7 @@ export function Sidebar() {
   return (
     <aside
       className={clsx(
-        "flex h-screen flex-col bg-sidebar transition-all duration-300",
+        "flex h-screen flex-col bg-linear-120 from-purple-900 to-purple-700 transition-all duration-300",
         collapsed ? "w-20" : "w-64",
       )}
     >

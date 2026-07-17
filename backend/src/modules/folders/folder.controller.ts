@@ -149,7 +149,7 @@ export async function deleteFolder(
     return res.status(200).json({
       message: "Folder deleted successfully",
     });
-  } catch (error) {
+  } catch (error) { 
     next(error);
   }
 }

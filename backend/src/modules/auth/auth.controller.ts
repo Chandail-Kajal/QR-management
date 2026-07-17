@@ -149,7 +149,7 @@ export async function createUser(dto: CreateUserDTO) {
         members: {
           create: {
             userId: user.id,
-            role: "SUPER_ADMIN",
+            role: "ADMIN",
           },
         },
       },

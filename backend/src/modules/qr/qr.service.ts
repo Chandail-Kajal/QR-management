@@ -122,3 +122,10 @@ export async function listQRs(
     },
   };
 }
+
+export async function deleteQR(id: number) {
+  await prisma.qR.delete({ where: { id } });
+
+}
+
+// DELETE from tablename where id=1

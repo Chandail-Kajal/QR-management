@@ -46,3 +46,9 @@ export async function updateFolder(
   const res = await api.patch("/folders/" + id, data);
   return res.data.data;
 }
+
+export async function deleteFolder(id:number|string){
+  await api.delete("/folders/" +id);
+}
+
+

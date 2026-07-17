@@ -85,12 +85,12 @@ export function DataTable<T extends { id: string | number }>({
       <div className="min-h-[75vh] ">
         <Table className="" >
           <TableHeader>
-            <TableRow className="border-b border-border-light bg-accent/20 hover:bg-background-secondary">
+            <TableRow className="border-b border-border-light bg-purple-700 hover:bg-purple-500">
               {columns.map((col, idx) => (
                 <TableHead
                   key={String(col.dataIndex) + idx}
                   className={cn(
-                    "h-11 text-[10px] font-semibold tracking-wider text-text-secondary uppercase select-none",
+                    "h-11 text-sm font-semibold tracking-wider text-white uppercase select-none",
                     idx === 0 && "pl-5",
                     idx === columns.length - 1 && "pr-5 text-right",
                     col.className,
