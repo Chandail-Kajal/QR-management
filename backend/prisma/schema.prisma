@@ -1,8 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
   provider = "prisma-client"
@@ -14,11 +12,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ==========================================
+// ENUMS
+// ==========================================
+
 enum Role {
-  SUPER_ADMIN
   ADMIN
-  MEMBER
-  VIEWER
+  USER
 }
 
 enum QRStatus {
@@ -36,145 +36,126 @@ enum QRType {
   WIFI
   FILE
   VCARD
-
   WHATSAPP
   GOOGLE_REVIEW
-
   INSTAGRAM
   FACEBOOK
   LINKEDIN
   X
   YOUTUBE
   TIKTOK
-
   SOCIAL
 }
 
+enum PlanInterval {
+  DAYS
+  MONTHS
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  TRIALING
+  PAST_DUE
+  CANCELED
+  EXPIRED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+// ==========================================
+// USER & CORE MODELS
+// ==========================================
+
 model User {
-  id               Int               @id @default(autoincrement())
-  name             String
-  email            String            @unique
-  password         String
-  createdQRCodes   QR[]              @relation("CreatedQRCodes")
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  deletedAt        DateTime?
-  workspaces       Workspace[]
-  workspaceMembers WorkspaceMember[]
-  qrs              QR[]
-  files            File[]
-  
-}
+  id        Int       @id @default(autoincrement())
+  name      String
+  email     String    @unique
+  password  String
+  role      Role      @default(USER)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
 
-model Workspace {
-  id          Int               @id @default(autoincrement())
-  name        String
-  slug        String            @unique
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-  deletedAt   DateTime?
-  members     WorkspaceMember[]
-  folders     Folder[]
-  qrs         QR[]
-  createdById Int
-  createdBy   User              @relation(fields: [createdById], references: [id])
-  campaigns   Campaign[]
-  files       File[]
-}
-
-model WorkspaceMember {
-  id Int @id @default(autoincrement())
-
-  workspaceId Int
-  userId      Int
-  role        Role
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  workspace Workspace @relation(fields: [workspaceId], references: [id])
-  user      User      @relation(fields: [userId], references: [id])
-
-  @@unique([workspaceId, userId])
+  // Relations
+  qrs           QR[]
+  folders       Folder[]
+  campaigns     Campaign[]
+  files         File[]
+  subscriptions Subscription[]
+  payments      Payment[]
 }
 
 model Folder {
-  id   Int    @id @default(autoincrement())
-  name String
-
-  workspaceId Int
-  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  id     Int    @id @default(autoincrement())
+  name   String
+  userId Int
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   qrs QR[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([workspaceId, name])
+  @@unique([userId, name])
+  @@index([userId])
 }
 
 model Campaign {
-  id Int @id @default(autoincrement())
-
+  id          Int       @id @default(autoincrement())
   name        String
   description String?
+  startDate   DateTime?
+  endDate     DateTime?
 
-  workspaceId Int
-  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   qrs QR[]
-
-  startDate DateTime?
-  endDate   DateTime?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([workspaceId])
+  @@index([userId])
 }
 
 model QR {
-  id          Int      @id @default(autoincrement())
-  token       String   @unique
-  name        String
-  type        QRType   @default(URL)
-  content     Json     @default("{}")
-  status      QRStatus @default(ACTIVE)
-  scanCount   Int      @default(0)
-  scanLimit   Int?
-  workspaceId Int
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  name      String
+  type      QRType   @default(URL)
+  content   Json     @default("{}")
+  status    QRStatus @default(ACTIVE)
+  scanCount Int      @default(0)
+  scanLimit Int?
 
   expiresAt   DateTime?
   activeFrom  DateTime?
   activeUntil DateTime?
   password    String?
 
-  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  scans     QRScan[]
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  createdById Int
-  createdBy   User @relation("CreatedQRCodes", fields: [createdById], references: [id])
-
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  deletedAt DateTime?
-
-  user   User? @relation(fields: [userId], references: [id])
-  userId Int?
-
-  folder   Folder? @relation(fields: [folderId], references: [id])
   folderId Int?
+  folder   Folder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
 
-  campaign   Campaign? @relation(fields: [campaignId], references: [id])
   campaignId Int?
+  campaign   Campaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
 
+  scans    QRScan[]
   qrdesign QRDesign?
 
-  @@unique([folderId, name])
-  @@index([campaignId])
-  @@index([workspaceId, folderId])
-  @@index([workspaceId])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@unique([userId, folderId, name])
+  @@index([userId])
   @@index([token])
   @@index([status])
 }
@@ -183,7 +164,7 @@ model QRScan {
   id Int @id @default(autoincrement())
 
   qrId      Int
-  qr        QR       @relation(fields: [qrId], references: [id], onDelete: Cascade)
+  qr        QR      @relation(fields: [qrId], references: [id], onDelete: Cascade)
   ipAddress String?
   userAgent String?
   country   String?
@@ -208,38 +189,117 @@ model File {
 
   fileName     String
   originalName String
+  mimeType     String
+  size         Int
+  storageKey   String
+  url          String
 
-  mimeType String
-  size     Int
-
-  storageKey String
-  url        String
-
-  workspaceId Int
-  workspace   Workspace @relation(fields: [workspaceId], references: [id])
-
-  uploadedById Int
-  uploadedBy   User @relation(fields: [uploadedById], references: [id])
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   createdAt DateTime  @default(now())
   deletedAt DateTime?
 
-  @@index([workspaceId])
-  @@index([uploadedById])
+  @@index([userId])
 }
 
 model QRDesign {
   id Int @id @default(autoincrement())
 
   qrId Int @unique
+  qr   QR  @relation(fields: [qrId], references: [id], onDelete: Cascade)
 
   foregroundColor String?
   backgroundColor String?
+  logoFileId      Int?
 
-  logoFileId Int?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ==========================================
+// SUBSCRIPTION & BILLING MODELS
+// ==========================================
+
+model SubscriptionPlan {
+  id          Int     @id @default(autoincrement())
+  name        String  // e.g. "Free Trial", "Monthly Pro", "Yearly Enterprise"
+  description String?
+  isFree      Boolean @default(false)
+  isActive    Boolean @default(true)
+
+  // Pricing & Duration Management
+  price             Decimal      @default(0.00) @db.Decimal(10, 2)
+  currency          String       @default("USD")
+  intervalType      PlanInterval @default(MONTHS) // DAYS or MONTHS
+  intervalValue     Int          @default(1)      // e.g., 14 Days, 1 Month, 3 Months, 12 Months
+
+  // --- Numeric & Resource Limits ---
+  // Note: Standard convention is null = UNLIMITED
+  maxQRCodes        Int?    // Total QR codes user can create
+  maxTotalScans     Int?    // Total scans pooled across all QRs
+  maxScansPerQR     Int?    // Cap on scans for a single QR code
+  maxFolders        Int?    // Maximum folders allowed
+  maxQRsPerFolder   Int?    // Maximum QRs allowed per folder
+  maxFileUploads    Int?    // Max files user can upload
+  maxFileSizeMb     Int?    // Single file upload size limit (in MB)
+  maxCampaigns      Int?    // Maximum campaigns allowed
+
+  // --- Feature & Access Flags ---
+  allowedQRTypes    Json    @default("[]") // Array of allowed QRType strings, e.g., ["URL", "VCARD"]
+  analyticsHistoryDays Int? // Limit analytics access to past N days (null = lifetime)
+  allowCustomDesign Boolean @default(true) // Ability to change colors/logo
+  allowPasswordProtection Boolean @default(false)
+  allowExpiryDate   Boolean @default(false)
+
+  subscriptions Subscription[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Subscription {
+  id Int @id @default(autoincrement())
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  planId Int
+  plan   SubscriptionPlan @relation(fields: [planId], references: [id])
+
+  status SubscriptionStatus @default(TRIALING)
+
+  startDate DateTime  @default(now())
+  endDate   DateTime? // Calculated based on intervalType + intervalValue
+  canceledAt DateTime?
+
+  payments Payment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  qr QR @relation(fields: [qrId], references: [id], onDelete: Cascade)
+  @@index([userId, status])
+}
+
+model Payment {
+  id Int @id @default(autoincrement())
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  subscriptionId Int?
+  subscription   Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+
+  amount   Decimal       @db.Decimal(10, 2)
+  currency String        @default("USD")
+  status   PaymentStatus @default(PENDING)
+
+  provider      String? // e.g. "STRIPE", "RAZORPAY", "PAYPAL"
+  transactionId String? @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([subscriptionId])
 }

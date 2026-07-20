@@ -1,27 +1,29 @@
 import { prisma } from "@/config/prisma";
 import { ApiError } from "@/shared/utils";
 import bcrypt from "bcrypt";
-import { Role } from "@/generated/prisma/client";
+import { Role, SubscriptionStatus } from "../src/generated/prisma";
 import { CreateUserDTO } from "../users/user.validations";
 
 export interface AuthUser {
   id: number;
   name: string;
   email: string;
+  role: Role;
   createdAt: Date;
   updatedAt: Date;
 }
 
-export interface UserWorkspace {
+export interface UserSubscription {
   id: number;
-  name: string;
-  slug: string;
-  role: Role;
+  status: SubscriptionStatus;
+  planId: number;
+  startDate: Date;
+  endDate: Date | null;
 }
 
 export interface LoginResult {
   user: AuthUser;
-  workspaces: UserWorkspace[];
+  subscription: UserSubscription | null;
 }
 
 export const getUser = async (
@@ -36,24 +38,31 @@ export const getUser = async (
       ...(id && {
         id,
       }),
+      deletedAt: null, // Exclude soft-deleted users
     },
     select: {
       id: true,
       name: true,
       email: true,
+      role: true,
       createdAt: true,
       updatedAt: true,
-
-      workspaceMembers: {
-        select: {
-          role: true,
-          workspace: {
-            select: {
-              name: true,
-              id: true,
-              slug: true,
-            },
+      subscriptions: {
+        where: {
+          status: {
+            in: [SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIALING],
           },
+        },
+        orderBy: {
+          createdAt: "desc",
+        },
+        take: 1,
+        select: {
+          id: true,
+          status: true,
+          planId: true,
+          startDate: true,
+          endDate: true,
         },
       },
     },
@@ -63,21 +72,18 @@ export const getUser = async (
     return null;
   }
 
+  const activeSubscription = user.subscriptions[0] || null;
+
   return {
     user: {
       id: user.id,
       name: user.name,
       email: user.email,
+      role: user.role,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     },
-
-    workspaces: user.workspaceMembers.map((membership) => ({
-      id: membership.workspace.id,
-      name: membership.workspace.name,
-      slug: membership.workspace.slug,
-      role: membership.role,
-    })),
+    subscription: activeSubscription,
   };
 };
 
@@ -88,8 +94,8 @@ export const login = async (
   const user = await prisma.user.findFirst({
     where: {
       email: email.toLowerCase(),
+      deletedAt: null,
     },
-
     select: {
       id: true,
       password: true,
@@ -109,16 +115,18 @@ export const login = async (
   const profile = await getUser(null, user.id);
 
   if (!profile) {
-    throw new ApiError(404, "User not found");
+    throw new ApiError(404, "User profile not found");
   }
 
   return profile;
 };
 
 export async function createUser(dto: CreateUserDTO) {
+  const normalizedEmail = dto.email.toLowerCase();
+
   const existing = await prisma.user.findUnique({
     where: {
-      email: dto.email,
+      email: normalizedEmail,
     },
   });
 
@@ -126,32 +134,30 @@ export async function createUser(dto: CreateUserDTO) {
     throw new ApiError(400, "Email already exists");
   }
 
-  const hashedPassword = await bcrypt.hash(
-    dto.password,
-    10
-  );
+  const hashedPassword = await bcrypt.hash(dto.password, 10);
 
   return prisma.$transaction(async (tx) => {
+    // 1. Create the User
     const user = await tx.user.create({
       data: {
         name: dto.name,
-        email: dto.email,
+        email: normalizedEmail,
         password: hashedPassword,
+        role: Role.USER,
       },
     });
 
-    await tx.workspace.create({
-      data: {
-        name: `${dto.name}'s Workspace`,
-        slug: `workspace-${user.id}`,
-        createdById: user.id,
+    // 2. Assign Default Free/Trial Subscription (14-day Trial)
+    const fourteenDaysFromNow = new Date();
+    fourteenDaysFromNow.setDate(fourteenDaysFromNow.getDate() + 14);
 
-        members: {
-          create: {
-            userId: user.id,
-            role: "ADMIN",
-          },
-        },
+    await tx.subscription.create({
+      data: {
+        userId: user.id,
+        planId: 1, // Default Free Plan ID (from seed)
+        status: SubscriptionStatus.TRIALING,
+        startDate: new Date(),
+        endDate: fourteenDaysFromNow,
       },
     });
 
@@ -159,6 +165,7 @@ export async function createUser(dto: CreateUserDTO) {
       id: user.id,
       name: user.name,
       email: user.email,
+      role: user.role,
     };
   });
 }

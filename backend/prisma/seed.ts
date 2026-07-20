@@ -1,4 +1,11 @@
-import { PrismaClient, Role } from "../src/generated/prisma/client";
+import {
+  PrismaClient,
+  Role,
+  QRType,
+  QRStatus,
+  PlanInterval,
+  SubscriptionStatus,
+} from "../src/generated/prisma/client";
 import bcrypt from "bcrypt";
 
 const prisma = new PrismaClient();
@@ -6,116 +13,190 @@ const prisma = new PrismaClient();
 async function main() {
   console.log("🌱 Starting seed...");
 
+  // 1. Password Hash
   const password = await bcrypt.hash("Admin@123", 10);
 
-  // Create Super Admin
+  // 2. Create System Admin
   const admin = await prisma.user.upsert({
     where: {
       email: "admin@example.com",
     },
-    update: {},
+    update: {
+      role: Role.ADMIN,
+    },
     create: {
       name: "System Administrator",
       email: "admin@example.com",
       password,
+      role: Role.ADMIN,
     },
   });
 
-  console.log("✅ Super Admin created");
+  console.log("✅ Admin user created/verified");
 
-  // Create System Workspace
-  const workspace = await prisma.workspace.upsert({
+  // 3. Create Default Subscription Plans
+  const freePlan = await prisma.subscriptionPlan.upsert({
+    where: { id: 1 },
+    update: {},
+    create: {
+      id: 1,
+      name: "Free Plan",
+      description: "Basic plan with limited scans and QR codes.",
+      isFree: true,
+      price: 0,
+      currency: "USD",
+      intervalType: PlanInterval.MONTHS,
+      intervalValue: 1,
+      maxQRCodes: 5,
+      maxTotalScans: 500,
+      maxScansPerQR: 100,
+      maxFolders: 2,
+      maxCampaigns: 1,
+      allowedQRTypes: JSON.stringify(["URL", "TEXT", "WIFI"]),
+      allowCustomDesign: true,
+      allowPasswordProtection: false,
+      allowExpiryDate: false,
+    },
+  });
+
+  const proPlan = await prisma.subscriptionPlan.upsert({
+    where: { id: 2 },
+    update: {},
+    create: {
+      id: 2,
+      name: "Pro Monthly",
+      description: "Unlimited access to all feature types and custom styling.",
+      isFree: false,
+      price: 19.99,
+      currency: "USD",
+      intervalType: PlanInterval.MONTHS,
+      intervalValue: 1,
+      maxQRCodes: null, // Unlimited
+      maxTotalScans: null, // Unlimited
+      maxScansPerQR: null,
+      maxFolders: 50,
+      maxCampaigns: 20,
+      allowedQRTypes: JSON.stringify(Object.values(QRType)),
+      allowCustomDesign: true,
+      allowPasswordProtection: true,
+      allowExpiryDate: true,
+    },
+  });
+
+  console.log("✅ Default Subscription Plans created");
+
+  // 4. Assign Pro Subscription to Admin
+  const oneYearFromNow = new Date();
+  oneYearFromNow.setFullYear(oneYearFromNow.getFullYear() + 1);
+
+  await prisma.subscription.upsert({
+    where: { id: 1 },
+    update: {
+      status: SubscriptionStatus.ACTIVE,
+    },
+    create: {
+      id: 1,
+      userId: admin.id,
+      planId: proPlan.id,
+      status: SubscriptionStatus.ACTIVE,
+      startDate: new Date(),
+      endDate: oneYearFromNow,
+    },
+  });
+
+  console.log("✅ Admin Pro Subscription activated");
+
+  // 5. Create Sample Folders & Campaigns
+  const marketingFolder = await prisma.folder.upsert({
     where: {
-      slug: "system",
+      userId_name: {
+        userId: admin.id,
+        name: "Marketing Materials",
+      },
     },
     update: {},
     create: {
-      name: "System Workspace",
-      slug: "system",
-      createdById: admin.id,
+      name: "Marketing Materials",
+      userId: admin.id,
     },
   });
 
-  console.log("✅ System Workspace created");
-
-  // Assign Super Admin role
-  await prisma.workspaceMember.upsert({
+  const socialFolder = await prisma.folder.upsert({
     where: {
-      workspaceId_userId: {
-        workspaceId: workspace.id,
+      userId_name: {
         userId: admin.id,
+        name: "Social Profiles",
       },
     },
-    update: {
-      role: Role.SUPER_ADMIN,
-    },
+    update: {},
     create: {
-      workspaceId: workspace.id,
+      name: "Social Profiles",
       userId: admin.id,
-      role: Role.SUPER_ADMIN,
     },
   });
 
-  console.log("✅ Super Admin membership created");
+  const launchCampaign = await prisma.campaign.create({
+    data: {
+      name: "2026 Product Launch",
+      description: "Q3 Marketing Drive",
+      userId: admin.id,
+    },
+  });
 
+  console.log("✅ Sample Folders and Campaigns created");
+
+  // 6. Seed QR Codes & Designs
   const qrSeeds = [
     {
       token: "demo-url",
       name: "Website QR",
-      type: "URL",
-      content: {
-        type: "URL",
-        url: "https://google.com",
-      },
+      type: QRType.URL,
+      folderId: marketingFolder.id,
+      campaignId: launchCampaign.id,
+      content: { type: "URL", url: "https://google.com" },
+      design: { foregroundColor: "#000000", backgroundColor: "#FFFFFF" },
     },
-
     {
       token: "demo-text",
       name: "Text QR",
-      type: "TEXT",
-      content: {
-        type: "TEXT",
-        text: "Welcome to Smart QR Platform",
-      },
+      type: QRType.TEXT,
+      content: { type: "TEXT", text: "Welcome to Smart QR Platform" },
+      design: { foregroundColor: "#1E3A8A", backgroundColor: "#F3F4F6" },
     },
-
     {
       token: "demo-email",
       name: "Email QR",
-      type: "EMAIL",
+      type: QRType.EMAIL,
       content: {
         type: "EMAIL",
         email: "support@example.com",
         subject: "Need Help",
         body: "Hello Team",
       },
+      design: { foregroundColor: "#047857", backgroundColor: "#ECFDF5" },
     },
-
     {
       token: "demo-phone",
       name: "Phone QR",
-      type: "PHONE",
-      content: {
-        type: "PHONE",
-        phone: "+819012345678",
-      },
+      type: QRType.PHONE,
+      content: { type: "PHONE", phone: "+819012345678" },
+      design: { foregroundColor: "#B91C1C", backgroundColor: "#FEF2F2" },
     },
-
     {
       token: "demo-sms",
       name: "SMS QR",
-      type: "SMS",
+      type: QRType.SMS,
       content: {
         type: "SMS",
         phone: "+819012345678",
         message: "Hello from QR",
       },
+      design: { foregroundColor: "#6D28D9", backgroundColor: "#F5F3FF" },
     },
-
     {
       token: "demo-wifi",
       name: "WiFi QR",
-      type: "WIFI",
+      type: QRType.WIFI,
       content: {
         type: "WIFI",
         ssid: "Office Wifi",
@@ -123,23 +204,13 @@ async function main() {
         encryption: "WPA2",
         hidden: false,
       },
+      design: { foregroundColor: "#4338CA", backgroundColor: "#EEF2FF" },
     },
-
-    {
-      token: "demo-file",
-      name: "File QR",
-      type: "FILE",
-      content: {
-        type: "FILE",
-        fileId: 1,
-        fileName: "brochure.pdf",
-      },
-    },
-
     {
       token: "demo-vcard",
       name: "vCard QR",
-      type: "VCARD",
+      type: QRType.VCARD,
+      folderId: marketingFolder.id,
       content: {
         type: "VCARD",
         firstName: "Malkeet",
@@ -152,100 +223,59 @@ async function main() {
         address: "Chiba, Japan",
         note: "Building SaaS products.",
       },
+      design: { foregroundColor: "#1F2937", backgroundColor: "#F9FAFB" },
     },
-
     {
       token: "demo-whatsapp",
       name: "WhatsApp QR",
-      type: "WHATSAPP",
+      type: QRType.WHATSAPP,
       content: {
         type: "WHATSAPP",
         phone: "819012345678",
         message: "Hello from QR",
       },
+      design: { foregroundColor: "#15803D", backgroundColor: "#F0FDF4" },
     },
-
     {
       token: "demo-google-review",
       name: "Google Review QR",
-      type: "GOOGLE_REVIEW",
+      type: QRType.GOOGLE_REVIEW,
       content: {
         type: "GOOGLE_REVIEW",
         placeId: "sample-place-id",
         reviewUrl: "https://g.page/r/sample/review",
       },
+      design: { foregroundColor: "#D97706", backgroundColor: "#FFFBEB" },
     },
-
     {
       token: "demo-instagram",
       name: "Instagram QR",
-      type: "INSTAGRAM",
+      type: QRType.INSTAGRAM,
+      folderId: socialFolder.id,
       content: {
         type: "INSTAGRAM",
         username: "instagram",
         url: "https://instagram.com/instagram",
       },
+      design: { foregroundColor: "#C13584", backgroundColor: "#FAFAFA" },
     },
-
     {
       token: "demo-facebook",
       name: "Facebook QR",
-      type: "FACEBOOK",
+      type: QRType.FACEBOOK,
+      folderId: socialFolder.id,
       content: {
         type: "FACEBOOK",
         pageName: "facebook",
         url: "https://facebook.com/facebook",
       },
+      design: { foregroundColor: "#1877F2", backgroundColor: "#FFFFFF" },
     },
-
-    {
-      token: "demo-linkedin",
-      name: "LinkedIn QR",
-      type: "LINKEDIN",
-      content: {
-        type: "LINKEDIN",
-        profileName: "linkedin",
-        url: "https://linkedin.com",
-      },
-    },
-
-    {
-      token: "demo-x",
-      name: "X QR",
-      type: "X",
-      content: {
-        type: "X",
-        username: "x",
-        url: "https://x.com",
-      },
-    },
-
-    {
-      token: "demo-youtube",
-      name: "YouTube QR",
-      type: "YOUTUBE",
-      content: {
-        type: "YOUTUBE",
-        channelName: "YouTube",
-        url: "https://youtube.com",
-      },
-    },
-
-    {
-      token: "demo-tiktok",
-      name: "TikTok QR",
-      type: "TIKTOK",
-      content: {
-        type: "TIKTOK",
-        username: "tiktok",
-        url: "https://tiktok.com",
-      },
-    },
-
     {
       token: "demo-social",
       name: "Social Links QR",
-      type: "SOCIAL",
+      type: QRType.SOCIAL,
+      folderId: socialFolder.id,
       content: {
         type: "SOCIAL",
         title: "SaruCoder",
@@ -261,40 +291,61 @@ async function main() {
           whatsapp: "https://wa.me/819012345678",
         },
       },
+      design: { foregroundColor: "#111827", backgroundColor: "#F3F4F6" },
     },
   ];
 
   for (const qr of qrSeeds) {
-    await prisma.qR.upsert({
+    const createdQr = await prisma.qR.upsert({
       where: {
         token: qr.token,
       },
-      update: {},
+      update: {
+        name: qr.name,
+        type: qr.type,
+        content: qr.content,
+      },
       create: {
         token: qr.token,
         name: qr.name,
-        type: qr.type as any,
+        type: qr.type,
         content: qr.content,
-        workspaceId: workspace.id,
-        createdById: admin.id,
+        userId: admin.id,
+        folderId: qr.folderId ?? null,
+        campaignId: qr.campaignId ?? null,
+        status: QRStatus.ACTIVE,
+      },
+    });
+
+    // Create or update QRDesign for this QR Code
+    await prisma.qRDesign.upsert({
+      where: {
+        qrId: createdQr.id,
+      },
+      update: {
+        foregroundColor: qr.design.foregroundColor,
+        backgroundColor: qr.design.backgroundColor,
+      },
+      create: {
+        qrId: createdQr.id,
+        foregroundColor: qr.design.foregroundColor,
+        backgroundColor: qr.design.backgroundColor,
       },
     });
   }
 
-  console.log(`✅ Created ${qrSeeds.length} demo QR codes`);
+  console.log(`✅ Created ${qrSeeds.length} demo QR codes with design settings`);
 
   console.log(`
 =================================
-Bootstrap completed successfully
+Bootstrap completed successfully!
 =================================
 
-Admin Login
-Email: admin@example.com
-Password: Admin@123
-
-Workspace:
-- System Workspace
-- Role: SUPER_ADMIN
+Admin Login Details:
+- Email: admin@example.com
+- Password: Admin@123
+- Role: ADMIN
+- Active Plan: Pro Monthly
 `);
 }
 
@@ -306,7 +357,3 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
-
-
-
-  8
