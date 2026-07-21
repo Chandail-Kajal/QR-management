@@ -7,17 +7,18 @@ import { useFolders } from "@/hooks/use-folders";
 import { FolderDialog } from "./components/add-update-modal";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { createFolder, deleteFolder, updateFolder } from "@/services/folder.service";
+import {
+  createFolder,
+  deleteFolder,
+  updateFolder,
+} from "@/services/folder.service";
 import { Toolbar } from "@/components/toolbar";
 import { useDebounce } from "use-debounce";
 import { useRouter } from "next/navigation";
 import { useUIStore } from "@/stores/ui.store";
-import { useAuthStore } from "@/stores/auth.store";
-import { id } from "zod/v4/locales";
 
 export default function FoldersPage() {
   const { setBreadcrumbs } = useUIStore();
-  const { selectedWorkspaceId } = useAuthStore();
   const [page] = useState(1);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchQuery, setSearchQuery] = useState("");
@@ -28,11 +29,7 @@ export default function FoldersPage() {
     id?: string | number;
   } | null>(null);
 
-  const { data, isLoading, isError, error } = useFolders(
-    page,
-    debouncedSearch,
-    selectedWorkspaceId as number,
-  );
+  const { data, isLoading, isError, error } = useFolders(page, debouncedSearch);
   const queryClient = useQueryClient();
 
   const router = useRouter();
@@ -62,24 +59,21 @@ export default function FoldersPage() {
     },
   });
 
-  const deleteMutation =useMutation({
-    
-    onSuccess:()=>{
+  const deleteMutation = useMutation({
+    onSuccess: () => {
       toast.success("Folder deleted Succesfully");
       queryClient.invalidateQueries({ queryKey: ["folders"] });
     },
-    onError:(error)=>{
+    onError: (error) => {
       toast.error(error.message);
     },
-    
-    mutationFn:deleteFolder
-  })
+
+    mutationFn: deleteFolder,
+  });
 
   useEffect(() => {
     setBreadcrumbs([{ label: "Folders", href: "/admin/folders" }]);
   }, [setBreadcrumbs]);
-
-
 
   return (
     <main className="flex-1 transition-colors duration-150 flex flex-col gap-4 font-bold">
@@ -135,8 +129,8 @@ export default function FoldersPage() {
               onForward={() => {
                 router.push(`/admin/folders/${folder.name}`);
               }}
-              onDelete={(folder)=>{
-                deleteMutation.mutate(folder.id)
+              onDelete={(folder) => {
+                deleteMutation.mutate(folder.id);
               }}
             />
           ))}
@@ -155,7 +149,6 @@ export default function FoldersPage() {
           ))}
         </div>
       )}
-
       <FolderDialog
         mode={editValues ? "edit" : "create"}
         open={open}

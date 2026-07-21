@@ -1,137 +1,128 @@
-import { createQRSchema, listQRSchema } from "./qr.validator";
-import { qrIdSchema, updateQRSchema } from "./qr.validator";
+import { CreateQRInput, ListQRInput, UpdateQRInput } from "./qr.validator";
 import type { Request, Response, NextFunction } from "express";
-import * as service from "./qr.service";
 import { prisma } from "@/config/prisma";
 import { QRType } from "@/generated/prisma/enums";
+import crypto from "crypto";
+import { paginate } from "@/shared/utils/Paginate";
+import { ApiError } from "@/shared/utils";
 
-export async function createQR(
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) {
-  try {
-    const body = createQRSchema.parse(req.body);
+export function createQR(qrDetails: CreateQRInput, userId: number) {
+  const token = crypto.randomBytes(8).toString("hex");
 
-    const data = await service.createQR(
-      { ...body },
-      req.workspace?.id as number,
-      req.auth?.userId as number,
-    );
-
-    return res.status(201).json({
-      message: "QR created successfully",
-      data,
-    });
-  } catch (error) {
-    next(error);
-  }
+  return prisma.qR.create({
+    data: {
+      token,
+      name: qrDetails.name,
+      type: qrDetails.type,
+      content: (qrDetails.content as object) || {},
+      status: "ACTIVE",
+      folderId: qrDetails.folderId,
+      userId,
+    },
+  });
 }
 
-export async function getQR(req: Request, res: Response, next: NextFunction) {
-  try {
-    const { id } = qrIdSchema.parse(req.params);
+export async function getQR(id: number) {
+  const qr = await prisma.qR.findFirst({
+    where: {
+      id,
+    },
+  });
 
-    const qr = await service.getQR(id, req.workspace!.id);
-
-    return res.status(200).json({
-      message: "QR fetched successfully",
-      data: qr,
-    });
-  } catch (error) {
-    next(error);
+  if (!qr) {
+    throw new ApiError(404, "QR code not found");
   }
+  return qr;
 }
 
-export async function getQrTypesWithCount(
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) {
-  try {
-    const folderId = req.query?.folderId || undefined;
-    const workspaceId = req.workspace?.id;
-    const where: Record<string, number> = {};
-    if (folderId) {
-      where.folderId = Number(folderId);
-    }
+export async function getQrTypesWithCount(folderId?: number) {
+  const where: Record<string, number> = {};
 
-    if (workspaceId) {
-      where.workspaceId = workspaceId;
-    }
+  if (folderId) {
+    where.folderId = folderId;
+  }
+  const result = await prisma.qR.groupBy({
+    by: ["type"],
+    _count: {
+      type: true,
+    },
+    where: {
+      ...where,
+    },
+  });
 
-    const result = await prisma.qR.groupBy({
-      by: ["type"],
-      _count: {
-        type: true,
-      },
-      where: {
-        ...where,
-      },
-    });
-
-    const data =
-      result.length === 0
-        ? Object.keys(QRType).map((i) => ({ type: i, count: 0 }))
-        : result.map((item) => ({
+  const data =
+    result.length === 0
+      ? Object.keys(QRType).map((i) => ({ type: i, count: 0 }))
+      : result.map((item) => ({
           type: item.type,
           count: item._count.type,
         }));
-    return res
-      .status(200)
-      .json({ data, message: "Type count fetched successfully!" });
-  } catch (error) {
-    next(error);
-  }
+
+  return data;
 }
 
-export async function updateQR(
-  req: Request,
-  res: Response,
-  next: NextFunction,
+export async function updateQR(id: number, qr: UpdateQRInput) {
+  return await prisma.qR.update({
+    where: {
+      id,
+    },
+    data: {
+      ...qr,
+    },
+  });
+}
+
+export async function listQRs(
+  query: ListQRInput & { userId?: number },
+  folderId?: number,
 ) {
-  try {
-    const { id } = qrIdSchema.parse(req.params);
+  const { page, limit, search, status, type, userId } = query;
+  const where = {
+    ...(type && { type }),
+    ...(folderId && { folderId }),
+    ...(userId && { userId }),
+    ...(search && {
+      OR: [
+        {
+          name: {
+            contains: search,
+            mode: "insensitive" as const,
+          },
+        },
+        {
+          token: {
+            contains: search,
+            mode: "insensitive" as const,
+          },
+        },
+      ],
+    }),
+    ...(status && {
+      status,
+    }),
+  };
 
-    const body = updateQRSchema.parse(req.body);
-    const qr = await service.updateQR(id, req.workspace!.id, body);
+  const data = await paginate({
+    prisma,
+    limit,
+    model: {
+      count: prisma.qR.count,
+      findMany: prisma.qR.findMany,
+    },
+    page,
+    orderBy: { createdAt: "desc" },
+    where,
+  });
 
-    return res.status(200).json({
-      message: "QR updated successfully",
-      data: qr,
-    });
-  } catch (error) {
-    next(error);
-  }
+  return data;
 }
-export async function listQRs(req: Request, res: Response, next: NextFunction) {
-  try {
-    const query = listQRSchema.parse(req.query);
-    const { folderId } = req.params;
 
-    const data = await service.listQRs(
-      query,
-      req.workspace?.id as number,
-      Number(folderId),
-    );
-    return res.status(200).json({
-      message: "QRs fetched successfully",
-      data,
-    });
-  } catch (error) {
-    next(error);
-  }
-}
-
-export async function deleteQR(req: Request, res: Response, next: NextFunction) {
-  try {
-    const id = req.params.id
-    await service.deleteQR(Number(id))
-    return res.status(200).json({
-      message:"QR deleted successfully",
-      data:null,
-    });
-  } catch (error) {
-    next(error);
-  }
+export async function deleteQR(id: number) {
+  return await prisma.qR.update({
+    where: { id },
+    data: {
+      deletedAt: new Date(),
+    },
+  });
 }

@@ -1,111 +1,114 @@
 "use client";
-import {
-  LayoutDashboard,
-  QrCode,
-  ChartColumn,
-  Folder,
-  Users,
-  CreditCard,
-  Settings,
-  LucideIcon,
-} from "lucide-react";
+import { QrCode, ChevronDown, ChevronRight } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import clsx from "clsx";
+import { Role } from "@/lib/roles";
+import { useState } from "react";
 import { useUIStore } from "@/stores/ui.store";
+import { useAuthStore } from "@/stores/auth.store";
+import { navigations, NavItem } from "@/lib/navigations";
 
-interface NavItem {
-  id: string;
-  label: string;
-  icon: LucideIcon;
-  href: string;
+function isItemActive(item: NavItem, pathname: string): boolean {
+  if (item.href) {
+    if (pathname === item.href || pathname.startsWith(item.href + "/")) {
+      return true;
+    }
+  }
+  return item.children?.some((child) => isItemActive(child, pathname)) ?? false;
 }
 
-interface NavItemProps {
-  item: NavItem;
-  onClick: () => void;
+function hasAccess(item: NavItem, role: Role) {
+  return item.access.includes(role);
 }
 
-const navigation: NavItem[] = [
-  {
-    id: "dashboard",
-    label: "Dashboard",
-    icon: LayoutDashboard,
-    href: "/admin/dashboard",
-  },
-  {
-    id: "qr-codes",
-    label: "QR Codes",
-    icon: QrCode,
-    href: "/admin/qr-codes",
-  },
-  // {
-  //   id: "analytics",
-  //   label: "Analytics",
-  //   icon: ChartColumn,
-  //   href: "/admin/analytics",
-  // },
-  {
-    id: "folders",
-    label: "Folders",
-    icon: Folder,
-    href: "/admin/folders",
-  },
-  {
-    id: "users",
-    label: "Users",
-    icon: Users,
-    href: "/admin/users",
-  },
-  {
-    id: "billing",
-    label: "Billing",
-    icon: CreditCard,
-    href: "/admin/billing",
-  },
-  {
-    id: "settings",
-    label: "Settings",
-    icon: Settings,
-    href: "/admin/settings",
-  },
-];
-
-interface NavItemProps {
+interface SidebarItemProps {
   item: NavItem;
   collapsed: boolean;
-  onClick: () => void;
+  pathname: string;
+  role: Role;
+  level?: number;
 }
 
-function SidebarItem({ item, collapsed, onClick }: NavItemProps) {
-  const pathname = usePathname();
+function SidebarItem({
+  item,
+  collapsed,
+  pathname,
+  role,
+  level = 0,
+}: SidebarItemProps) {
+  const router = useRouter();
+  const active = isItemActive(item, pathname);
+  const [open, setOpen] = useState(active);
+
+  if (!hasAccess(item, role)) return null;
+
+  const hasChildren = !!item.children?.length;
 
   const Icon = item.icon;
 
-  const active = pathname === item.href || pathname.startsWith(item.href + "/");
-
   return (
-    <button
-      title={collapsed ? item.label : undefined}
-      onClick={onClick}
-      className={clsx(
-        "group flex w-full items-center border-r-4 py-3 text-sm transition-all duration-200",
-        collapsed ? "justify-center px-0" : "gap-3 px-5",
-        active
-          ? "border-secondary bg-white/10 text-sidebar-text"
-          : "border-transparent text-sidebar-muted hover:bg-white/5 hover:text-sidebar-text",
-      )}
-    >
-      <Icon size={20} strokeWidth={2} className="shrink-0" />
+    <>
+      <button
+        onClick={() => {
+          if (hasChildren) {
+            setOpen((o) => !o);
+          } else if (item.href) {
+            router.push(item.href);
+          }
+        }}
+        className={clsx(
+          "flex w-full items-cente py-3 text-sm transition",
+          active
+            ? "bg-white/10 border-r-4 text-white font-semibold border-secondary"
+            : "hover:bg-white/5 text-white/70",
+          collapsed ? "justify-center" : "gap-3 px-5",
+          "items-center",
+        )}
+        style={{
+          paddingLeft: collapsed ? undefined : 20 + level * 20,
+        }}
+      >
+        {Icon ? (
+          <Icon size={20} />
+        ) : level > 0 ? (
+          <span
+            className={clsx(
+              "h-1.5 w-1.5 rounded-full",
+              active ? "bg-white" : "bg-white/70",
+            )}
+          />
+        ) : null}
 
-      {!collapsed && <span className="font-medium">{item.label}</span>}
-    </button>
+        {!collapsed && (
+          <>
+            <span className="flex-1 text-left">{item.label}</span>
+            {hasChildren &&
+              (open ? <ChevronDown size={16} /> : <ChevronRight size={16} />)}
+          </>
+        )}
+      </button>
+
+      {!collapsed &&
+        hasChildren &&
+        open &&
+        item.children!.map((child) => (
+          <SidebarItem
+            key={child.id}
+            item={child}
+            pathname={pathname}
+            collapsed={collapsed}
+            role={role}
+            level={level + 1}
+          />
+        ))}
+    </>
   );
 }
 
 export function Sidebar() {
-  const router = useRouter();
-
+  const pathname = usePathname();
   const sidebar = useUIStore((s) => s.sidebar);
+  const role = useAuthStore((s) => s.user?.role);
 
   if (sidebar === "closed") {
     return null;
@@ -148,12 +151,13 @@ export function Sidebar() {
       {/* Navigation */}
 
       <nav className="flex-1 py-2">
-        {navigation.map((item) => (
+        {navigations.map((item) => (
           <SidebarItem
             key={item.id}
             item={item}
             collapsed={collapsed}
-            onClick={() => router.push(item.href)}
+            pathname={pathname}
+            role={role as Role}
           />
         ))}
       </nav>

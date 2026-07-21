@@ -1,22 +1,29 @@
-export interface ApiResponse<T> {
+export interface IPagination {
+  page: number;
+  limit: number;
+  totalItems: number;
+  totalPages: number;
+}
+
+export type ValidationError = {
+  field: string;
+  error: string;
+};
+
+export interface IApiMetaErrorStack {
+  stack: string;
+}
+
+export interface IApiMetaPagination {
+  pagination: IPagination;
+}
+
+export interface IApiMetaValidationErrors {
+  errors: ValidationError[];
+}
+
+export type IApiResponse<T, M = undefined> = {
   message: string;
-  error?: string;
-  success: boolean;
+  statusCode: number;
   data: T;
-}
-
-export interface PaginatedDTO<T> {
-  items: T;
-  pagination: {
-    page: number;
-    limit: number;
-    totalItems: number;
-    totalPages: number;
-  };
-}
-
-export interface GetResourceQueryDTO {
-  page?: number;
-  limit?: number;
-  search?: string;
-}
+} & (M extends undefined ? object : { meta: M });

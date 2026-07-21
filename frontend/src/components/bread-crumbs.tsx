@@ -14,7 +14,6 @@ export const Breadcrumbs = () => {
           {index !== 0 && (
             <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
           )}
-
           {item.href ? (
             <Link
               href={item.href}

@@ -1,12 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { api } from "@/lib/api";
-import { ApiResponse, QRAnalyticsDTO } from "@/types";
-import {
-  DashboardResponse,
-  DashboardSummary,
-  QRAnalyticsData,
-} from "@/types/analytics";
-import { Summary } from "lucide-react";
+import { IApiResponse } from "@/types";
+import { DashboardResponse, QRAnalyticsData } from "@/types/analytics";
 
 export const getQRAnalytics = async (
   qrId: string,
@@ -16,36 +11,18 @@ export const getQRAnalytics = async (
     days: number;
   },
 ) => {
-  try {
-    const res = await api.get<ApiResponse<QRAnalyticsData>>(
-      `/analytics/${qrId}`,
-    );
-    return res.data.data;
-  } catch (error) {
-    return null;
-  }
+  const res = await api.get<IApiResponse<QRAnalyticsData>>(
+    `/analytics/${qrId}`,
+    {
+      params: query,
+    },
+  );
+  return res.data.data;
 };
 
 export const getWorkspaceDashboard = async () => {
-  try {
-    const res = await api.get<any>("/analytics/dashboard");
-    return {
-      summary: {
-        activeQrCodes: res.data.activeQrCodes,
-        growth: res.data.growth,
-        totalScans: res.data.totalScans,
-        uniqueVisitors: res.data.uniqueVisitors,
-        topPerformer: {
-          ...res.data.topPerformer,
-        },
-      },
-      scanVolume: {
-        ...res.data.scanVolume,
-      },
-      deviceSplit: [...res.data.deviceSplit],
-    } as DashboardResponse;
-  } catch (error) {
-    console.log(error);
-    return null;
-  }
+  const res = await api.get<IApiResponse<DashboardResponse>>(
+    "/analytics/dashboard",
+  );
+  return res.data.data;
 };

@@ -1,26 +1,16 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 
-import { ChevronRight, LogOut, Menu, User } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/stores/auth.store";
 import { useUIStore } from "@/stores/ui.store";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
+import { LogOut, Menu, User } from "lucide-react";
 
 export function Topbar() {
   const router = useRouter();
 
-  const { user, workspaces, setWorkspace, selectedWorkspaceId, logout } =
-    useAuthStore();
+  const { user, logout } = useAuthStore();
 
   const { breadcrumbs, theme, toggleTheme, sidebar, setSidebar } = useUIStore();
 
@@ -64,26 +54,6 @@ export function Topbar() {
           )}
         </Button> */}
 
-        <Select
-          value={workspaces.find((ws) => selectedWorkspaceId === ws.id)?.name}
-          onValueChange={(val) => {
-            const wsId = workspaces.find((ws) => ws.name === val);
-            if (!wsId) return;
-            setWorkspace(wsId?.id);
-          }}
-        >
-          <SelectTrigger className="border-border bg-background focus:border-secondary w-full text-left">
-            <SelectValue placeholder="Select context" />
-          </SelectTrigger>
-          <SelectContent className="bg-surface border border-border">
-            {workspaces.map((item) => (
-              <SelectItem key={item.id} value={item.name}>
-                {item.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
         <div className=" flex items-center gap-3 rounded-xl border border-border bg-background pr-4 py-0.5">
           <div className="bg-primary text-primary-foreground flex h-9 w-9 items-center justify-center rounded-full">
             <User className="h-5 w-5" />
@@ -94,10 +64,7 @@ export function Topbar() {
               {user?.name ?? "User"}
             </div>
             <div className="text-muted-foreground text-[10px]">
-              {workspaces
-                .find((ws) => selectedWorkspaceId === ws.id)
-                ?.role?.split("_")
-                .join(" ") || "Operator"}
+              {user?.role}
             </div>
           </div>
         </div>

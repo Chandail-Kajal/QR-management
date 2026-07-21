@@ -22,47 +22,47 @@ import { useQuery } from "@tanstack/react-query";
 import { getQRAnalytics } from "@/services/analytics.service";
 import { getQRDetails } from "@/services/qr.service";
 import { useUIStore } from "@/stores/ui.store";
-import { useAuthStore } from "@/stores/auth.store";
+
 import { Breadcrumbs } from "@/components/bread-crumbs";
 import { getQRTypeIcon } from "@/lib/preview-type-icon";
 import { QRStatus, QRType } from "@/types";
 import { QRStatusBadge } from "../qr-code-page/components/qr-status-badge";
 
 type Props = {
-  qrId: string,
-  folderName?: string
+  qrId: string;
+  folderName?: string;
 };
 
 export function QRAnalyticsPage(props: Props) {
   const qrId = props.qrId;
   const folderName = props.folderName;
   const { setBreadcrumbs } = useUIStore();
-  const { selectedWorkspaceId } = useAuthStore();
 
   const { data: analytics, isLoading } = useQuery({
-    queryKey: [`analytics/${qrId}`, selectedWorkspaceId],
+    queryKey: [`analytics/${qrId}`],
     queryFn: async () => getQRAnalytics(qrId, { days: 30 }),
   });
 
   const { data: qrData } = useQuery({
-    queryKey: [`analytics/${qrId}/details`, selectedWorkspaceId],
+    queryKey: [`analytics/${qrId}/details`],
     queryFn: async () => getQRDetails(qrId),
   });
 
-  // useEffect(()=>{},[])
-
   useEffect(() => {
-    const crumbs = []
+    const crumbs = [];
     if (folderName) {
-      crumbs.push({ label: "Folder", href: "/admin/folders" })
-      crumbs.push({ label: folderName, href: `/admin/folders/${folderName}` })
-      crumbs.push({ label: qrData?.name || "Qr", })
+      crumbs.push({ label: "Folder", href: "/admin/folders" });
+      crumbs.push({
+        label: decodeURI(folderName),
+        href: `/admin/folders/${folderName}`,
+      });
+      crumbs.push({ label: qrData?.name || "Qr" });
     } else {
-      crumbs.push({ label: "Qr-Codes", href: "/admin/qr-codes" })
+      crumbs.push({ label: "Qr-Codes", href: "/admin/qr-codes" });
       crumbs.push({
         label: qrData?.name || "Qr",
         href: `/admin/qr-codes/${qrId}/analytics`,
-      })
+      });
     }
     setBreadcrumbs(crumbs);
   }, [qrId, qrData?.name, folderName]);

@@ -1,20 +1,17 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { LoginResponseDTO, UserDTO, WorkspaceDTO } from "@/types";
+import { ILoginResponseDTO } from "@/types";
 
 interface AuthState {
-  user: UserDTO | null;
-  workspaces: WorkspaceDTO[];
-  accessToken: string | null;
-
-  selectedWorkspaceId: number | null;
+  user: ILoginResponseDTO["user"] | null;
+  plan: ILoginResponseDTO["subscription"] | null;
+  accessToken: ILoginResponseDTO["accessToken"] | null;
 
   hydrated: boolean;
   setHydrated: () => void;
 
-  setAuth: (data: LoginResponseDTO) => void;
+  setAuth: (data: ILoginResponseDTO) => void;
   setAccessToken: (token: string) => void;
-  setWorkspace: (workspaceId: number) => void;
 
   logout: () => void;
 }
@@ -23,7 +20,7 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       user: null,
-      workspaces: [],
+      plan: null,
       accessToken: null,
       hydrated: false,
       selectedWorkspaceId: null,
@@ -31,9 +28,7 @@ export const useAuthStore = create<AuthState>()(
 
       setAuth: (data) =>
         set({
-          user: data.user,
-          workspaces: data.workspaces,
-          accessToken: data.accessToken,
+          ...data,
         }),
 
       setAccessToken: (token) =>
@@ -41,15 +36,10 @@ export const useAuthStore = create<AuthState>()(
           accessToken: token,
         }),
 
-      setWorkspace: (workspaceId) =>
-        set({
-          selectedWorkspaceId: workspaceId,
-        }),
-
       logout: () =>
         set({
           user: null,
-          workspaces: [],
+          plan: null,
           accessToken: null,
         }),
     }),

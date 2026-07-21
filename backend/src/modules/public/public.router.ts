@@ -4,17 +4,21 @@ import { generateVisitorId, resolveQRDestination } from "./public.utils";
 import { prisma } from "@/config/prisma";
 import { QRContent } from "@/types";
 import { UAParser } from "ua-parser-js";
+import { z } from "zod";
+import { ApiError } from "@/shared/utils";
+
+const qrTokenSchema = z.object({
+  token: z.coerce.string().min(8, "Invalid qr token"),
+});
 
 export const publicRouter = Router();
 
 publicRouter.get("/qr/:token", async (req, res, next) => {
   try {
-    const { token } = req.params;
+    const { token } = qrTokenSchema.parse(req.params);
     const qr = await findQr(token);
     if (qr.scanLimit !== null && qr.scanCount >= qr.scanLimit) {
-      return res.status(403).json({
-        message: "QR scan limit reached",
-      });
+      throw new ApiError(403, "QR scan limit reached");
     }
 
     const ipAddress =
@@ -60,7 +64,7 @@ publicRouter.get("/qr/:token", async (req, res, next) => {
       qr.content as unknown as QRContent,
       qr.type,
     );
-    res.status(200).json({ ...redirectContent });
+    res.apiResponse(200, null, redirectContent);
   } catch (error) {
     next(error);
   }

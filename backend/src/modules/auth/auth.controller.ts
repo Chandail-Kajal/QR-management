@@ -1,8 +1,9 @@
 import { prisma } from "@/config/prisma";
 import { ApiError } from "@/shared/utils";
 import bcrypt from "bcrypt";
-import { Role, SubscriptionStatus } from "../src/generated/prisma";
-import { CreateUserDTO } from "../users/user.validations";
+import { Role, SubscriptionStatus } from "@/generated/prisma/client";
+import { signAccessToken } from "@/shared/jwt";
+import { SignupDto } from "./auth.validator";
 
 export interface AuthUser {
   id: number;
@@ -24,12 +25,10 @@ export interface UserSubscription {
 export interface LoginResult {
   user: AuthUser;
   subscription: UserSubscription | null;
+  accessToken: string;
 }
 
-export const getUser = async (
-  email?: string | null,
-  id?: number | null,
-): Promise<LoginResult | null> => {
+export const getUser = async (email?: string | null, id?: number | null) => {
   const user = await prisma.user.findFirst({
     where: {
       ...(email && {
@@ -101,27 +100,22 @@ export const login = async (
       password: true,
     },
   });
-
-  if (!user) {
-    throw new ApiError(401, "Invalid email or password");
-  }
+  if (!user) throw new ApiError(401, "Invalid email or password");
 
   const isPasswordValid = await bcrypt.compare(password, user.password);
-
-  if (!isPasswordValid) {
-    throw new ApiError(401, "Invalid email or password");
-  }
+  if (!isPasswordValid) throw new ApiError(401, "Invalid email or password");
 
   const profile = await getUser(null, user.id);
+  if (!profile) throw new ApiError(404, "User profile not found");
 
-  if (!profile) {
-    throw new ApiError(404, "User profile not found");
-  }
-
-  return profile;
+  const accessToken = signAccessToken({
+    userId: profile.user.id,
+    userRole: profile.user.role,
+  });
+  return { ...profile, accessToken };
 };
 
-export async function createUser(dto: CreateUserDTO) {
+export async function createUser(dto: SignupDto) {
   const normalizedEmail = dto.email.toLowerCase();
 
   const existing = await prisma.user.findUnique({

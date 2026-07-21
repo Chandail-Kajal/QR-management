@@ -5,6 +5,7 @@ import {
   QRStatus,
   PlanInterval,
   SubscriptionStatus,
+  AccountStatus,
 } from "../src/generated/prisma/client";
 import bcrypt from "bcrypt";
 
@@ -29,6 +30,7 @@ async function main() {
       email: "admin@example.com",
       password,
       role: Role.ADMIN,
+      status: AccountStatus.ACTIVE,
     },
   });
 
@@ -334,7 +336,9 @@ async function main() {
     });
   }
 
-  console.log(`✅ Created ${qrSeeds.length} demo QR codes with design settings`);
+  console.log(
+    `✅ Created ${qrSeeds.length} demo QR codes with design settings`,
+  );
 
   console.log(`
 =================================

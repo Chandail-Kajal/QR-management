@@ -9,7 +9,7 @@ export function RedirectRenderer({
 }) {
   useEffect(() => {
     if (!destinationUrl) {
-      console.log("error");
+      
       return
     }
 

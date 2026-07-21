@@ -1,9 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { getFolders } from "@/services/folder.service";
 
-export function useFolders(page: number, search: string, workspaceId: number) {
+export function useFolders(page: number, search: string) {
   return useQuery({
-    queryKey: ["folders", page, search, workspaceId],
+    queryKey: ["folders", page, search],
     queryFn: () =>
       getFolders({
         page,

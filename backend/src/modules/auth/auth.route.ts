@@ -6,153 +6,76 @@ import {
   verifyRefreshToken,
 } from "@/shared/jwt";
 import { AuthJwtPayload } from "@/types";
-import express, { NextFunction, Request, Response } from "express";
-import { createUser, getUser, login } from "./auth.controller";
-import { CreateUserDTO } from "../users/users.dto";
+import express, { Request, Response } from "express";
+import { createUser, getUser, login, LoginResult } from "./auth.controller";
+import { ApiError } from "@/shared/utils";
+import { loginSchema, signupSchema } from "./auth.validator";
 
 export const authRouter = express.Router();
 
-authRouter.post(
-  "/login",
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { email, password, remember } = req.body;
+authRouter.post("/login", async (req: Request, res: Response) => {
+  const { email, password, remember } = loginSchema.parse(req.body);
+  const result = await login(email, password);
 
-      if (!email || !password) {
-        return res.status(400).json({
-          message: "Email and password are required",
-        });
-      }
+  const payload: AuthJwtPayload = {
+    userId: result.user.id,
+    userRole: result.user.role,
+  };
 
-      const result = await login(email, password);
+  const refreshToken = signRefreshToken(
+    payload,
+    remember
+      ? 1000 * 60 * 60 * 24 * 30 // 30 days
+      : 1000 * 60 * 60 * 24, // 1 day
+  );
 
-      const payload: AuthJwtPayload = {
-        userId: result.user.id,
-        userRole: result.workspaces[0]?.role,
-      };
+  res.cookie("refreshToken", refreshToken, {
+    path: "/",
+    httpOnly: true,
+    secure: env.IS_PRODUCTION,
+    sameSite: "strict",
+    maxAge: remember ? 1000 * 60 * 60 * 24 * 30 : 1000 * 60 * 60 * 24,
+  });
 
-      const accessToken = signAccessToken(payload);
-
-      const refreshToken = signRefreshToken(
-        payload,
-        remember
-          ? 1000 * 60 * 60 * 24 * 30 // 30 days
-          : 1000 * 60 * 60 * 24, // 1 day
-      );
-
-      res.cookie("refreshToken", refreshToken, {
-        path: "/",
-        httpOnly: true,
-        secure: env.IS_PRODUCTION,
-        sameSite: "strict",
-        maxAge: remember ? 1000 * 60 * 60 * 24 * 30 : 1000 * 60 * 60 * 24,
-      });
-
-      return res.status(200).json({
-        message: "Login successful",
-        data: {
-          user: result.user,
-          workspaces: result.workspaces,
-          accessToken,
-        },
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
-);
+  res.apiResponse<LoginResult>(200, "Login success", result);
+});
 
 /* ===================== PROFILE ===================== */
-authRouter.get(
-  "/profile",
-  auth,
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const user = await getUser(null, req.auth?.userId as number);
+authRouter.get("/profile", auth, async (req: Request, res: Response) => {
+  const user = await getUser(null, req.auth?.userId as number);
 
-      if (!user) {
-        return res.status(404).json({
-          message: "User not found",
-        });
-      }
+  if (!user) throw new ApiError(400, "User not found!");
 
-      return res.status(200).json({
-        message: "Profile fetched successfully",
-        data: user,
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
-);
+  return res.status(200).json({
+    message: "Profile fetched successfully",
+    data: user,
+  });
+});
 
-/* ===================== REFRESH TOKEN ===================== */
-authRouter.post(
-  "/refresh-token",
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const refreshToken = req.cookies?.refreshToken;
+authRouter.post("/refresh-token", async (req: Request, res: Response) => {
+  const refreshToken = req.cookies?.refreshToken;
+  if (!refreshToken) throw new ApiError(401, "Refresh token is required");
 
-      if (!refreshToken) {
-        return res.status(401).json({
-          message: "Unauthorized access",
-        });
-      }
+  const decoded = verifyRefreshToken(refreshToken);
+  const user = await getUser(null, decoded.userId);
+  const payload: AuthJwtPayload = {
+    userId: decoded.userId,
+    userRole: user?.user.role as string,
+  };
+  const accessToken = signAccessToken(payload);
+  res.apiResponse(200, null, { accessToken });
+});
 
-      const decoded = verifyRefreshToken(refreshToken);
+authRouter.post("/signup", async (req: Request, res: Response) => {
+  const { email, name, password } = signupSchema.parse(req.body);
+  const createdUser = createUser({ name, email, password });
+  res.apiResponse(200, null, createdUser);
+});
 
-      const user = await getUser(null, decoded.userId);
-
-      const payload: AuthJwtPayload = {
-        userId: decoded.userId,
-        userRole: user?.workspaces[0].role as string,
-      };
-
-      const accessToken = signAccessToken(payload);
-
-      return res.status(200).json({
-        message: "Token refreshed successfully",
-        data: {
-          accessToken,
-        },
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
-);
-
-authRouter.post(
-  "/signup",
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { email, name, password } = req.body as CreateUserDTO;
-      const createdUser = createUser({ name, email, password });
-      res.status(200).json({
-        data: null,
-        message: "Registered successfully",
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
-);
-
-/* ===================== LOGOUT ===================== */
-authRouter.post(
-  "/logout",
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      res.clearCookie("refreshToken", {
-        path: "/",
-      });
-
-      return res.status(200).json({
-        message: "Logged out successfully",
-      });
-    } catch (error) {
-      next(error);
-    }
-  },
-);
+authRouter.post("/logout", async (req: Request, res: Response) => {
+  res.clearCookie("refreshToken", {
+    path: "/",
+  });
+  return res.apiResponse(200);
+});
 //

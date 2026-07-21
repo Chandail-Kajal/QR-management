@@ -5,11 +5,19 @@ export const folderIdSchema = z.object({
 });
 
 export const createFolderSchema = z.object({
-  name: z.string().min(1).max(100),
+  name: z.string().trim().min(1).max(100),
 });
 
 export const updateFolderSchema = z.object({
-  name: z.string().min(1).max(100),
+  name: z.coerce.string().trim().min(1).max(100),
+});
+
+export const folderOptionQuery = z.object({
+  search: z.string().trim().min(3),
+});
+
+export const folderNameSchema = z.object({
+  name: z.coerce.string().trim(),
 });
 
 export const listFoldersSchema = z.object({
@@ -18,4 +26,6 @@ export const listFoldersSchema = z.object({
   search: z.string().optional(),
 });
 
-export type ListFolderQuery = z.infer<typeof listFoldersSchema>
+export type CreateFolder = z.infer<typeof createFolderSchema>;
+export type updateFolder = z.infer<typeof updateFolderSchema>;
+export type ListFolderQuery = z.infer<typeof listFoldersSchema>;

@@ -19,41 +19,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { TrendingUp, QrCode, Users, Trophy } from "lucide-react";
 import { getWorkspaceDashboard } from "@/services/analytics.service";
-import { useAuthStore } from "@/stores/auth.store";
 import { useUIStore } from "@/stores/ui.store";
-
-type DashboardResponse = {
-  totalScans: number;
-  growth: number;
-  activeQrCodes: number;
-  uniqueVisitors: number;
-  topPerformer: {
-    id: number;
-    name: string;
-    scans: number;
-  } | null;
-  scanVolume: Record<string, number>;
-  deviceSplit: {
-    device: string;
-    scans: number;
-    percent: number;
-  }[];
-};
 
 const COLORS = ["#6366F1", "#10B981", "#F59E0B", "#EF4444"];
 
 export default function DashboardPage() {
   const { setBreadcrumbs, clearBreadcrumbs } = useUIStore();
-  const { selectedWorkspaceId } = useAuthStore();
   const { data, isLoading } = useQuery({
-    queryKey: ["dashboard", selectedWorkspaceId],
+    queryKey: ["dashboard"],
     queryFn: async () => getWorkspaceDashboard(),
   });
 
   const chartData = useMemo(() => {
     if (!data) return [];
 
-    return Object.entries(data.scanVolume).map(([date, scans]) => ({
+    return data.scanVolume.map(({ date, scans }) => ({
       date: new Date(date).toLocaleDateString(undefined, {
         month: "short",
         day: "numeric",
@@ -177,13 +157,9 @@ export default function DashboardPage() {
             <ResponsiveContainer width="100%" height={350}>
               <LineChart data={chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
-
                 <XAxis dataKey="date" />
-
                 <YAxis />
-
                 <Tooltip />
-
                 <Line
                   type="monotone"
                   dataKey="scans"

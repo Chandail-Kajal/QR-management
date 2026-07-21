@@ -1,9 +1,11 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
 import { QRRenderer } from "../../../components/r/qr-renderer";
-import { VCardQRContent } from "@/types";
+import { IApiResponse, VCardQRContent } from "@/types";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/lib/api";
+import { AxiosError } from "axios";
 
 type Redirect = {
   destinationUrl: string;
@@ -17,35 +19,23 @@ type QRResponse = {
 export default function QRPage() {
   const params = useParams();
   const token = params.token as string;
-
-  const [qr, setQr] = useState<QRResponse | null>(null);
-
-  useEffect(() => {
-    if (!token) return;
-
-    async function fetchQR() {
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/public/qr/${token}`,
-        {
-          headers: {
-            "x-language": navigator.language,
-          },
-        },
-      );
-
-      if (!res.ok) {
-        console.error("Invalid QR code");
-        return;
+  const { data, isLoading, isError, error } = useQuery({
+    queryKey: [`/resolved-qr-token/${token}`],
+    queryFn: async () => {
+      try {
+        const res = await api.get<IApiResponse<QRResponse>>(
+          `/public/qr/${token}`,
+        );
+        return res.data.data;
+      } catch (error: unknown) {
+        const message = (error as AxiosError<IApiResponse<null>>).response?.data
+          .message;
+        throw new Error(message);
       }
+    },
+  });
 
-      const data = (await res.json()) as QRResponse;
-      setQr(data);
-    }
-
-    fetchQR();
-  }, [token]);
-
-  if (!qr) {
+  if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
         Loading...
@@ -53,5 +43,18 @@ export default function QRPage() {
     );
   }
 
-  return <QRRenderer content={qr.content} renderMode={qr.renderMode} />;
+  if (!data || isError) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        {error?.message}
+      </div>
+    );
+  }
+
+  return (
+    <QRRenderer
+      content={data?.content as QRResponse["content"]}
+      renderMode={data?.renderMode as QRResponse["renderMode"]}
+    />
+  );
 }

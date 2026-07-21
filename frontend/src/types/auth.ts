@@ -1,34 +1,40 @@
-export type Role =
-  | "SUPER_ADMIN"
-  | "ADMIN"
-  | "MEMBER"
-  | "VIEWER";
+export type Role = "ADMIN" | "USER";
 
-export interface WorkspaceDTO {
-  id: number;
-  name: string;
-  slug: string;
-  role: Role;
-}
-
-export interface UserDTO {
+type SubscriptionStatus =
+  | "ACTIVE"
+  | "TRIALING"
+  | "PAST_DUE"
+  | "CANCELED"
+  | "EXPIRED";
+export interface AuthUser {
   id: number;
   name: string;
   email: string;
+  role: Role;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-export interface LoginRequestDTO {
+export interface UserSubscription {
+  id: number;
+  status: SubscriptionStatus;
+  planId: number;
+  startDate: Date;
+  endDate: Date | null;
+}
+
+export interface ILoginResponseDTO {
+  user: AuthUser;
+  subscription: UserSubscription | null;
+  accessToken: string;
+}
+
+export interface ILoginRequestDTO {
   email: string;
   password: string;
   remember?: boolean;
 }
 
-export interface LoginResponseDTO {
-  user: UserDTO;
-  workspaces: WorkspaceDTO[];
-  accessToken: string;
-}
-
-export interface RefreshTokenResponseDTO {
+export interface IRefreshTokenResponseDTO {
   accessToken: string;
 }

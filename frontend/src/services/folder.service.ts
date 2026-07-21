@@ -1,6 +1,7 @@
 import { api } from "@/lib/api";
-import { PaginatedDTO } from "@/types";
+import { IApiMetaPagination, IApiResponse } from "@/types";
 import { TCreateFolderDTO, TFolderDTO, TUpdateFolderDTO } from "@/types/folder";
+import { AxiosError } from "axios";
 
 interface Params {
   page: number;
@@ -9,46 +10,54 @@ interface Params {
   status?: string;
 }
 
-export async function getFolders(
-  params: Params,
-): Promise<PaginatedDTO<TFolderDTO[]>> {
-  const res = await api.get("/folders", {
-    params,
-  });
-
-  return res.data.data;
-}
-
-export async function getFolderByName({
-  name,
-}: {
-  name: string;
-}): Promise<TFolderDTO | null> {
+export async function getFolders(params: Params) {
   try {
-    const res = await api.get("/folders/by-name/" + name);
-    return res.data.data;
-  } catch (error) {
-    return null;
+    const res = await api.get<IApiResponse<TFolderDTO[], IApiMetaPagination>>(
+      "/folders",
+      {
+        params,
+      },
+    );
+    return {
+      items: res.data.data,
+      pagination: res.data.meta.pagination,
+    };
+  } catch (error: unknown) {
+    const msg = (error as AxiosError<IApiResponse<null>>).response?.data
+      .message;
+    throw new Error(msg);
   }
 }
 
-export async function createFolder(
-  data: TCreateFolderDTO,
-): Promise<TFolderDTO> {
-  const res = await api.post("/folders", data);
+export async function getFolderByName({ name }: { name: string }) {
+  try {
+    const res = await api.get<IApiResponse<TFolderDTO>>(
+      "/folders/by-name/" + name,
+    );
+    return res.data.data;
+  } catch (error) {
+    const msg = (error as AxiosError<IApiResponse<null>>).response?.data
+      .message;
+    throw new Error(msg);
+  }
+}
+
+export async function createFolder(data: TCreateFolderDTO) {
+  const res = await api.post<IApiResponse<TFolderDTO>>("/folders", data);
   return res.data.data;
 }
 
 export async function updateFolder(
   id: number | string,
   data: TUpdateFolderDTO,
-): Promise<TFolderDTO> {
-  const res = await api.patch("/folders/" + id, data);
+) {
+  const res = await api.patch<IApiResponse<TUpdateFolderDTO>>(
+    "/folders/" + id,
+    data,
+  );
   return res.data.data;
 }
 
-export async function deleteFolder(id:number|string){
-  await api.delete("/folders/" +id);
+export async function deleteFolder(id: number | string) {
+  await api.delete("/folders/" + id);
 }
-
-

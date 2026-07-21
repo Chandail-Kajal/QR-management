@@ -1,7 +1,7 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 
 import { useAuthStore } from "@/stores/auth.store";
-import { RefreshTokenResponseDTO } from "@/types";
+import { IRefreshTokenResponseDTO } from "@/types";
 
 export const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
@@ -12,14 +12,10 @@ export const api = axios.create({
  * Attach access token
  */
 api.interceptors.request.use((config) => {
-  const { accessToken, selectedWorkspaceId } = useAuthStore.getState();
+  const { accessToken } = useAuthStore.getState();
 
   if (accessToken) {
     config.headers.Authorization = `Bearer ${accessToken}`;
-  }
-
-  if (selectedWorkspaceId) {
-    config.headers["x-workspace-id"] = String(selectedWorkspaceId);
   }
 
   return config;
@@ -61,7 +57,6 @@ api.interceptors.response.use(
           failedQueue.push({
             resolve: (token) => {
               originalRequest.headers.Authorization = `Bearer ${token}`;
-
               resolve(api(originalRequest));
             },
 
@@ -75,7 +70,7 @@ api.interceptors.response.use(
 
       try {
         const response = await axios.post<{
-          data: RefreshTokenResponseDTO;
+          data: IRefreshTokenResponseDTO;
         }>(
           `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh-token`,
           {},

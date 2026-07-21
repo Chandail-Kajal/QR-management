@@ -10,6 +10,8 @@ import {
   PrismaClientUnknownRequestError,
   PrismaClientValidationError,
 } from "@/generated/prisma/internal/prismaNamespace";
+import { ZodError } from "zod";
+import { APIResponse } from "@/shared/utils";
 
 export const errorHandler = (
   err: any,
@@ -18,6 +20,7 @@ export const errorHandler = (
   next: NextFunction,
 ): Response => {
   let error: any = { ...err };
+  let meta: APIResponse<null>["meta"] = null;
   error.message = err.message || "An error occurred";
 
   // Handle ApiError
@@ -87,7 +90,6 @@ export const errorHandler = (
   // Prisma Known Database Errors
   if (err instanceof PrismaClientKnownRequestError) {
     error.isOperational = true;
-
     switch (err.code) {
       // Unique constraint failed
       case "P2002":
@@ -123,10 +125,15 @@ export const errorHandler = (
         error.message = "Required field is missing";
         break;
 
-      // Value too long
+      // Value too long 
       case "P2000":
         error.statusCode = 400;
         error.message = "One or more fields exceed allowed length";
+        break;
+      
+      case "P2022":
+        error.statusCode=400;
+        error.message="column is missing";
         break;
 
       default:
@@ -135,6 +142,25 @@ export const errorHandler = (
     }
   }
 
+  if (err instanceof ZodError) {
+    error.statusCode = 400;
+    error.isOperational = true;
+
+    if (err.issues.length === 1) {
+      const issue = err.issues[0];
+
+      error.message = `${issue.path.join(".")}: ${issue.message}`;
+    } else {
+      error.message = "Validation failed";
+
+      meta = {
+        errors: err.issues.map((issue) => ({
+          field: issue.path.join("."),
+          error: issue.message,
+        })),
+      };
+    }
+  }
   // Prisma Unknown Error
   if (err instanceof PrismaClientUnknownRequestError) {
     error.statusCode = 500;
@@ -169,14 +195,16 @@ export const errorHandler = (
     logger.error(error);
   }
 
+  if (!env.IS_PRODUCTION) {
+    if (meta) {
+      meta = { ...meta, stack: err.stack };
+    } else {
+      meta = { stack: err.stack };
+    }
+  }
   // Final API response
   if (res.apiResponse) {
-    return res.apiResponse(
-      error.statusCode,
-      error.message,
-      null,
-      env.IS_PRODUCTION ? null : { stack: err.stack },
-    );
+    return res.apiResponse<null>(error.statusCode, error.message, null, meta);
   }
 
   return res.status(error.statusCode).json({

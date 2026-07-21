@@ -35,20 +35,3 @@ export const isAdmin = (req: Request, res: Response, next: NextFunction) => {
     next(error);
   }
 };
-
-export const isSuperAdminOrAdmin = (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  try {
-    const flag = req.auth?.userRole === Role.SUPER_ADMIN;
-    if (flag) {
-      next();
-    } else {
-      throw new ApiError(403, "Operation Not Allowed!");
-    }
-  } catch (error) {
-    next(error);
-  }
-};
