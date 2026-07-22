@@ -114,7 +114,7 @@ export default function LandingPage() {
                   onFocus={() => setSelectedType(feat.name)}
                   className={`group relative p-8 rounded-2xl border cursor-pointer transition-all duration-300 flex flex-col items-center justify-center text-center gap-3 transform hover:-translate-y-1 hover:scale-[1.03] ${
                     isSelected
-                      ? 'bg-gradient-to-br from-purple-600 to-indigo-600 border-transparent text-white shadow-xl shadow-purple-950/30'
+                      ? 'bg-linear-to-br from-purple-600 to-indigo-600 border-transparent text-white shadow-xl shadow-purple-950/30'
                       : 'bg-slate-950 border-slate-900 text-slate-300 hover:border-purple-500/40 hover:bg-slate-900/40'
                   }`}
                 >

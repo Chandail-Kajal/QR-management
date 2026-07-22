@@ -6,6 +6,7 @@ import {
   QrCode,
   Settings,
   Users,
+  BadgePlus,
 } from "lucide-react";
 import { Role } from "./roles";
 
@@ -59,6 +60,14 @@ export const navigations: NavItem[] = [
     label: "Settings",
     href: "/admin/settings",
     icon: Settings,
+    access: [Role.ADMIN],
+
+  },
+  {
+    id: "assign qr",
+    label: "Assign Qr",
+    href: "/admin/assign-qr",
+    icon: BadgePlus,
     access: [Role.ADMIN],
 
   },
