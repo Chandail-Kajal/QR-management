@@ -1,6 +1,9 @@
+/* eslint-disable react-hooks/set-state-in-effect */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { useQuery, UseQueryOptions } from "@tanstack/react-query";
 import {
   ShieldAlert,
   KeyRound,
@@ -22,12 +25,17 @@ import {
   BarChart3,
   Calendar,
   Filter,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
+import { api } from "@/lib/api";
 
-// --- TYPES ---
-type ExportTimeRange = "1m" | "3m" | "6m" | "12m";
+// ==========================================
+// --- TYPES & INTERFACES ---
+// ==========================================
+export type ExportTimeRange = "1m" | "3m" | "6m" | "12m";
 
-interface SystemNotification {
+export interface SystemNotification {
   id: number;
   userId: number;
   userName: string;
@@ -40,7 +48,7 @@ interface SystemNotification {
   createdAt: string;
 }
 
-interface ManagedUser {
+export interface ManagedUser {
   id: number;
   name: string;
   email: string;
@@ -51,7 +59,7 @@ interface ManagedUser {
   qrsCount: number;
 }
 
-interface QRScannerRecord {
+export interface QRScannerRecord {
   id: number;
   name: string;
   userId: number;
@@ -64,48 +72,61 @@ interface QRScannerRecord {
   createdAt: string;
 }
 
-// --- MOCK DATA ---
-const INITIAL_NOTIFICATIONS: SystemNotification[] = [
-  {
-    id: 101,
-    userId: 3,
-    userName: "Sarah Jenkins",
-    userEmail: "sarah.j@growthlabs.com",
-    type: "SUBSCRIPTION_EXPIRING",
-    message: "3-Month Pro subscription expires in 3 days.",
-    daysRemaining: 3,
-    subscriptionId: 301,
-    createdAt: "2026-07-20T08:00:00Z",
-  },
-  {
-    id: 102,
-    userId: 6,
-    userName: "Liam O'Connor",
-    userEmail: "liam@bistro99.ie",
-    type: "SCAN_LIMIT_REACHED",
-    message: "QR code 'Summer Menu' has reached 95% of scan limit (1,850 / 2,000 scans).",
-    scansLeft: 150,
-    createdAt: "2026-07-19T14:30:00Z",
-  },
-];
+export interface AdminSettingsData {
+  notifications: SystemNotification[];
+  users: ManagedUser[];
+  scanners: QRScannerRecord[];
+}
 
-const INITIAL_USERS: ManagedUser[] = [
-  { id: 1, name: "Alex Morgan", email: "alex.morgan@techcorp.io", role: "USER", status: "ACTIVE", planName: "Yearly Enterprise", subscriptionId: 201, qrsCount: 142 },
-  { id: 2, name: "Devon Chen", email: "devon@designstudio.co", role: "USER", status: "ACTIVE", planName: "Monthly Pro", subscriptionId: 202, qrsCount: 28 },
-  { id: 3, name: "Sarah Jenkins", email: "sarah.j@growthlabs.com", role: "ADMIN", status: "ACTIVE", planName: "3-Month Pro", subscriptionId: 301, qrsCount: 45 },
-  { id: 4, name: "Marcus Vance", email: "m.vance@retailhub.net", role: "USER", status: "ACTIVE", planName: "Free Trial", subscriptionId: null, qrsCount: 3 },
-  { id: 5, name: "Liam O'Connor", email: "liam@bistro99.ie", role: "USER", status: "DEACTIVATED", planName: "Monthly Pro", subscriptionId: 205, qrsCount: 18 },
-];
+export interface AdminSettingsApiResponse {
+  success: boolean;
+  data: AdminSettingsData;
+}
 
-const MOCK_SCANNERS: QRScannerRecord[] = [
-  { id: 501, name: "Summer Campaign URL", userId: 1, userName: "Alex Morgan", folderName: "Marketing 2026", scanCount1m: 1420, scanCount3m: 4800, scanCount6m: 9200, scanCount12m: 18400, createdAt: "2025-08-10" },
-  { id: 502, name: "Corporate vCard", userId: 1, userName: "Alex Morgan", folderName: "Sales Team", scanCount1m: 310, scanCount3m: 980, scanCount6m: 2100, scanCount12m: 4500, createdAt: "2025-09-01" },
-  { id: 503, name: "Restaurant Menu PDF", userId: 2, userName: "Devon Chen", folderName: "Table QR Codes", scanCount1m: 890, scanCount3m: 2400, scanCount6m: 4100, scanCount12m: 7800, createdAt: "2025-11-15" },
-  { id: 504, name: "Feedback Google Review", userId: 3, userName: "Sarah Jenkins", folderName: "Customer Loyalty", scanCount1m: 540, scanCount3m: 1600, scanCount6m: 3200, scanCount12m: 5900, createdAt: "2026-01-20" },
-  { id: 505, name: "WiFi Guest Access", userId: 4, userName: "Marcus Vance", folderName: "Office Guests", scanCount1m: 45, scanCount3m: 120, scanCount6m: 210, scanCount12m: 340, createdAt: "2026-05-10" },
-];
+// ==========================================
+// --- REACT QUERY HOOK & FETCHER ---
+// ==========================================
+const fetchAdminSettingsData = async (): Promise<AdminSettingsData> => {
+  const res = await api.get("/settings")
+  const result: AdminSettingsApiResponse | AdminSettingsData = res.data;
+  if ("data" in result) {
+    return result.data;
+  }
+  return result;
 
+  // const response = await fetch("/api/v1/settings", {
+  //   method: "GET",
+  //   headers: {
+  //     "Content-Type": "application/json",
+  //   },
+  // });
+
+  // if (!response.ok) {
+  //   throw new Error(`Failed to fetch settings data (${response.status}: ${response.statusText})`);
+  // }
+
+
+  // Handle both wrapped { success: true, data: {...} } or direct payload
+};
+
+export function useAdminSettingsData(
+  options?: Omit<UseQueryOptions<AdminSettingsData, Error>, "queryKey" | "queryFn">
+) {
+  return useQuery<AdminSettingsData, Error>({
+    queryKey: ["admin", "settings"],
+    queryFn: fetchAdminSettingsData,
+    staleTime: 1000 * 60 * 5, // Fresh for 5 minutes
+    refetchOnWindowFocus: false,
+    ...options,
+  });
+}
+
+// ==========================================
+// --- MAIN COMPONENT ---
+// ==========================================
 export default function AdminSettingsPage() {
+  const { data, isLoading, isError, error, refetch } = useAdminSettingsData();
+
   const [activeTab, setActiveTab] = useState<"users" | "exports" | "alerts" | "security">("exports");
 
   // Admin Credentials State
@@ -114,15 +135,26 @@ export default function AdminSettingsPage() {
   const [adminConfirmPassword, setAdminConfirmPassword] = useState("");
   const [securityMessage, setSecurityMessage] = useState<{ text: string; isError: boolean } | null>(null);
 
-  // User Management State
-  const [users, setUsers] = useState<ManagedUser[]>(INITIAL_USERS);
+  // User Management State (Synchronized with fetched data)
+  const [users, setUsers] = useState<ManagedUser[]>([]);
   const [userSearch, setUserSearch] = useState("");
   const [selectedUserForPassword, setSelectedUserForPassword] = useState<ManagedUser | null>(null);
   const [newUserPassword, setNewUserPassword] = useState("");
   const [userActionMessage, setUserActionMessage] = useState<string | null>(null);
 
-  // System Notifications State
-  const [notifications, setNotifications] = useState<SystemNotification[]>(INITIAL_NOTIFICATIONS);
+  // System Notifications State (Synchronized with fetched data)
+  const [notifications, setNotifications] = useState<SystemNotification[]>([]);
+
+  // Sync local state when API data resolves so UI mutations (toggles) work seamlessly
+  useEffect(() => {
+    if (data) {
+      setUsers(data.users || []);
+      setNotifications(data.notifications || []);
+    }
+  }, [data]);
+
+  // Read-only scanners data directly from query
+  const scanners = data?.scanners ?? [];
 
   // --- EXPORT STATE ---
   const [exportTimeRange, setExportTimeRange] = useState<ExportTimeRange>("3m");
@@ -132,17 +164,17 @@ export default function AdminSettingsPage() {
 
   // Available unique folders from scanners
   const availableFolders = useMemo(() => {
-    return Array.from(new Set(MOCK_SCANNERS.map((s) => s.folderName)));
-  }, []);
+    return Array.from(new Set(scanners.map((s) => s.folderName)));
+  }, [scanners]);
 
   // Filtered Scanners for Preview Table
   const filteredScanners = useMemo(() => {
-    return MOCK_SCANNERS.filter((scanner) => {
+    return scanners.filter((scanner) => {
       const matchesUser = exportSelectedUserId === "ALL" || scanner.userId === Number(exportSelectedUserId);
       const matchesFolder = exportSelectedFolder === "ALL" || scanner.folderName === exportSelectedFolder;
       return matchesUser && matchesFolder;
     });
-  }, [exportSelectedUserId, exportSelectedFolder]);
+  }, [scanners, exportSelectedUserId, exportSelectedFolder]);
 
   // CSV EXPORT GENERATOR
   const handleGenerateCSVExport = () => {
@@ -219,6 +251,41 @@ export default function AdminSettingsPage() {
     setNewUserPassword("");
   };
 
+  // --- RENDER LOADING STATE ---
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <div className="flex flex-col items-center gap-3 bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+          <Loader2 className="w-8 h-8 text-purple-600 animate-spin" />
+          <p className="text-sm font-medium text-slate-600">Loading settings dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // --- RENDER ERROR STATE ---
+  if (isError) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <div className="flex flex-col items-center gap-4 bg-white p-8 rounded-2xl shadow-sm border border-rose-100 max-w-md text-center">
+          <div className="p-3 bg-rose-100 text-rose-600 rounded-full">
+            <AlertCircle className="w-6 h-6" />
+          </div>
+          <div>
+            <h3 className="font-bold text-slate-900">Failed to load data</h3>
+            <p className="text-xs text-slate-500 mt-1">{error?.message || "An unexpected error occurred."}</p>
+          </div>
+          <button
+            onClick={() => refetch()}
+            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium text-xs rounded-xl shadow-sm transition-all"
+          >
+            Retry Fetching
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 p-4 md:p-8 text-slate-800 font-sans">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -260,11 +327,10 @@ export default function AdminSettingsPage() {
         <div className="flex flex-wrap bg-white p-1.5 rounded-2xl border border-slate-200 shadow-sm w-full md:w-fit gap-1">
           <button
             onClick={() => setActiveTab("exports")}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${
-              activeTab === "exports"
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${activeTab === "exports"
                 ? "bg-purple-600 text-white shadow-md shadow-purple-600/20"
                 : "text-slate-600 hover:bg-purple-50 hover:text-purple-700"
-            }`}
+              }`}
           >
             <FileSpreadsheet className="w-4 h-4" />
             Scan History Exports
@@ -272,11 +338,10 @@ export default function AdminSettingsPage() {
 
           <button
             onClick={() => setActiveTab("users")}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${
-              activeTab === "users"
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${activeTab === "users"
                 ? "bg-purple-600 text-white shadow-md shadow-purple-600/20"
                 : "text-slate-600 hover:bg-purple-50 hover:text-purple-700"
-            }`}
+              }`}
           >
             <User className="w-4 h-4" />
             User Accounts
@@ -284,11 +349,10 @@ export default function AdminSettingsPage() {
 
           <button
             onClick={() => setActiveTab("alerts")}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all relative ${
-              activeTab === "alerts"
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all relative ${activeTab === "alerts"
                 ? "bg-purple-600 text-white shadow-md shadow-purple-600/20"
                 : "text-slate-600 hover:bg-purple-50 hover:text-purple-700"
-            }`}
+              }`}
           >
             <Bell className="w-4 h-4" />
             Expiry Alerts
@@ -301,11 +365,10 @@ export default function AdminSettingsPage() {
 
           <button
             onClick={() => setActiveTab("security")}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${
-              activeTab === "security"
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${activeTab === "security"
                 ? "bg-purple-600 text-white shadow-md shadow-purple-600/20"
                 : "text-slate-600 hover:bg-purple-50 hover:text-purple-700"
-            }`}
+              }`}
           >
             <Lock className="w-4 h-4" />
             Admin Credentials
@@ -315,7 +378,7 @@ export default function AdminSettingsPage() {
         {/* TAB 1: SCAN HISTORY EXPORTS */}
         {activeTab === "exports" && (
           <div className="space-y-6">
-            
+
             {/* EXPORT CONTROL PANEL */}
             <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
               <div>
@@ -329,7 +392,7 @@ export default function AdminSettingsPage() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                
+
                 {/* Duration Window Selector */}
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
@@ -348,11 +411,10 @@ export default function AdminSettingsPage() {
                       <button
                         key={range.id}
                         onClick={() => setExportTimeRange(range.id)}
-                        className={`py-2 rounded-lg text-center transition-all ${
-                          exportTimeRange === range.id
+                        className={`py-2 rounded-lg text-center transition-all ${exportTimeRange === range.id
                             ? "bg-purple-600 text-white shadow-sm"
                             : "text-slate-600 hover:text-purple-700"
-                        }`}
+                          }`}
                       >
                         {range.label}
                       </button>
@@ -438,32 +500,40 @@ export default function AdminSettingsPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-sm">
-                    {filteredScanners.map((scanner) => {
-                      let scans = scanner.scanCount3m;
-                      if (exportTimeRange === "1m") scans = scanner.scanCount1m;
-                      if (exportTimeRange === "6m") scans = scanner.scanCount6m;
-                      if (exportTimeRange === "12m") scans = scanner.scanCount12m;
+                    {filteredScanners.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="py-12 text-center text-slate-400 font-medium">
+                          No scan records match your filter criteria.
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredScanners.map((scanner) => {
+                        let scans = scanner.scanCount3m;
+                        if (exportTimeRange === "1m") scans = scanner.scanCount1m;
+                        if (exportTimeRange === "6m") scans = scanner.scanCount6m;
+                        if (exportTimeRange === "12m") scans = scanner.scanCount12m;
 
-                      return (
-                        <tr key={scanner.id} className="hover:bg-purple-50/40 transition-colors">
-                          <td className="py-3.5 px-4 pl-6 font-semibold text-slate-900 flex items-center gap-2">
-                            <QrCode className="w-4 h-4 text-purple-600" />
-                            {scanner.name}
-                          </td>
-                          <td className="py-3.5 px-4 text-slate-700">{scanner.userName}</td>
-                          <td className="py-3.5 px-4">
-                            <span className="inline-flex items-center gap-1 text-xs bg-slate-100 px-2 py-0.5 rounded-md text-slate-700 font-medium">
-                              <Folder className="w-3 h-3 text-slate-400" />
-                              {scanner.folderName}
-                            </span>
-                          </td>
-                          <td className="py-3.5 px-4 font-bold text-purple-800">
-                            {scans.toLocaleString()}
-                          </td>
-                          <td className="py-3.5 px-4 text-xs text-slate-500 pr-6">{scanner.createdAt}</td>
-                        </tr>
-                      );
-                    })}
+                        return (
+                          <tr key={scanner.id} className="hover:bg-purple-50/40 transition-colors">
+                            <td className="py-3.5 px-4 pl-6 font-semibold text-slate-900 flex items-center gap-2">
+                              <QrCode className="w-4 h-4 text-purple-600" />
+                              {scanner.name}
+                            </td>
+                            <td className="py-3.5 px-4 text-slate-700">{scanner.userName}</td>
+                            <td className="py-3.5 px-4">
+                              <span className="inline-flex items-center gap-1 text-xs bg-slate-100 px-2 py-0.5 rounded-md text-slate-700 font-medium">
+                                <Folder className="w-3 h-3 text-slate-400" />
+                                {scanner.folderName}
+                              </span>
+                            </td>
+                            <td className="py-3.5 px-4 font-bold text-purple-800">
+                              {scans.toLocaleString()}
+                            </td>
+                            <td className="py-3.5 px-4 text-xs text-slate-500 pr-6">{scanner.createdAt}</td>
+                          </tr>
+                        );
+                      })
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -501,56 +571,63 @@ export default function AdminSettingsPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 text-sm">
-                    {users.map((user) => (
-                      <tr key={user.id} className="hover:bg-purple-50/40 transition-colors">
-                        <td className="py-4 px-4 pl-6">
-                          <div className="font-semibold text-slate-900">{user.name}</div>
-                          <div className="text-xs text-slate-500">{user.email}</div>
-                        </td>
+                    {users
+                      .filter((u) => u.name.toLowerCase().includes(userSearch.toLowerCase()) || u.email.toLowerCase().includes(userSearch.toLowerCase()))
+                      .map((user) => (
+                        <tr key={user.id} className="hover:bg-purple-50/40 transition-colors">
+                          <td className="py-4 px-4 pl-6">
+                            <div className="font-semibold text-slate-900">{user.name}</div>
+                            <div className="text-xs text-slate-500">{user.email}</div>
+                          </td>
 
-                        <td className="py-4 px-4">
-                          <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-900">
-                            {user.role}
-                          </span>
-                        </td>
+                          <td className="py-4 px-4">
+                            <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-900">
+                              {user.role}
+                            </span>
+                          </td>
 
-                        <td className="py-4 px-4 font-medium text-slate-800">{user.planName}</td>
+                          <td className="py-4 px-4 font-medium text-slate-800">{user.planName}</td>
 
-                        <td className="py-4 px-4">
-                          <span
-                            className={`inline-flex items-center text-[11px] font-bold px-2.5 py-0.5 rounded-full ${
-                              user.status === "ACTIVE"
-                                ? "bg-emerald-100 text-emerald-800"
-                                : "bg-rose-100 text-rose-800"
-                            }`}
-                          >
-                            {user.status}
-                          </span>
-                        </td>
+                          <td className="py-4 px-4">
+                            <span
+                              className={`inline-flex items-center text-[11px] font-bold px-2.5 py-0.5 rounded-full ${user.status === "ACTIVE"
+                                  ? "bg-emerald-100 text-emerald-800"
+                                  : "bg-rose-100 text-rose-800"
+                                }`}
+                            >
+                              {user.status}
+                            </span>
+                          </td>
 
-                        <td className="py-4 px-4 text-right pr-6 space-x-2">
-                          <button
-                            onClick={() => setSelectedUserForPassword(user)}
-                            className="px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 font-semibold text-xs rounded-lg border border-purple-200 transition-all inline-flex items-center gap-1"
-                          >
-                            <KeyRound className="w-3.5 h-3.5" />
-                            Reset Password
-                          </button>
+                          <td className="py-4 px-4 text-right pr-6 space-x-2">
+                            <button
+                              onClick={() => setSelectedUserForPassword(user)}
+                              className="px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 font-semibold text-xs rounded-lg border border-purple-200 transition-all inline-flex items-center gap-1"
+                            >
+                              <KeyRound className="w-3.5 h-3.5" />
+                              Reset Password
+                            </button>
 
-                          <button
-                            onClick={() => handleToggleUserStatus(user.id)}
-                            className={`px-3 py-1.5 font-semibold text-xs rounded-lg transition-all inline-flex items-center gap-1 ${
-                              user.status === "ACTIVE"
-                                ? "bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200"
-                                : "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200"
-                            }`}
-                          >
-                            {user.status === "ACTIVE" ? <UserX className="w-3.5 h-3.5" /> : <UserCheck className="w-3.5 h-3.5" />}
-                            {user.status === "ACTIVE" ? "Deactivate" : "Activate"}
-                          </button>
+                            <button
+                              onClick={() => handleToggleUserStatus(user.id)}
+                              className={`px-3 py-1.5 font-semibold text-xs rounded-lg transition-all inline-flex items-center gap-1 ${user.status === "ACTIVE"
+                                  ? "bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200"
+                                  : "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200"
+                                }`}
+                            >
+                              {user.status === "ACTIVE" ? <UserX className="w-3.5 h-3.5" /> : <UserCheck className="w-3.5 h-3.5" />}
+                              {user.status === "ACTIVE" ? "Deactivate" : "Activate"}
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    {users.length === 0 && (
+                      <tr>
+                        <td colSpan={5} className="py-12 text-center text-slate-400 font-medium">
+                          No user accounts found.
                         </td>
                       </tr>
-                    ))}
+                    )}
                   </tbody>
                 </table>
               </div>
@@ -569,19 +646,25 @@ export default function AdminSettingsPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {notifications.map((item) => (
-                <div key={item.id} className="bg-white p-5 rounded-2xl border border-purple-100 shadow-sm space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="bg-amber-100 text-amber-900 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold flex items-center gap-1">
-                      <CreditCard className="w-3 h-3" /> Expiry Warning
-                    </span>
-                  </div>
-                  <div className="font-bold text-slate-900 text-sm">{item.userName}</div>
-                  <p className="text-xs text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100 font-medium">
-                    {item.message}
-                  </p>
+              {notifications.length === 0 ? (
+                <div className="col-span-full p-8 text-center text-slate-500 bg-white rounded-2xl border border-slate-200 border-dashed">
+                  No active expiration or limit alerts right now.
                 </div>
-              ))}
+              ) : (
+                notifications.map((item) => (
+                  <div key={item.id} className="bg-white p-5 rounded-2xl border border-purple-100 shadow-sm space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="bg-amber-100 text-amber-900 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold flex items-center gap-1">
+                        <CreditCard className="w-3 h-3" /> Expiry Warning
+                      </span>
+                    </div>
+                    <div className="font-bold text-slate-900 text-sm">{item.userName}</div>
+                    <p className="text-xs text-slate-700 bg-slate-50 p-3 rounded-xl border border-slate-100 font-medium">
+                      {item.message}
+                    </p>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         )}
@@ -597,7 +680,7 @@ export default function AdminSettingsPage() {
             </div>
 
             {securityMessage && (
-              <div className="p-3.5 rounded-xl text-xs font-semibold bg-purple-50 text-purple-900 border border-purple-200">
+              <div className={`p-3.5 rounded-xl text-xs font-semibold border ${securityMessage.isError ? "bg-rose-50 text-rose-900 border-rose-200" : "bg-purple-50 text-purple-900 border-purple-200"}`}>
                 {securityMessage.text}
               </div>
             )}

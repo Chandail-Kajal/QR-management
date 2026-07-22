@@ -5,6 +5,8 @@ import { folderRouter } from "./folders/folder.route";
 import { publicRouter } from "./public/public.router";
 import { analyticsRouter } from "./analytics/analytics.routes";
 import { usersRouter } from "./users/users.route";
+import { billingRouter } from "./billing/billing.routes";
+import { settingsRouter } from "./settings/settings.routes";
 
 export const v1Router = Router();
 
@@ -14,3 +16,5 @@ v1Router.use("/qrs", qrRouter);
 v1Router.use("/folders", folderRouter);
 v1Router.use("/analytics", analyticsRouter);
 v1Router.use("/users", usersRouter);
+v1Router.use("/billing",billingRouter);
+v1Router.use("/settings",settingsRouter);

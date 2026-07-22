@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
+import { useQuery, UseQueryOptions } from "@tanstack/react-query";
 import {
   Search,
   Filter,
@@ -13,18 +14,27 @@ import {
   Users,
   CreditCard,
   DollarSign,
-  UserCheck,
-  UserX,
-  MoreVertical,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
+import { api } from "@/lib/api";
 
-// --- TYPES ---
-type Role = "ADMIN" | "USER";
-type PlanType = "Free Trial" | "Monthly Pro" | "3-Month Pro" | "Yearly Enterprise";
-type Status = "ACTIVE" | "EXPIRING_SOON" | "EXPIRED";
-type DurationUnit = "auto" | "days" | "months" | "years";
+// ==========================================
+// --- TYPES & INTERFACES ---
+// ==========================================
+export type Role = "ADMIN" | "USER";
+export type PlanType = "Free Trial" | "Monthly Pro" | "3-Month Pro" | "Yearly Enterprise";
+export type Status = "ACTIVE" | "EXPIRING_SOON" | "EXPIRED";
+export type DurationUnit = "auto" | "days" | "months" | "years";
 
-interface UserBillingData {
+export interface QrBreakdown {
+  url: number;
+  vcard: number;
+  social: number;
+  file: number;
+}
+
+export interface UserBillingData {
   id: number;
   name: string;
   email: string;
@@ -36,131 +46,56 @@ interface UserBillingData {
   totalScans: number;
   firstQrDate: string; // ISO String
   monthlyRevenue: number;
-  qrBreakdown: {
-    url: number;
-    vcard: number;
-    social: number;
-    file: number;
+  qrBreakdown: QrBreakdown;
+}
+
+export interface BillingApiResponse {
+  users: UserBillingData[];
+  meta?: {
+    totalRecords: number;
+    page?: number;
+    limit?: number;
   };
 }
 
-// --- MOCK DATA ---
-const INITIAL_USERS: UserBillingData[] = [
-  {
-    id: 1,
-    name: "Alex Morgan",
-    email: "alex.morgan@techcorp.io",
-    role: "USER",
-    plan: "Yearly Enterprise",
-    status: "ACTIVE",
-    totalQRs: 142,
-    maxQRs: 500,
-    totalScans: 28400,
-    firstQrDate: "2024-03-15T08:30:00Z",
-    monthlyRevenue: 199,
-    qrBreakdown: { url: 80, vcard: 30, social: 20, file: 12 },
-  },
-  {
-    id: 2,
-    name: "Devon Chen",
-    email: "devon@designstudio.co",
-    role: "USER",
-    plan: "Monthly Pro",
-    status: "ACTIVE",
-    totalQRs: 28,
-    maxQRs: 50,
-    totalScans: 4120,
-    firstQrDate: "2025-08-10T11:15:00Z",
-    monthlyRevenue: 29,
-    qrBreakdown: { url: 15, vcard: 8, social: 3, file: 2 },
-  },
-  {
-    id: 3,
-    name: "Sarah Jenkins",
-    email: "sarah.j@growthlabs.com",
-    role: "ADMIN",
-    plan: "3-Month Pro",
-    status: "EXPIRING_SOON",
-    totalQRs: 45,
-    maxQRs: 50,
-    totalScans: 8900,
-    firstQrDate: "2025-11-01T14:20:00Z",
-    monthlyRevenue: 79,
-    qrBreakdown: { url: 20, vcard: 15, social: 5, file: 5 },
-  },
-  {
-    id: 4,
-    name: "Marcus Vance",
-    email: "m.vance@retailhub.net",
-    role: "USER",
-    plan: "Free Trial",
-    status: "ACTIVE",
-    totalQRs: 3,
-    maxQRs: 5,
-    totalScans: 140,
-    firstQrDate: "2026-06-20T09:00:00Z",
-    monthlyRevenue: 0,
-    qrBreakdown: { url: 2, vcard: 1, social: 0, file: 0 },
-  },
-  {
-    id: 5,
-    name: "Elena Rostova",
-    email: "elena@globalevents.org",
-    role: "USER",
-    plan: "Yearly Enterprise",
-    status: "ACTIVE",
-    totalQRs: 210,
-    maxQRs: 1000,
-    totalScans: 64200,
-    firstQrDate: "2023-11-12T16:45:00Z",
-    monthlyRevenue: 299,
-    qrBreakdown: { url: 110, vcard: 50, social: 30, file: 20 },
-  },
-  {
-    id: 6,
-    name: "Liam O'Connor",
-    email: "liam@bistro99.ie",
-    role: "USER",
-    plan: "Monthly Pro",
-    status: "EXPIRED",
-    totalQRs: 18,
-    maxQRs: 50,
-    totalScans: 1850,
-    firstQrDate: "2025-01-05T10:00:00Z",
-    monthlyRevenue: 0,
-    qrBreakdown: { url: 10, vcard: 4, social: 2, file: 2 },
-  },
-  {
-    id: 7,
-    name: "Priya Sharma",
-    email: "priya@fittech.app",
-    role: "USER",
-    plan: "3-Month Pro",
-    status: "ACTIVE",
-    totalQRs: 32,
-    maxQRs: 50,
-    totalScans: 5600,
-    firstQrDate: "2025-09-18T13:10:00Z",
-    monthlyRevenue: 79,
-    qrBreakdown: { url: 18, vcard: 8, social: 4, file: 2 },
-  },
-  {
-    id: 8,
-    name: "James Wilson",
-    email: "j.wilson@consulting.com",
-    role: "USER",
-    plan: "Free Trial",
-    status: "EXPIRED",
-    totalQRs: 5,
-    maxQRs: 5,
-    totalScans: 890,
-    firstQrDate: "2026-01-10T08:00:00Z",
-    monthlyRevenue: 0,
-    qrBreakdown: { url: 3, vcard: 1, social: 1, file: 0 },
-  },
-];
+// ==========================================
+// --- REACT QUERY HOOK & FETCHER ---
+// ==========================================
+const fetchBillingData = async (): Promise<UserBillingData[]> => {
+  const res = await api.get("/billing")
+  const data: BillingApiResponse | UserBillingData[] = res.data
+  return Array.isArray(data) ? data : data.users;
+  // return res.data
+  // const response = await fetch("/api/v1/billing", {
+  //   method: "GET",
+  //   headers: {
+  //     "Content-Type": "application/json",
+  //   },
+  // });
 
+  // if (!response.ok) {
+  //   throw new Error(`Failed to fetch billing data (${response.status}: ${response.statusText})`);
+  // }
+
+
+  // Handles both wrapped response { users: [...] } and flat array [...]
+};
+
+export function useUserBillingData(
+  options?: Omit<UseQueryOptions<UserBillingData[], Error>, "queryKey" | "queryFn">
+) {
+  return useQuery<UserBillingData[], Error>({
+    queryKey: ["admin", "billing-data"],
+    queryFn: fetchBillingData,
+    staleTime: 1000 * 60 * 5, // Data remains fresh for 5 minutes
+    refetchOnWindowFocus: false,
+    ...options,
+  });
+}
+
+// ==========================================
 // --- HELPER DURATION CALCULATOR ---
+// ==========================================
 function calculateDuration(
   startDateStr: string,
   unit: DurationUnit,
@@ -196,8 +131,13 @@ function calculateDuration(
   }
 }
 
+// ==========================================
+// --- MAIN COMPONENT ---
+// ==========================================
 export default function AdminBillingPage() {
-  const [users] = useState<UserBillingData[]>(INITIAL_USERS);
+  // Fetch dynamic data from /api/v1/billing using React Query
+  const { data: users = [], isLoading, isError, error, refetch } = useUserBillingData();
+
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPlan, setSelectedPlan] = useState<string>("ALL");
   const [durationUnit, setDurationUnit] = useState<DurationUnit>("auto");
@@ -252,10 +192,45 @@ export default function AdminBillingPage() {
     setExpandedUserId(expandedUserId === id ? null : id);
   };
 
+  // --- RENDER LOADING STATE ---
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <div className="flex flex-col items-center gap-3 bg-white p-8 rounded-2xl shadow-sm border border-slate-200">
+          <Loader2 className="w-8 h-8 text-purple-600 animate-spin" />
+          <p className="text-sm font-medium text-slate-600">Fetching billing analytics...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // --- RENDER ERROR STATE ---
+  if (isError) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <div className="flex flex-col items-center gap-4 bg-white p-8 rounded-2xl shadow-sm border border-rose-100 max-w-md text-center">
+          <div className="p-3 bg-rose-100 text-rose-600 rounded-full">
+            <AlertCircle className="w-6 h-6" />
+          </div>
+          <div>
+            <h3 className="font-bold text-slate-900">Failed to load data</h3>
+            <p className="text-xs text-slate-500 mt-1">{error?.message || "An unexpected error occurred."}</p>
+          </div>
+          <button
+            onClick={() => refetch()}
+            className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium text-xs rounded-xl shadow-sm transition-all"
+          >
+            Retry Fetching
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 p-4 md:p-8 text-slate-800 font-sans">
       <div className="max-w-7xl mx-auto space-y-6">
-        
+
         {/* HEADER SECTION */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-purple-800 via-purple-700 to-purple-600 p-6 rounded-2xl text-white shadow-xl shadow-purple-900/10">
           <div>
@@ -322,7 +297,7 @@ export default function AdminBillingPage() {
         {/* CONTROLS & FILTERS */}
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-4">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            
+
             {/* Search Bar */}
             <div className="relative flex-1 min-w-[260px]">
               <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -359,11 +334,10 @@ export default function AdminBillingPage() {
                   <button
                     key={unit}
                     onClick={() => setDurationUnit(unit)}
-                    className={`px-3 py-1 rounded-lg capitalize transition-all ${
-                      durationUnit === unit
+                    className={`px-3 py-1 rounded-lg capitalize transition-all ${durationUnit === unit
                         ? "bg-purple-600 text-white shadow-sm"
                         : "hover:text-purple-700"
-                    }`}
+                      }`}
                   >
                     {unit}
                   </button>
@@ -431,9 +405,8 @@ export default function AdminBillingPage() {
                       <React.Fragment key={user.id}>
                         <tr
                           onClick={() => toggleExpand(user.id)}
-                          className={`hover:bg-purple-50/50 transition-colors cursor-pointer ${
-                            isExpanded ? "bg-purple-50/80" : ""
-                          }`}
+                          className={`hover:bg-purple-50/50 transition-colors cursor-pointer ${isExpanded ? "bg-purple-50/80" : ""
+                            }`}
                         >
                           {/* User Info */}
                           <td className="py-4 px-4 pl-6">
@@ -460,13 +433,12 @@ export default function AdminBillingPage() {
                             <div>
                               <div className="font-medium text-slate-800">{user.plan}</div>
                               <span
-                                className={`inline-flex items-center text-[11px] font-semibold px-2 py-0.5 rounded-full mt-0.5 ${
-                                  user.status === "ACTIVE"
+                                className={`inline-flex items-center text-[11px] font-semibold px-2 py-0.5 rounded-full mt-0.5 ${user.status === "ACTIVE"
                                     ? "bg-emerald-100 text-emerald-800"
                                     : user.status === "EXPIRING_SOON"
-                                    ? "bg-amber-100 text-amber-800"
-                                    : "bg-rose-100 text-rose-800"
-                                }`}
+                                      ? "bg-amber-100 text-amber-800"
+                                      : "bg-rose-100 text-rose-800"
+                                  }`}
                               >
                                 {user.status.replace("_", " ")}
                               </span>
@@ -481,9 +453,8 @@ export default function AdminBillingPage() {
                               </div>
                               <div className="w-24 bg-slate-200 h-1.5 rounded-full mt-1.5 overflow-hidden">
                                 <div
-                                  className={`h-full rounded-full ${
-                                    usagePercent > 85 ? "bg-amber-500" : "bg-purple-600"
-                                  }`}
+                                  className={`h-full rounded-full ${usagePercent > 85 ? "bg-amber-500" : "bg-purple-600"
+                                    }`}
                                   style={{ width: `${usagePercent}%` }}
                                 />
                               </div>
@@ -545,19 +516,19 @@ export default function AdminBillingPage() {
                                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
                                   <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
                                     <span className="text-slate-400 font-medium">URL QRs</span>
-                                    <p className="text-lg font-bold text-slate-800 mt-0.5">{user.qrBreakdown.url}</p>
+                                    <p className="text-lg font-bold text-slate-800 mt-0.5">{user.qrBreakdown?.url ?? 0}</p>
                                   </div>
                                   <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
                                     <span className="text-slate-400 font-medium">vCard QRs</span>
-                                    <p className="text-lg font-bold text-slate-800 mt-0.5">{user.qrBreakdown.vcard}</p>
+                                    <p className="text-lg font-bold text-slate-800 mt-0.5">{user.qrBreakdown?.vcard ?? 0}</p>
                                   </div>
                                   <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
                                     <span className="text-slate-400 font-medium">Social QRs</span>
-                                    <p className="text-lg font-bold text-slate-800 mt-0.5">{user.qrBreakdown.social}</p>
+                                    <p className="text-lg font-bold text-slate-800 mt-0.5">{user.qrBreakdown?.social ?? 0}</p>
                                   </div>
                                   <div className="bg-slate-50 p-3 rounded-lg border border-slate-100">
                                     <span className="text-slate-400 font-medium">File Upload QRs</span>
-                                    <p className="text-lg font-bold text-slate-800 mt-0.5">{user.qrBreakdown.file}</p>
+                                    <p className="text-lg font-bold text-slate-800 mt-0.5">{user.qrBreakdown?.file ?? 0}</p>
                                   </div>
                                 </div>
                               </div>

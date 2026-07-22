@@ -60,13 +60,6 @@ export const navigations: NavItem[] = [
     href: "/admin/settings",
     icon: Settings,
     access: [Role.ADMIN],
-    children: [
-      {
-        id: "subscription-plans",
-        label: "Subscription Plans",
-        access: [Role.ADMIN],
-        href: "/admin/subscription-plan",
-      },
-    ],
+
   },
 ];
