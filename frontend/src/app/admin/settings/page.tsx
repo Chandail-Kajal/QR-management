@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react-hooks/set-state-in-effect */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
@@ -291,7 +292,7 @@ export default function AdminSettingsPage() {
       <div className="max-w-7xl mx-auto space-y-6">
 
         {/* HEADER SECTION */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-purple-800 via-purple-700 to-purple-600 p-6 rounded-2xl text-white shadow-xl shadow-purple-900/10">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-linear-to-r from-purple-800 via-purple-700 to-purple-600 p-6 rounded-2xl text-white shadow-xl shadow-purple-900/10">
           <div>
             <span className="text-purple-200 text-xs font-semibold uppercase tracking-wider bg-purple-900/50 px-2.5 py-1 rounded-full border border-purple-400/30">
               Admin Control Center
@@ -395,7 +396,7 @@ export default function AdminSettingsPage() {
 
                 {/* Duration Window Selector */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1.5 flex items-center gap-1.5">
+                  <label className="block text-xs font-bold text-slate-700 mb-1.5  items-center gap-1.5">
                     <Calendar className="w-3.5 h-3.5 text-purple-600" />
                     Time Window Duration
                   </label>

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   CreditCard,
   Folder,
@@ -63,12 +64,5 @@ export const navigations: NavItem[] = [
     access: [Role.ADMIN],
 
   },
-  {
-    id: "assign qr",
-    label: "Assign Qr",
-    href: "/admin/assign-qr",
-    icon: BadgePlus,
-    access: [Role.ADMIN],
-
-  },
+  
 ];
