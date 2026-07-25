@@ -12,6 +12,7 @@ export type TFolderDTO = {
 
 export type TCreateFolderDTO = {
   name: string;
+  userId?: string;
 };
 
-export type TUpdateFolderDTO = TCreateFolderDTO
+export type TUpdateFolderDTO = TCreateFolderDTO;

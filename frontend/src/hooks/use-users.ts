@@ -1,66 +1,71 @@
-import { getUsers, createUser, updateUser, deleteUser } from "@/services/user.service";
+import {
+  getUsers,
+  createUser,
+  updateUser,
+  deleteUser,
+  getUserById,
+} from "@/services/user.service";
 import { TUpdateUserDTO } from "@/types/user";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 
 export const useUsers = (params: {
-    page: number;
-    limit: number;
-    search?: string;
-    status?: string;
+  page: number;
+  limit: number;
+  search?: string;
+  status?: string;
 }) =>
-    useQuery({
-        queryKey: ["users", params],
-        queryFn: () => getUsers(params),
-    });
+  useQuery({
+    queryKey: ["users", params],
+    queryFn: () => getUsers(params),
+  });
 
 export const useCreateUser = () => {
-    const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
-    return useMutation({
-        mutationFn: createUser,
-        onSuccess: () => {
-            queryClient.invalidateQueries({
-                queryKey: ["users"],
-            });
-        },
-    });
+  return useMutation({
+    mutationFn: createUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["users"],
+      });
+    },
+  });
 };
 
 export const useUpdateUser = () => {
-    const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
-    return useMutation({
-        mutationFn: ({
-            id,
-            data,
-        }: {
-            id: number;
-            data: TUpdateUserDTO;
-        }) => updateUser(id, data),
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: TUpdateUserDTO }) =>
+      updateUser(id, data),
 
-        onSuccess: () => {
-            queryClient.invalidateQueries({
-                queryKey: ["users"],
-            });
-        },
-    });
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["users"],
+      });
+    },
+  });
 };
 
 export const useDeleteUser = () => {
-    const queryClient = useQueryClient();
+  const queryClient = useQueryClient();
 
-    return useMutation({
-        mutationFn: ({
-            id,
-        }: {
-            id: number;
-            data: TUpdateUserDTO;
-        }) => deleteUser(id),
+  return useMutation({
+    mutationFn: ({ id }: { id: number; data: TUpdateUserDTO }) =>
+      deleteUser(id),
 
-        onSuccess: () => {
-            queryClient.invalidateQueries({
-                queryKey: ["users"],
-            });
-        },
-    });
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["users"],
+      });
+    },
+  });
+};
+
+export const useUserById = (userId?: string, enabled = false) => {
+  return useQuery({
+    queryKey: ["user-by-id", userId],
+    queryFn: () => getUserById(userId),
+    enabled,
+  });
 };

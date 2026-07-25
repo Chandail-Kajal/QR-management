@@ -6,6 +6,7 @@ export const createQRSchema = z.object({
   type: z.nativeEnum(QRType),
   content: z.record(z.any(), z.any()),
   folderId: z.number().int().positive().optional(),
+  userId:z.coerce.number().optional(),
   scanLimit: z.number().int().positive().nullable().optional(),
 });
 
@@ -15,6 +16,7 @@ export const listQRSchema = z.object({
   search: z.string().optional(),
   status: z.nativeEnum(QRStatus).optional(),
   type: z.nativeEnum(QRType).optional(),
+  userId: z.coerce.number().optional(),
 });
 
 export type CreateQRInput = z.infer<typeof createQRSchema>;

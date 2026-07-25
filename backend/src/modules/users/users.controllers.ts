@@ -111,3 +111,16 @@ export async function getUsers(query: ListUsersDTO) {
     },
   });
 }
+
+export async function getUserById(id: number) {
+  return await prisma.user.findFirst({
+    where: { id },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+}

@@ -35,8 +35,10 @@ qrRouter
     res.apiResponse(200, null, data.data, data.meta);
   })
   .post(async (req, res) => {
-    const qr = createQRSchema.parse(req.body);
-    const newQr = await createQR(qr, req.auth?.userId as number);
+      const { userId: uid, ...qr } = createQRSchema.parse(req.body);
+    const userId =
+      req.auth?.userRole === "ADMIN" ? uid : (req.auth?.userId as number);
+    const newQr = await createQR(qr, userId as number);
     res.apiResponse(201, "Qr create successfully", newQr);
   });
 
@@ -72,12 +74,12 @@ qrRouter.get(
   "/folders/:folderId",
   allowRoles("ADMIN", "USER"),
   async (req, res) => {
-    const userId =
-      req.auth?.userRole === "ADMIN"
-        ? undefined
-        : Number(req.auth?.userId as number);
     const query = listQRSchema.parse(req.query);
     const { folderId } = folderIdSchema.parse(req.params);
+    const userId =
+      req.auth?.userRole === "ADMIN"
+        ? query.userId
+        : Number(req.auth?.userId as number);
     const data = await listQRs({ ...query, userId }, folderId);
     res.apiResponse(200, null, data.data, data.meta);
   },

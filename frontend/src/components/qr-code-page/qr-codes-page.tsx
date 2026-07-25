@@ -17,12 +17,13 @@ import { SegmentedControl } from "@/components/segmented-control";
 import { getQRTypeIcon } from "@/lib/preview-type-icon";
 import { QrCode } from "lucide-react";
 import { Toolbar } from "@/components/toolbar";
-import { useUIStore } from "@/stores/ui.store";
+import { BreadcrumbItem, useUIStore } from "@/stores/ui.store";
 import { useRouter } from "next/navigation";
 import { getFolderByName } from "@/services/folder.service";
 import { Breadcrumbs } from "../bread-crumbs";
 import { useFolderOptions } from "@/hooks/use-folders";
 import { useAuthStore } from "@/stores/auth.store";
+import { useUserById } from "@/hooks/use-users";
 
 const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
   URL: { bg: "bg-primary/10", text: "text-primary" },
@@ -86,20 +87,27 @@ function getContentPreview(qr: TQRDTO) {
   }
 }
 
-export function QRsPage({ folderName }: { folderName?: string }) {
+export function QRsPage({
+  folderName,
+  userId,
+}: {
+  folderName?: string;
+  userId?: string;
+}) {
   const { setBreadcrumbs } = useUIStore();
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
   const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [type, setType] = useState<string | undefined>(undefined);
-  const [folderSearch, setFolderSearch] = useState<string>("")
-  const [debouncedFolderSearch] = useDebounce(folderSearch, 500)
+  const [folderSearch, setFolderSearch] = useState<string>("");
+  const [debouncedFolderSearch] = useDebounce(folderSearch, 500);
   const [debouncedSearch] = useDebounce(search, 500);
-  const { data: typeCountArray = [] } = useQrTypeCounts();
   const [editValues, setEditValues] = useState<TQRDTO | null>(null);
   const queryClient = useQueryClient();
-  const { user } = useAuthStore()
+  const { user } = useAuthStore();
+
+  const { data: userDetails } = useUserById(userId, !!userId);
 
   const router = useRouter();
 
@@ -113,7 +121,11 @@ export function QRsPage({ folderName }: { folderName?: string }) {
     enabled: !!folderName,
   });
 
-  const folderOptions = useFolderOptions(debouncedFolderSearch, !folderName)
+  const { data: typeCountArray = [] } = useQrTypeCounts({
+    folderId: folder?.id,
+    userId,
+  });
+  const folderOptions = useFolderOptions(debouncedFolderSearch, !folderName);
 
   const folderQRs = useFolderQRs(
     {
@@ -123,6 +135,7 @@ export function QRsPage({ folderName }: { folderName?: string }) {
     },
     {
       folderId: folder?.id as number,
+      userId,
     },
     !!folderName,
   );
@@ -140,26 +153,37 @@ export function QRsPage({ folderName }: { folderName?: string }) {
 
   useEffect(() => {
     const crumbs = [];
-    if (folderName) {
+    if (folderName && !userId) {
       crumbs.push({ label: "Folders", href: "/admin/folders" });
       crumbs.push({ label: decodeURI(folderName) as string, href: "" });
+    } else if (folderName && userId) {
+      crumbs.push({ label: "Users", href: "/admin/users" });
+      crumbs.push({
+        label: userDetails?.name,
+        href: `/admin/users/${userId}/folders`,
+      });
+      crumbs.push({
+        label: decodeURI(folderName),
+        href: `/admin/users/${userId}/folders/${folderName}`,
+      });
     } else {
       crumbs.push({ label: "All Qr Codes", href: "/admin/qr-codes" });
     }
 
-    setBreadcrumbs(crumbs);
-  }, [folderName, setBreadcrumbs]);
+    setBreadcrumbs(crumbs as BreadcrumbItem[]);
+  }, [setBreadcrumbs, folderName, userId, userDetails, folder]);
 
   const mutation = useMutation({
     mutationFn: async (formData: TCreateQRDTO) => {
       if (editValues) {
         await updateQr(editValues.id, {
           ...formData,
-
+          ...(userId && { userId, folderId: folder?.id }),
         });
       } else {
         await createQR({
           ...formData,
+          ...(userId && { userId, folderId: folder?.id }),
         });
       }
     },
@@ -376,20 +400,23 @@ export function QRsPage({ folderName }: { folderName?: string }) {
         }}
         showFolderOptions={!folderName && user?.role !== "ADMIN"}
         onFolderSearch={setFolderSearch}
-        folderOptions={folderOptions.data}
+        folderOptions={folderOptions.data as { label: string; value: number }[]}
         folderSearchQuery={folderSearch}
-        folderSearchLoading={folderOptions.isFetching}
+        folderSearchLoading={folderOptions.isLoading}
         mode={editValues ? "edit" : "create"}
         initialData={
           editValues
             ? {
-              folderId: folderName && user?.role !== "ADMIN" ? folder?.id as number : undefined,
-              name: editValues.name,
-              content: editValues.content,
-              status: editValues.status,
-              type: editValues.type,
-              scanLimit: editValues.scanCount || undefined,
-            }
+                folderId:
+                  folderName && user?.role !== "ADMIN"
+                    ? (folder?.id as number)
+                    : undefined,
+                name: editValues.name,
+                content: editValues.content,
+                status: editValues.status,
+                type: editValues.type,
+                scanLimit: editValues.scanCount || undefined,
+              }
             : undefined
         }
         onSubmit={mutation.mutate}

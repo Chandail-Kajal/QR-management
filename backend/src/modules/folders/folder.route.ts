@@ -30,7 +30,7 @@ folderRouter
   .get(async (req, res) => {
     const query = listFoldersSchema.parse(req.query);
     const userId =
-      req.auth?.userRole === "ADMIN" ? undefined : req.auth?.userId;
+      req.auth?.userRole === "ADMIN" ? query.userId : req.auth?.userId;
     const data = await listFolders(query, userId);
     res.apiResponse(201, null, data.data, { pagination: data.meta.pagination });
   })
@@ -45,11 +45,11 @@ folderRouter
 
 folderRouter.get("/options", allowRoles("ADMIN", "USER"), async (req, res) => {
   const { search } = folderOptionQuery.parse(req.query);
-  const userId = req.auth?.userRole === "ADMIN" ? undefined : req.auth?.userId as number
+  const userId =
+    req.auth?.userRole === "ADMIN" ? undefined : (req.auth?.userId as number);
   const options = await getFolderOptions(search, userId);
   res.apiResponse(200, null, options);
 });
-
 
 folderRouter
   .route("/:id")

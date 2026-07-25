@@ -8,6 +8,7 @@ interface Params {
   limit: number;
   search?: string;
   status?: string;
+  userId?: string;
 }
 
 export async function getFolders(params: Params) {
@@ -43,7 +44,10 @@ export async function getFolderByName({ name }: { name: string }) {
 }
 
 export async function createFolder(data: TCreateFolderDTO) {
-  const res = await api.post<IApiResponse<TFolderDTO>>("/folders", data);
+  const res = await api.post<IApiResponse<TFolderDTO>>("/folders", {
+    name: data.name,
+    ...(data.userId && { userId: data.userId }),
+  });
   return res.data.data;
 }
 
@@ -53,7 +57,10 @@ export async function updateFolder(
 ) {
   const res = await api.patch<IApiResponse<TUpdateFolderDTO>>(
     "/folders/" + id,
-    data,
+    {
+      name: data.name,
+      ...(data.userId && { userId: data.userId }),
+    },
   );
   return res.data.data;
 }
@@ -62,8 +69,10 @@ export async function deleteFolder(id: number | string) {
   await api.delete("/folders/" + id);
 }
 
-
 export async function getFolderOptions(search: string) {
-  const res = await api.get<IApiResponse<{ label: string, value: number }[]>>("/folders/options", { params: { search } })
-  return res.data.data
+  const res = await api.get<IApiResponse<{ label: string; value: number }[]>>(
+    "/folders/options",
+    { params: { search } },
+  );
+  return res.data.data;
 }

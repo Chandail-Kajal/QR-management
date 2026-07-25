@@ -62,7 +62,5 @@ export const navigations: NavItem[] = [
     href: "/admin/settings",
     icon: Settings,
     access: [Role.ADMIN],
-
   },
-  
 ];

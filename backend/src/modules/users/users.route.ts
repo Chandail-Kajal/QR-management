@@ -32,6 +32,11 @@ usersRouter
 usersRouter
   .route("/:id")
   .all(allowRoles("ADMIN"))
+  .get(async (req, res) => {
+    const { id } = userIdParamSchema.parse(req.params);
+    const user = await UserController.getUserById(id);
+    res.apiResponse(200, null, user);
+  })
   .patch(async (req, res) => {
     const { id } = userIdParamSchema.parse(req.params);
     const body = updateUserSchema.parse(req.body);

@@ -23,7 +23,7 @@ export async function getUsers(params: Params) {
   };
 }
 
-export async function getUserById(id: number | string) {
+export async function getUserById(id?: string) {
   const res = await api.get<IApiResponse<TUserDTO>>(`/users/${id}`);
   return res.data.data;
 }

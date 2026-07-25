@@ -33,11 +33,17 @@ export async function getQRDetails(qrId: string) {
   return res.data.data;
 }
 
-export async function getFolderQRs(params: Params, folderId: number | string) {
+export async function getFolderQRs(
+  params: Params,
+  meta: { folderId: number | string; userId?: string },
+) {
   const res = await api.get<IApiResponse<TQRDTO[], IApiMetaPagination>>(
-    `/qrs/folders/${folderId}`,
+    `/qrs/folders/${meta.folderId}`,
     {
-      params,
+      params: {
+        userId: meta.userId,
+        ...params,
+      },
     },
   );
   return {
@@ -46,11 +52,17 @@ export async function getFolderQRs(params: Params, folderId: number | string) {
   };
 }
 
-export async function getQrTypeCounts(folderId?: number | string) {
+export async function getQrTypeCounts(data: {
+  folderId?: number | string;
+  userId?: string;
+}) {
   const res = await api.get<IApiResponse<{ type: string; count: number }[]>>(
     `/qrs/type-counts`,
     {
-      params: { folderId },
+      params: {
+        ...(data.folderId && { folderId: data.folderId }),
+        ...(data.userId && { userId: data.userId }),
+      },
     },
   );
   const result = res.data.data || [];
@@ -70,5 +82,3 @@ export async function updateQr(id: number | string, data: TUpdateQRDTO) {
 export async function deleteQR(id: number | string) {
   await api.delete("/qrs/" + id);
 }
-
-

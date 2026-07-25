@@ -29,6 +29,7 @@ export function useFolderQRs(
   },
   meta: {
     folderId: number | string;
+    userId?: string;
   },
   enabled = true,
 ) {
@@ -40,6 +41,7 @@ export function useFolderQRs(
       params.status,
       meta.folderId,
       params.type,
+      meta.userId,
     ],
     queryFn: () =>
       getFolderQRs(
@@ -48,15 +50,21 @@ export function useFolderQRs(
           limit: params.limit ? params.limit : 10,
           type: params.type,
         },
-        meta.folderId,
+        {
+          userId: meta.userId,
+          folderId: meta.folderId,
+        },
       ),
     enabled,
   });
 }
 
-export function useQrTypeCounts(folderId?: string | number) {
+export function useQrTypeCounts(data: {
+  folderId?: string | number;
+  userId?: string;
+}) {
   return useQuery({
-    queryKey: ["qr-type-with-counts", folderId],
-    queryFn: () => getQrTypeCounts(folderId),
+    queryKey: ["qr-type-with-counts", data.folderId, data.userId],
+    queryFn: () => getQrTypeCounts(data),
   });
 }
