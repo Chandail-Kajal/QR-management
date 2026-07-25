@@ -43,6 +43,14 @@ folderRouter
     res.apiResponse(200, null, newFolder);
   });
 
+folderRouter.get("/options", allowRoles("ADMIN", "USER"), async (req, res) => {
+  const { search } = folderOptionQuery.parse(req.query);
+  const userId = req.auth?.userRole === "ADMIN" ? undefined : req.auth?.userId as number
+  const options = await getFolderOptions(search, userId);
+  res.apiResponse(200, null, options);
+});
+
+
 folderRouter
   .route("/:id")
   .all(allowRoles("ADMIN", "USER"))
@@ -65,12 +73,6 @@ folderRouter
     const folder = await deleteFolder(id, req.auth?.userId as number);
     res.apiResponse(200, null, folder);
   });
-
-folderRouter.get("/options", allowRoles("ADMIN", "USER"), async (req, res) => {
-  const { search } = folderOptionQuery.parse(req.query);
-  const options = await getFolderOptions(search);
-  res.apiResponse(200, null, options);
-});
 
 folderRouter.get(
   "/by-name/:name",

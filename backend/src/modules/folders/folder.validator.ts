@@ -13,7 +13,7 @@ export const updateFolderSchema = z.object({
 });
 
 export const folderOptionQuery = z.object({
-  search: z.string().trim().min(3),
+  search: z.string().trim(),
 });
 
 export const folderNameSchema = z.object({

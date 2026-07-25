@@ -61,3 +61,9 @@ export async function updateFolder(
 export async function deleteFolder(id: number | string) {
   await api.delete("/folders/" + id);
 }
+
+
+export async function getFolderOptions(search: string) {
+  const res = await api.get<IApiResponse<{ label: string, value: number }[]>>("/folders/options", { params: { search } })
+  return res.data.data
+}

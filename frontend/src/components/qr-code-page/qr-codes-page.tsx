@@ -21,6 +21,8 @@ import { useUIStore } from "@/stores/ui.store";
 import { useRouter } from "next/navigation";
 import { getFolderByName } from "@/services/folder.service";
 import { Breadcrumbs } from "../bread-crumbs";
+import { useFolderOptions } from "@/hooks/use-folders";
+import { useAuthStore } from "@/stores/auth.store";
 
 const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
   URL: { bg: "bg-primary/10", text: "text-primary" },
@@ -91,10 +93,13 @@ export function QRsPage({ folderName }: { folderName?: string }) {
   const [search, setSearch] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
   const [type, setType] = useState<string | undefined>(undefined);
+  const [folderSearch, setFolderSearch] = useState<string>("")
+  const [debouncedFolderSearch] = useDebounce(folderSearch, 500)
   const [debouncedSearch] = useDebounce(search, 500);
   const { data: typeCountArray = [] } = useQrTypeCounts();
   const [editValues, setEditValues] = useState<TQRDTO | null>(null);
   const queryClient = useQueryClient();
+  const { user } = useAuthStore()
 
   const router = useRouter();
 
@@ -107,6 +112,8 @@ export function QRsPage({ folderName }: { folderName?: string }) {
     queryFn: async () => getFolderByName({ name: folderName as string }),
     enabled: !!folderName,
   });
+
+  const folderOptions = useFolderOptions(debouncedFolderSearch, !folderName)
 
   const folderQRs = useFolderQRs(
     {
@@ -148,12 +155,11 @@ export function QRsPage({ folderName }: { folderName?: string }) {
       if (editValues) {
         await updateQr(editValues.id, {
           ...formData,
-          ...(folderName && { folderId: folder?.id as number }),
+
         });
       } else {
         await createQR({
           ...formData,
-          ...(folderName && { folderId: folder?.id as number }),
         });
       }
     },
@@ -368,16 +374,22 @@ export function QRsPage({ folderName }: { folderName?: string }) {
             setEditValues(null);
           }
         }}
+        showFolderOptions={!folderName && user?.role !== "ADMIN"}
+        onFolderSearch={setFolderSearch}
+        folderOptions={folderOptions.data}
+        folderSearchQuery={folderSearch}
+        folderSearchLoading={folderOptions.isFetching}
         mode={editValues ? "edit" : "create"}
         initialData={
           editValues
             ? {
-                name: editValues.name,
-                content: editValues.content,
-                status: editValues.status,
-                type: editValues.type,
-                scanLimit: editValues.scanCount || undefined,
-              }
+              folderId: folderName && user?.role !== "ADMIN" ? folder?.id as number : undefined,
+              name: editValues.name,
+              content: editValues.content,
+              status: editValues.status,
+              type: editValues.type,
+              scanLimit: editValues.scanCount || undefined,
+            }
             : undefined
         }
         onSubmit={mutation.mutate}

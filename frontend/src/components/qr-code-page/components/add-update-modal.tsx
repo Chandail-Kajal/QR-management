@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useEffect, useState } from "react";
@@ -50,6 +51,11 @@ interface QRDialogProps {
   initialData?: TCreateQRDTO | null;
   loading?: boolean;
   onSubmit: (values: TCreateQRDTO) => Promise<void> | void;
+  folderOptions: { label: string, value: number }[]
+  onFolderSearch: (search: string) => void
+  showFolderOptions: boolean
+  folderSearchQuery: string
+  folderSearchLogin: boolean
 }
 
 // Full premium configurations mapping visual aesthetics
@@ -71,6 +77,11 @@ export function QrModalForm({
   initialData,
   loading = false,
   onSubmit,
+  onFolderSearch,
+  folderOptions,
+  showFolderOptions,
+  folderSearchQuery,
+  folderSearchLogin
 }: QRDialogProps) {
   const [step, setStep] = useState<number>(0);
 
@@ -196,24 +207,36 @@ export function QrModalForm({
                 </div>
               </div>
 
-              <div className="pt-2 border-t border-gray-100">
-                <h4 className="text-2xs font-bold tracking-wider text-gray-400 uppercase mb-3">Assign Workspace Folder</h4>
+              {showFolderOptions && < div className="pt-2 border-t border-gray-100">
+                <h4 className="text-2xs font-bold tracking-wider text-gray-400 uppercase mb-3">Search Folder
+                  <Input
+                    placeholder="Search folder minimum 3 characters..."
+                    className="h-10 border-gray-200 rounded-lg focus-visible:ring-indigo-500 focus-visible:border-indigo-500"
+                    value={folderSearchQuery}
+                    onChange={(e) => {
+                      onFolderSearch(e.target.value)
+                    }}
+                  />
+                </h4>
                 <div className="flex flex-wrap gap-2">
-                  {["Demo", "Business", "Social Media", "Marketing Asset"].map((folder) => (
-                    <button
-                      key={folder}
-                      type="button"
-                      onClick={() => setSelectedFolder(folder)}
-                      className={`text-xs px-3 py-1.5 rounded-full border transition-all duration-150 flex items-center gap-1.5 ${selectedFolder === folder
-                        ? "bg-linear-to-r from-indigo-600 to-indigo-500 text-white border-transparent shadow-sm shadow-indigo-600/20"
-                        : "bg-white border-gray-200 text-gray-600 hover:border-indigo-400 hover:text-indigo-600"
-                        }`}
-                    >
-                      <span><Folder /></span> {folder}
-                    </button>
-                  ))}
+                  {folderSearchLogin && <div>Loading...</div>}
+                  {!folderOptions?.length && !folderSearchLogin ?
+                    <div className="border border-border rounded-md p-2 w-full">No folders present</div>
+                    : folderOptions?.map((folder) => (
+                      <button
+                        key={folder.value}
+                        type="button"
+                        onClick={() => setSelectedFolder(String(folder.value))}
+                        className={`text-xs px-3 py-1.5 rounded-full border transition-all duration-150 flex items-center gap-1.5 ${selectedFolder === String(folder.value)
+                          ? "bg-linear-to-r from-indigo-600 to-indigo-500 text-white border-transparent shadow-sm shadow-indigo-600/20"
+                          : "bg-white border-gray-200 text-gray-600 hover:border-indigo-400 hover:text-indigo-600"
+                          }`}
+                      >
+                        <span><Folder /></span> {folder.label}
+                      </button>
+                    ))}
                 </div>
-              </div>
+              </div>}
             </div>
           )}
 
@@ -515,6 +538,6 @@ export function QrModalForm({
         </form>
 
       </DialogContent>
-    </Dialog>
+    </Dialog >
   );
 }

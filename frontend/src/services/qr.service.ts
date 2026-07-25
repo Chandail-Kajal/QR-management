@@ -70,3 +70,5 @@ export async function updateQr(id: number | string, data: TUpdateQRDTO) {
 export async function deleteQR(id: number | string) {
   await api.delete("/qrs/" + id);
 }
+
+

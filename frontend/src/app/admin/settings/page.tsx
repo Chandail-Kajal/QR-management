@@ -252,7 +252,6 @@ export default function AdminSettingsPage() {
     setNewUserPassword("");
   };
 
-  // --- RENDER LOADING STATE ---
   if (isLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
@@ -264,7 +263,6 @@ export default function AdminSettingsPage() {
     );
   }
 
-  // --- RENDER ERROR STATE ---
   if (isError) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
@@ -291,7 +289,6 @@ export default function AdminSettingsPage() {
     <div className="min-h-screen bg-slate-50 p-4 md:p-8 text-slate-800 font-sans">
       <div className="max-w-7xl mx-auto space-y-6">
 
-        {/* HEADER SECTION */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-linear-to-r from-purple-800 via-purple-700 to-purple-600 p-6 rounded-2xl text-white shadow-xl shadow-purple-900/10">
           <div>
             <span className="text-purple-200 text-xs font-semibold uppercase tracking-wider bg-purple-900/50 px-2.5 py-1 rounded-full border border-purple-400/30">
@@ -311,7 +308,6 @@ export default function AdminSettingsPage() {
           </div>
         </div>
 
-        {/* FEEDBACK TOAST */}
         {userActionMessage && (
           <div className="p-4 bg-purple-100 border border-purple-200 text-purple-900 text-sm rounded-xl flex items-center justify-between">
             <div className="flex items-center gap-2 font-medium">

@@ -19,18 +19,21 @@ export async function createFolder(
   return folder;
 }
 
-export async function getFolderOptions(search: string) {
+export async function getFolderOptions(search: string, userId?: number) {
   const folders = await prisma.folder.findMany({
     where: {
-      name: {
-        contains: search as string,
-      },
+      ...(search && {
+        name: {
+          contains: search as string,
+        }
+      }),
+      ...(userId && { userId })
     },
     select: {
       name: true,
       id: true,
     },
-    take: 10,
+    take: 5,
   });
   return folders.map((f) => ({ label: f.name, value: f.id }));
 }

@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { getFolders } from "@/services/folder.service";
+import { getFolderOptions, getFolders } from "@/services/folder.service";
 
 export function useFolders(page: number, search: string) {
   return useQuery({
@@ -11,4 +11,13 @@ export function useFolders(page: number, search: string) {
         search,
       }),
   });
+}
+
+
+export function useFolderOptions(search: string, enabled = true) {
+  return useQuery({
+    queryKey: ['qr-folder-options', search],
+    queryFn: () => getFolderOptions(search) as Promise<{ label: string, value: number }[]>,
+    enabled
+  })
 }
