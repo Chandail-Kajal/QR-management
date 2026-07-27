@@ -20,6 +20,13 @@ export const listUsersSchema = z.object({
 export const userIdParamSchema = z.object({
   id: z.coerce.number().int().positive(),
 });
+
+export const passwordResetSchema=z.object({
+password:z.string().min(8,"password should be at least 8 characters").max(50),
+})
+
+
+export type PasswordResetDTO=z.infer<typeof passwordResetSchema>;
 export type CreateUserDTO = z.infer<typeof createUserSchema>;
 export type UpdateUserDTO = z.infer<typeof updateUserSchema>;
 export type ListUsersDTO = z.infer<typeof listUsersSchema>;

@@ -2,6 +2,7 @@ import bcrypt from "bcrypt";
 import { prisma } from "@/config/prisma";
 import { CreateUserDTO, UpdateUserDTO, ListUsersDTO } from "./user.validations";
 import { paginate } from "@/shared/utils/Paginate";
+import { ApiError } from "@/shared/utils";
 
 const SALT_ROUNDS = 10;
 
@@ -123,4 +124,29 @@ export async function getUserById(id: number) {
       updatedAt: true,
     },
   });
+}
+
+export async function resetPassword(userId:number,password:string){
+
+  const existing = await prisma.user.findUnique({
+    where: {
+      id:userId,
+
+    },
+  });
+
+  if (!existing) {
+    throw new ApiError(400,"User not exist");
+  }
+
+  const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+  const updatedUser =await prisma.user.update({
+    where:{
+      id:userId,
+    },
+    data:{password:hashedPassword}
+
+  });
+
+  return updatedUser;
 }

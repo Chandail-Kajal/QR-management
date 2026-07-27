@@ -34,10 +34,14 @@ export async function createUser(data: TCreateUserDTO) {
 }
 
 export async function updateUser(id: number | string, data: TUpdateUserDTO) {
-  const res = await api.patch<IApiResponse<TUserDTO>>(`/users/${id}`, data);
+  const res = await api.put<IApiResponse<TUserDTO>>(`/users/${id}`, data);
   return res.data.data;
 }
 
 export async function deleteUser(id: number | string) {
   await api.delete(`/users/${id}`);
+}
+export async function resetPassword(id:number,password:string){
+const res =await api.patch<IApiResponse<TUserDTO>>(`/users/${id}`,{password});
+ return res.data.data;
 }

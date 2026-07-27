@@ -56,6 +56,7 @@ export function DataTable<T extends { id: string | number }>({
   onLimitChange,
   limitOptions = [10, 20, 50],
   emptyState,
+  
 }: DataTableProps<T>) {
   const [sortConfig, setSortConfig] = React.useState<{
     key: string;
@@ -115,7 +116,7 @@ export function DataTable<T extends { id: string | number }>({
 
           <TableBody className="h-fit" >
             {data.length === 0 ? (
-              <TableRow className="h-fit" >
+              <TableRow className="h-fit"  >
                 <TableCell colSpan={columns.length} className="p-0">
                   {emptyState ?? (
                     <div className="p-12 text-center text-text-secondary text-sm">

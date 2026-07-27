@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
@@ -7,19 +8,23 @@ import { useEffect, useState } from "react";
 import {
   useCreateUser,
   useDeleteUser,
+  useResetPassword,
   useUpdateUser,
   useUsers,
 } from "@/hooks/use-users";
 import { DataTableColumn, DataTable } from "@/components/data-table";
-import { Delete, Edit, FolderIcon, User } from "lucide-react";
+import { Delete, Edit, FolderIcon, KeyIcon, User } from "lucide-react";
 import { useDebounce } from "use-debounce";
 import { ActionsDropdown } from "@/components/table-action-dropdown";
 import { TUserDTO } from "@/types/user";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { ChangePasswordDialog } from "./components/change-password";
 
 export default function UserManagement() {
   const [open, setOpen] = useState<boolean>(false);
+  const [passwordChangeModalOpen, setPasswordChangeModalOpen] = useState<boolean>(false);
   const [search, setSearch] = useState<string>("");
   const [page, setPage] = useState<number>(1);
   const [limit, setLimit] = useState<number>(10);
@@ -49,8 +54,16 @@ export default function UserManagement() {
     error: deleteUserError,
   } = useDeleteUser();
 
+  const {
+    mutate: resetPassword,
+    isPending: resettingPassword,
+    isSuccess: resetUserPasswordSuccess,
+    error: resetUserPasswordError,
+  } = useResetPassword();
+
   const [editingId, setEditingId] = useState<number | undefined>(undefined);
   const [editValues, setEditValues] = useState<TUserDTO | null>(null);
+  const [userPasswordResetId, setUserPasswordResetId] = useState<number | undefined>(undefined)
 
   const router = useRouter();
 
@@ -64,6 +77,15 @@ export default function UserManagement() {
     setEditValues(values as TUserDTO);
     setOpen(true);
   }, [editValues, editingId]);
+
+  useEffect(() => {
+    if (userPasswordResetId) {
+      setPasswordChangeModalOpen(true)
+    } else {
+      setPasswordChangeModalOpen(false)
+      setUserPasswordResetId(undefined)
+    }
+  }, [userPasswordResetId]);
 
   useEffect(() => {
     if (createUserSuccess) {
@@ -86,6 +108,19 @@ export default function UserManagement() {
       toast.error("Network Error");
     }
   }, [updateUserSuccess, updateUserError, updateUser]);
+
+  useEffect(() => {
+    if (resetUserPasswordSuccess) {
+      toast.success("User Password Updated Successfully");
+      setPasswordChangeModalOpen(false);
+
+    }
+    if (resetUserPasswordError) {
+      toast.error("Network Error");
+    }
+
+  }, [resetUserPasswordSuccess, resetUserPasswordError])
+
 
   const columns: DataTableColumn<TUserDTO>[] = [
     {
@@ -127,27 +162,38 @@ export default function UserManagement() {
       label: "Actions",
       dataIndex: "id",
       render: (id) => (
-        <ActionsDropdown
-          actions={[
-            {
-              label: "Edit",
-              icon: <Edit className="text-warning" />,
-              onClick: () => setEditingId(id),
-            },
-            {
-              label: "View Folders",
-              icon: <FolderIcon className="text-error" />,
-              onClick: () => {
-                router.push(`/admin/users/${id}/folders`);
-              }
-            },
-            {
-              label: "Delete",
-              icon: <Delete className="text-error" />,
-              onClick: () => toast.success("Deleting user with id: " + id),
-            },
-          ]}
-        />
+        <div className="flex flex-row gap-2 items-center justify-end">
+          <Button size={"icon-sm"} variant={"outline"} className={"rounded-full "} onClick={() => {
+            router.push(`/admin/users/${id}/folders`);
+          }}>
+
+            <FolderIcon />
+          </Button>
+          <Button size={"icon-sm"} variant={"outline"} className={"rounded-full"} onClick={() => setUserPasswordResetId(id)}>
+            <KeyIcon />
+          </Button>
+          <ActionsDropdown
+            actions={[
+              {
+                label: "Edit",
+                icon: <Edit className="text-warning" />,
+                onClick: () => setEditingId(id),
+              },
+              {
+                label: "View Folders",
+                icon: <FolderIcon className="text-error" />, 
+                onClick: () => {
+                  router.push(`/admin/users/${id}/folders`);
+                }
+              },
+              {
+                label: "Delete",
+                icon: <Delete className="text-error" />,
+                onClick: () => toast.success("Deleting user with id: " + id),
+              },
+            ]}
+          />
+        </div>
       ),
     },
   ];
@@ -160,7 +206,7 @@ export default function UserManagement() {
   };
 
   const emptyStatePlaceholder = (
-    <div className="relative overflow-hidden rounded-xl bg-surface p-12 text-center flex flex-col items-center justify-center min-h-[280px] group">
+    <div className="relative overflow-hidden rounded-xl bg-surface p-12 text-center flex flex-col items-center justify-center min-h-70 group">
       <div className="flex h-14 w-14 items-center justify-center rounded-xl mb-4 bg-background-secondary border border-border text-secondary transition-transform duration-200 group-hover:scale-105">
         <User className="h-6 w-6" strokeWidth={1.5} />
       </div>
@@ -192,6 +238,7 @@ export default function UserManagement() {
         onPrev={setPage}
         onLimitChange={setLimit}
         emptyState={emptyStatePlaceholder}
+
       />
 
       <UserDialog
@@ -205,15 +252,15 @@ export default function UserManagement() {
         initialValues={
           editValues
             ? {
-                email: editValues?.email,
-                name: editValues?.name,
-                status: editValues?.status,
-              }
+              email: editValues?.email,
+              name: editValues?.name,
+              status: editValues?.status,
+            }
             : {
-                email: "",
-                name: "",
-                status: "",
-              }
+              email: "",
+              name: "",
+              status: "",
+            }
         }
         onSubmit={(values) => {
           if (editingId) {
@@ -230,6 +277,18 @@ export default function UserManagement() {
           }
         }}
       />
+      <ChangePasswordDialog
+        open={passwordChangeModalOpen}
+        onOpenChange={() => {
+          setUserPasswordResetId(undefined)
+          setPasswordChangeModalOpen(false)
+        }}
+        onSubmit={values => {
+          resetPassword({ id: userPasswordResetId!, password: values.password })
+        }}
+      />
+
+
     </main>
   );
 }

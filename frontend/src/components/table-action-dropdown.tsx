@@ -52,7 +52,11 @@ export function ActionsDropdown({
 
                         <DropdownMenuItem
                             disabled={action.disabled}
-                            onClick={action.onClick}
+                            onClick={(e)=>{
+                                e.stopPropagation()
+                                e.preventDefault()
+                                action.onClick?.()
+                            }}
                             className={`flex cursor-pointer items-center gap-2 rounded-sm px-2.5 py-1.5 text-sm font-medium transition-colors
                 ${action.variant === "destructive"
                                     ? "text-danger focus:bg-danger/10 focus:text-danger"

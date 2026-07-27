@@ -5,6 +5,7 @@ import { validate } from "@/middlewares/validate";
 import {
   createUserSchema,
   listUsersSchema,
+  passwordResetSchema,
   updateUserSchema,
   userIdParamSchema,
 } from "./user.validations";
@@ -37,14 +38,21 @@ usersRouter
     const user = await UserController.getUserById(id);
     res.apiResponse(200, null, user);
   })
-  .patch(async (req, res) => {
+  .put(async (req, res) => {
     const { id } = userIdParamSchema.parse(req.params);
     const body = updateUserSchema.parse(req.body);
     const updatedUser = await UserController.updateUser(id, body);
     res.apiResponse(200, null, updatedUser);
+  })
+  .patch(async(req,res)=>{
+    const{id} = userIdParamSchema.parse(req.params);
+    const {password} =passwordResetSchema.parse(req.body);
+    const user =await UserController.resetPassword(id,password);
+    res.apiResponse(200,null,user);
   })
   .delete(async (req, res) => {
     const { id } = userIdParamSchema.parse(req.params);
     const deletedUser = await UserController.deleteUser(id);
     res.apiResponse(200, null, deletedUser);
   });
+

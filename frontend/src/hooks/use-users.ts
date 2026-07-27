@@ -4,6 +4,7 @@ import {
   updateUser,
   deleteUser,
   getUserById,
+  resetPassword,
 } from "@/services/user.service";
 import { TUpdateUserDTO } from "@/types/user";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
@@ -39,6 +40,21 @@ export const useUpdateUser = () => {
     mutationFn: ({ id, data }: { id: number; data: TUpdateUserDTO }) =>
       updateUser(id, data),
 
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["users"],
+      });
+    },
+  });
+};
+
+export const useResetPassword = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, password }: { id: number; password:string }) =>
+      resetPassword(id, password),
+      
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: ["users"],
