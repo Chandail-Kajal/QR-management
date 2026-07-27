@@ -9,7 +9,7 @@ import {
   SignUpFormValues,
   signUpSchema,
 } from "@/lib/validators/auth.validator";
-import { ApiResponse } from "@/types";
+import { IApiResponse } from "@/types";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { AxiosError } from "axios";
 import { UserPlus } from "lucide-react";
@@ -56,7 +56,7 @@ export default function SignupPage() {
       console.error(error);
 
       toast.error(
-        (error as AxiosError<ApiResponse<{ data: unknown }>>)?.response?.data
+        (error as AxiosError<IApiResponse<{ data: unknown }>>)?.response?.data
           ?.message ?? "Unable to create account. Please try again.",
       );
     } finally {

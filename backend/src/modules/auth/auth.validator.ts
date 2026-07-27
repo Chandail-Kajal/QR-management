@@ -6,7 +6,7 @@ export const loginSchema = z.object({
     .string()
     .trim()
     .min(8, "Password is required and must be valid"),
-//   remember: z.coerce.boolean(),
+     remember: z.coerce.boolean(),
 });
 
 export const signupSchema = z.object({
