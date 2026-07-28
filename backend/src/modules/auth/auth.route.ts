@@ -7,9 +7,9 @@ import {
 } from "@/shared/jwt";
 import { AuthJwtPayload } from "@/types";
 import express, { Request, Response } from "express";
-import { createUser, getUser, login, LoginResult } from "./auth.controller";
+import { changePassword, createUser, getUser, login, LoginResult } from "./auth.controller";
 import { ApiError } from "@/shared/utils";
-import { loginSchema, signupSchema } from "./auth.validator";
+import { changePasswordSchema, loginSchema, signupSchema } from "./auth.validator";
 
 export const authRouter = express.Router();
 
@@ -70,6 +70,13 @@ authRouter.post("/signup", async (req: Request, res: Response) => {
   const { email, name, password } = signupSchema.parse(req.body);
   const createdUser = createUser({ name, email, password });
   res.apiResponse(200, null, createdUser);
+});
+
+authRouter.post("/change-password", async (req: Request, res: Response) => {
+  const { currentPassword, newPassword } = changePasswordSchema.parse(req.body);
+  const userId = req.auth?.userId as number
+  await changePassword(userId, { currentPassword, newPassword })
+  res.apiResponse(200, null);
 });
 
 authRouter.post("/logout", async (req: Request, res: Response) => {

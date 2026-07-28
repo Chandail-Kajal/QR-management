@@ -17,6 +17,7 @@ import { api } from "@/lib/axios";
 import { LogIn } from "lucide-react";
 import { IApiResponse, ILoginResponseDTO } from "@/types";
 import Link from "next/link";
+import { login } from "@/services/auth.service";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -40,11 +41,7 @@ export default function LoginPage() {
   const onSubmit = async (values: LoginFormValues) => {
     try {
       setLoading(true);
-      const response = await api.post<IApiResponse<ILoginResponseDTO>>(
-        "/auth/login",
-        values,
-      );
-      const data = response.data.data;
+      const data = await login(values)
       setAuth(data);
       router.push("/admin/dashboard");
     } catch (error) {
@@ -88,6 +85,7 @@ export default function LoginPage() {
                 />
                 {errors.email && (
                   <FieldError>{errors.email.message}</FieldError>
+                  
                 )}
               </Field>
 

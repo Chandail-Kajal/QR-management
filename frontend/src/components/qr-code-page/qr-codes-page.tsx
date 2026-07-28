@@ -341,6 +341,8 @@ export function QRsPage({
 
   const totalCount = typeCountArray?.reduce((acc, curr) => acc + curr.count, 0);
 
+
+
   return (
     <main className="flex-1 transition-colors duration-150 flex flex-col gap-4 pb-20">
       <Breadcrumbs />
@@ -377,7 +379,7 @@ export function QRsPage({
         createLabel="New QR"
         searchQuery={search}
         onSearchChange={setSearch}
-        onCreate={() => setCreateOpen(true)}
+        onCreate={(!userId || !folderName) && user?.role === "ADMIN" ? undefined : () => setCreateOpen(true)}
       />
 
       <DataTable
@@ -407,16 +409,16 @@ export function QRsPage({
         initialData={
           editValues
             ? {
-                folderId:
-                  folderName && user?.role !== "ADMIN"
-                    ? (folder?.id as number)
-                    : undefined,
-                name: editValues.name,
-                content: editValues.content,
-                status: editValues.status,
-                type: editValues.type,
-                scanLimit: editValues.scanCount || undefined,
-              }
+              folderId:
+                folderName && user?.role !== "ADMIN"
+                  ? (folder?.id as number)
+                  : undefined,
+              name: editValues.name,
+              content: editValues.content,
+              status: editValues.status,
+              type: editValues.type,
+              scanLimit: editValues.scanCount || undefined,
+            }
             : undefined
         }
         onSubmit={mutation.mutate}

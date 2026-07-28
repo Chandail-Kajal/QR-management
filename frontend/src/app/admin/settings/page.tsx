@@ -30,6 +30,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { api } from "@/lib/api";
+import { changePassword } from "@/services/auth.service";
 
 // ==========================================
 // --- TYPES & INTERFACES ---
@@ -215,7 +216,7 @@ export default function AdminSettingsPage() {
   };
 
   // --- HANDLERS ---
-  const handleAdminPasswordUpdate = (e: React.FormEvent) => {
+  const handleAdminPasswordUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!adminCurrentPassword || !adminNewPassword || !adminConfirmPassword) {
       setSecurityMessage({ text: "Please fill in all password fields.", isError: true });
@@ -225,10 +226,17 @@ export default function AdminSettingsPage() {
       setSecurityMessage({ text: "New passwords do not match.", isError: true });
       return;
     }
-    setSecurityMessage({ text: "Admin password updated successfully!", isError: false });
-    setAdminCurrentPassword("");
-    setAdminNewPassword("");
-    setAdminConfirmPassword("");
+    try {
+      await changePassword({ newPassword: adminNewPassword, currentPassword: adminCurrentPassword })
+      setSecurityMessage({ text: "Admin password updated successfully!", isError: false });
+      setAdminCurrentPassword("");
+      setAdminNewPassword("");
+      setAdminConfirmPassword("");
+    } catch (error) {
+      const message = (error as Error).message
+      setSecurityMessage({ text: message, isError: true });
+
+    }
   };
 
   const handleToggleUserStatus = (userId: number) => {
@@ -325,8 +333,8 @@ export default function AdminSettingsPage() {
           <button
             onClick={() => setActiveTab("exports")}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${activeTab === "exports"
-                ? "bg-purple-600 text-white shadow-md shadow-purple-600/20"
-                : "text-slate-600 hover:bg-purple-50 hover:text-purple-700"
+              ? "bg-purple-600 text-white shadow-md shadow-purple-600/20"
+              : "text-slate-600 hover:bg-purple-50 hover:text-purple-700"
               }`}
           >
             <FileSpreadsheet className="w-4 h-4" />
@@ -336,8 +344,8 @@ export default function AdminSettingsPage() {
           <button
             onClick={() => setActiveTab("users")}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${activeTab === "users"
-                ? "bg-purple-600 text-white shadow-md shadow-purple-600/20"
-                : "text-slate-600 hover:bg-purple-50 hover:text-purple-700"
+              ? "bg-purple-600 text-white shadow-md shadow-purple-600/20"
+              : "text-slate-600 hover:bg-purple-50 hover:text-purple-700"
               }`}
           >
             <User className="w-4 h-4" />
@@ -347,8 +355,8 @@ export default function AdminSettingsPage() {
           <button
             onClick={() => setActiveTab("alerts")}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all relative ${activeTab === "alerts"
-                ? "bg-purple-600 text-white shadow-md shadow-purple-600/20"
-                : "text-slate-600 hover:bg-purple-50 hover:text-purple-700"
+              ? "bg-purple-600 text-white shadow-md shadow-purple-600/20"
+              : "text-slate-600 hover:bg-purple-50 hover:text-purple-700"
               }`}
           >
             <Bell className="w-4 h-4" />
@@ -363,8 +371,8 @@ export default function AdminSettingsPage() {
           <button
             onClick={() => setActiveTab("security")}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${activeTab === "security"
-                ? "bg-purple-600 text-white shadow-md shadow-purple-600/20"
-                : "text-slate-600 hover:bg-purple-50 hover:text-purple-700"
+              ? "bg-purple-600 text-white shadow-md shadow-purple-600/20"
+              : "text-slate-600 hover:bg-purple-50 hover:text-purple-700"
               }`}
           >
             <Lock className="w-4 h-4" />
@@ -409,8 +417,8 @@ export default function AdminSettingsPage() {
                         key={range.id}
                         onClick={() => setExportTimeRange(range.id)}
                         className={`py-2 rounded-lg text-center transition-all ${exportTimeRange === range.id
-                            ? "bg-purple-600 text-white shadow-sm"
-                            : "text-slate-600 hover:text-purple-700"
+                          ? "bg-purple-600 text-white shadow-sm"
+                          : "text-slate-600 hover:text-purple-700"
                           }`}
                       >
                         {range.label}
@@ -588,8 +596,8 @@ export default function AdminSettingsPage() {
                           <td className="py-4 px-4">
                             <span
                               className={`inline-flex items-center text-[11px] font-bold px-2.5 py-0.5 rounded-full ${user.status === "ACTIVE"
-                                  ? "bg-emerald-100 text-emerald-800"
-                                  : "bg-rose-100 text-rose-800"
+                                ? "bg-emerald-100 text-emerald-800"
+                                : "bg-rose-100 text-rose-800"
                                 }`}
                             >
                               {user.status}
@@ -608,8 +616,8 @@ export default function AdminSettingsPage() {
                             <button
                               onClick={() => handleToggleUserStatus(user.id)}
                               className={`px-3 py-1.5 font-semibold text-xs rounded-lg transition-all inline-flex items-center gap-1 ${user.status === "ACTIVE"
-                                  ? "bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200"
-                                  : "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200"
+                                ? "bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200"
+                                : "bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200"
                                 }`}
                             >
                               {user.status === "ACTIVE" ? <UserX className="w-3.5 h-3.5" /> : <UserCheck className="w-3.5 h-3.5" />}

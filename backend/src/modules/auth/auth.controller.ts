@@ -3,7 +3,7 @@ import { ApiError } from "@/shared/utils";
 import bcrypt from "bcrypt";
 import { Role, SubscriptionStatus } from "@/generated/prisma/client";
 import { signAccessToken } from "@/shared/jwt";
-import { SignupDto } from "./auth.validator";
+import { ChangePassword, SignupDto } from "./auth.validator";
 
 export interface AuthUser {
   id: number;
@@ -163,3 +163,19 @@ export async function createUser(dto: SignupDto) {
     };
   });
 }
+
+
+export async function changePassword(userId: number, passwords: ChangePassword) {
+  const existingUser = await prisma.user.findFirst({ where: { id: userId }, select: { id: true, password: true } })
+  if (!existingUser) throw new ApiError(404, "User not exists")
+  const isCurrentPasswordMatched = await bcrypt.compare(passwords.currentPassword, existingUser.password)
+  if (!isCurrentPasswordMatched) throw new ApiError(400, "Current password is invalid")
+  const newHash = await bcrypt.hash(passwords.newPassword, 10)
+  const updatedUser = await prisma.user.update({
+    where: { id: userId }, data: {
+      password: newHash
+    }
+  })
+
+  return updatedUser
+} 
