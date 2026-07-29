@@ -26,6 +26,7 @@ export interface DataTableColumn<T> {
   dataIndex: keyof T | string;
   render?: (value: any, record: T, index: number) => React.ReactNode;
   onSort?: (dataIndex: keyof T | string, order: "asc" | "desc") => void;
+  hidden?:boolean;
   className?: string;
 }
 
@@ -87,8 +88,9 @@ export function DataTable<T extends { id: string | number }>({
         <Table className="" >
           <TableHeader>
             <TableRow className="border-b border-border-light bg-purple-700 hover:bg-purple-500">
-              {columns.map((col, idx) => (
-                <TableHead
+              {columns.map((col, idx) => {
+                if(col.hidden) return null;
+               return  <TableHead
                   key={String(col.dataIndex) + idx}
                   className={cn(
                     "h-11 text-sm font-semibold tracking-wider text-white uppercase select-none",
@@ -110,7 +112,7 @@ export function DataTable<T extends { id: string | number }>({
                     col.label
                   )}
                 </TableHead>
-              ))}
+              })}
             </TableRow>
           </TableHeader>
 
@@ -132,6 +134,8 @@ export function DataTable<T extends { id: string | number }>({
                   className="group border-b border-border-light transition-colors duration-150 bg-transparent hover:bg-surface-hover cursor-default"
                 >
                   {columns.map((col, colIdx) => {
+                      if(col.hidden) return null;
+
                     const value =
                       col.dataIndex in record
                         ? (record as any)[col.dataIndex]

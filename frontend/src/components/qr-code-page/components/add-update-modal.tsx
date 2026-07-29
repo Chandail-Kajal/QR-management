@@ -390,7 +390,7 @@ export function QrModalForm({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <div className="flex flex-col gap-1.5">
                         <label className="text-xs font-semibold text-gray-700 tracking-wide">
-                          Default Action Subject Line
+                          Default Action Subject Line 
                         </label>
                         <Input
                           placeholder="Inquiry from QR Vector"
@@ -734,7 +734,7 @@ export function QrModalForm({
           )}
         </div>
 
-        <form onSubmit={handleSubmit((data) => onSubmit(data as TCreateQRDTO))}>
+        <form onSubmit={handleSubmit((data) => onSubmit(data as unknown as TCreateQRDTO))}>
           <DialogFooter className="px-8 h-20 pb-8 border-t border-gray-100 bg-slate-50 flex items-center justify-between gap-2 sm:justify-between">
             <div className="flex items-center ">
               {step > 0 && (

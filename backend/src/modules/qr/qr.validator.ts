@@ -1,5 +1,5 @@
 import { QRStatus, QRType } from "@/generated/prisma/enums";
-import { z } from "zod";
+import { boolean, z } from "zod";
 
 export const createQRSchema = z.object({
   name: z.string().min(1).max(100),
@@ -8,13 +8,14 @@ export const createQRSchema = z.object({
   folderId: z.number().int().positive().optional(),
   userId:z.coerce.number().optional(),
   scanLimit: z.number().int().positive().nullable().optional(),
+  isActive:z.boolean().optional(),
 });
 
 export const listQRSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(10),
   search: z.string().optional(),
-  status: z.nativeEnum(QRStatus).optional(),
+  isActive:z.boolean().optional(),
   type: z.nativeEnum(QRType).optional(),
   userId: z.coerce.number().optional(),
 });
@@ -30,6 +31,10 @@ export const qrIdSchema = z.object({
 export const folderIdSchema = z.object({
   folderId: z.coerce.number().int().positive(),
 });
+
+export const isActiveSchema=z.object({
+isActive:z.coerce.boolean(),
+})
 
 export const updateQRSchema = z.object({
   name: z.string().min(1).max(100).optional(),

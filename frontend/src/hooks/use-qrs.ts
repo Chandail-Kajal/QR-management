@@ -68,3 +68,4 @@ export function useQrTypeCounts(data: {
     queryFn: () => getQrTypeCounts(data),
   });
 }
+

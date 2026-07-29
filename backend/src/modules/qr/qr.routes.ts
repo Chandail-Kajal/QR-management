@@ -9,10 +9,12 @@ import {
   getQR,
   getQrTypesWithCount,
   deleteQR,
+  qrStatus,
 } from "./qr.controller";
 import {
   createQRSchema,
   folderIdSchema,
+  isActiveSchema,
   listQRSchema,
   qrIdSchema,
   updateQRSchema,
@@ -68,7 +70,16 @@ qrRouter
     const { id } = qrIdSchema.parse(req.params);
     await deleteQR(id);
     res.apiResponse(200, "Qr deleted successfully");
-  });
+  })
+  .put(allowRoles("ADMIN"),
+  async(req,res)=>{
+    const {id} =qrIdSchema.parse(req.params);
+    const {isActive}=isActiveSchema.parse(req.body);
+    await qrStatus(id,isActive);
+    res.apiResponse(200,"Qr status Changed Succesfully");
+
+  }
+)
 
 qrRouter.get(
   "/folders/:folderId",
@@ -84,3 +95,4 @@ qrRouter.get(
     res.apiResponse(200, null, data.data, data.meta);
   },
 );
+ 

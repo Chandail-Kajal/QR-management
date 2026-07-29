@@ -30,7 +30,7 @@ export type TQRDTO = {
 
   content: QRContent;
 
-  status: QRStatus;
+  isActive:boolean;
 
   scanCount: number;
   scanLimit: number | null;
@@ -44,7 +44,7 @@ export type TCreateQRDTO = {
   scanLimit?: number | null;
   content: any;
   type: QRType;
-  status: QRStatus;
+  isActive:boolean;
   folderId?: number;
   userId?: string;
 };

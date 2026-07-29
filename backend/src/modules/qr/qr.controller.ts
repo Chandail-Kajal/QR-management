@@ -15,7 +15,7 @@ export function createQR(qrDetails: CreateQRInput, userId: number) {
       name: qrDetails.name,
       type: qrDetails.type,
       content: (qrDetails.content as object) || {},
-      status: "ACTIVE",
+      isActive:qrDetails.isActive,
       folderId: qrDetails.folderId,
       userId,
     },
@@ -77,8 +77,9 @@ export async function listQRs(
   query: ListQRInput & { userId?: number },
   folderId?: number,
 ) {
-  const { page, limit, search, status, type, userId } = query;
+  const { page, limit, search, isActive, type, userId } = query;
   const where = {
+    deletedAt:null,
     ...(type && { type }),
     ...(folderId && { folderId }),
     ...(userId && { userId }),
@@ -98,8 +99,8 @@ export async function listQRs(
         },
       ],
     }),
-    ...(status && {
-      status,
+    ...(isActive && {
+      isActive,
     }),
   };
 
@@ -125,4 +126,14 @@ export async function deleteQR(id: number) {
       deletedAt: new Date(),
     },
   });
+}
+
+export async function qrStatus(id:number,isActive:boolean){
+
+  return await prisma.qR.update({
+    where:{id},
+    data:{
+      isActive
+    },
+  })
 }

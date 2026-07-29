@@ -82,3 +82,7 @@ export async function updateQr(id: number | string, data: TUpdateQRDTO) {
 export async function deleteQR(id: number | string) {
   await api.delete("/qrs/" + id);
 }
+
+export async function changeStatus(data:{id:number,isActive:boolean}){
+  await api.put("/qrs/" +data.id ,{isActive:data.isActive});
+}

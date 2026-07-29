@@ -247,7 +247,7 @@ export default function UserManagement() {
           setEditValues(null);
           setEditingId(undefined);
           setOpen(false);
-        }}
+        }}       
         mode={editingId ? "edit" : "create"}
         initialValues={
           editValues

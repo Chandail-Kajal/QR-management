@@ -25,6 +25,7 @@ export function QRActionsDropdown({
   onEdit,
   onDelete,
   onAnalytics,
+  
 }: {
   qr: TQRDTO;
   onEdit: (qr: TQRDTO) => void;

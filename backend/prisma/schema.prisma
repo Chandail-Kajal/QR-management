@@ -28,8 +28,7 @@ enum AccountStatus {
 
 enum QRStatus {
   ACTIVE
-  PAUSED
-  ARCHIVED
+  DEACTIVATE
 }
 
 enum QRType {
@@ -135,7 +134,7 @@ model QR {
   name      String
   type      QRType   @default(URL)
   content   Json     @default("{}")
-  status    QRStatus @default(ACTIVE)
+ isActive   Boolean  @default(true)
   scanCount Int      @default(0)
   scanLimit Int?
 
@@ -159,11 +158,12 @@ model QR {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
+  
 
   @@unique([userId, folderId, name])
   @@index([userId])
   @@index([token])
-  @@index([status])
+ 
 }
 
 model QRScan {

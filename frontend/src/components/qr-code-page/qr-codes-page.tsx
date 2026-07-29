@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
@@ -11,7 +12,7 @@ import { QRActionsDropdown } from "./components/qr-action-dropdown";
 import { useFolderQRs, useQRs, useQrTypeCounts } from "@/hooks/use-qrs";
 import { QrModalForm } from "./components/add-update-modal";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { createQR, deleteQR, updateQr } from "@/services/qr.service";
+import { changeStatus, createQR, deleteQR, updateQr } from "@/services/qr.service";
 import { toast } from "sonner";
 import { SegmentedControl } from "@/components/segmented-control";
 import { getQRTypeIcon } from "@/lib/preview-type-icon";
@@ -24,6 +25,9 @@ import { Breadcrumbs } from "../bread-crumbs";
 import { useFolderOptions } from "@/hooks/use-folders";
 import { useAuthStore } from "@/stores/auth.store";
 import { useUserById } from "@/hooks/use-users";
+import clsx from "clsx";
+import { Switch } from "../ui/switch";
+import { Field, FieldLabel } from "../ui/field";
 
 const TYPE_COLORS: Record<string, { bg: string; text: string }> = {
   URL: { bg: "bg-primary/10", text: "text-primary" },
@@ -201,6 +205,20 @@ export function QRsPage({
     },
   });
 
+  const statusMutation = useMutation({
+    mutationFn: changeStatus,
+    onError: (err) => toast.error(`Error: ${err.message}`),
+    onSuccess: () => {
+      toast.success("QR Status changed successfully");
+      setCreateOpen(false);
+      queryClient.invalidateQueries({
+        queryKey: [folderName ? `qrs/${folder?.id}` : "qrs"],
+      });
+      queryClient.invalidateQueries({ queryKey: ["qr-type-with-counts"] });
+    },
+  });
+
+
   const deleteMutation = useMutation({
     mutationFn: deleteQR,
     onError: (err) => toast.error(`Error: ${err.message}`),
@@ -258,14 +276,16 @@ export function QRsPage({
             </div>
           </div>
         );
-      },
+      }, 
     },
     {
       label: "Status",
-      dataIndex: "status",
+      dataIndex: "isActive",
       render: (status) => (
         <div className="inline-flex">
-          <QRStatusBadge status={status} />
+          <div className={clsx("text-xs rounded-full px-2 py-0.5 border", status ? "bg-success/10 border-success text-success font-semibold" : "bg-red-400 ")}>{status ? "Active" : "Inactive"}</div>
+
+
         </div>
       ),
     },
@@ -282,7 +302,7 @@ export function QRsPage({
       label: "Created",
       dataIndex: "createdAt",
       render: (date) => (
-        <span className="text-xs font-semibold text-text-secondary">
+        <span className="text-xs font-semibold text-white">
           {new Date(date).toLocaleDateString(undefined, {
             year: "numeric",
             month: "short",
@@ -291,6 +311,28 @@ export function QRsPage({
         </span>
       ),
     },
+
+    {
+      label: "Change Status",
+      dataIndex: "isActive",
+      hidden:user!.role=="USER",
+      render: (status, record) => (
+        <div className="inline-flex">
+          <Field orientation="horizontal" data-disabled className="w-fit">
+            <Switch id="switch-disabled-unchecked " checked={status} 
+              onCheckedChange={(checked) => {
+                statusMutation.mutate({
+                  id: record.id,
+                  isActive: checked,
+                });
+              }} />
+            <FieldLabel htmlFor="switch-disabled-unchecked rounded">{status ? "Deactivate" : "Activate"}</FieldLabel>
+          </Field>
+ 
+        </div>
+      ),
+    },
+
     {
       label: "",
       dataIndex: "actions",
@@ -308,6 +350,7 @@ export function QRsPage({
             qr={qr}
             onEdit={onEdit}
             onDelete={onDelete}
+
           />
         </div>
       ),
@@ -326,7 +369,7 @@ export function QRsPage({
   };
 
   const emptyStatePlaceholder = (
-    <div className="relative overflow-hidden rounded-xl bg-surface p-12 text-center flex flex-col items-center justify-center min-h-[280px] group">
+    <div className="relative overflow-hidden rounded-xl bg-surface p-12 text-center flex flex-col items-center justify-center min-h-70 group">
       <div className="flex h-14 w-14 items-center justify-center rounded-xl mb-4 bg-background-secondary border border-border text-secondary transition-transform duration-200 group-hover:scale-105">
         <QrCode className="h-6 w-6" strokeWidth={1.5} />
       </div>
@@ -340,9 +383,6 @@ export function QRsPage({
   );
 
   const totalCount = typeCountArray?.reduce((acc, curr) => acc + curr.count, 0);
-
-
-
   return (
     <main className="flex-1 transition-colors duration-150 flex flex-col gap-4 pb-20">
       <Breadcrumbs />
@@ -379,7 +419,7 @@ export function QRsPage({
         createLabel="New QR"
         searchQuery={search}
         onSearchChange={setSearch}
-        onCreate={(!userId || !folderName) && user?.role === "ADMIN" ? undefined : () => setCreateOpen(true)}
+        onCreate={((!userId || !folderName) && user?.role === "ADMIN")||user!.role==="USER" ? undefined : () => setCreateOpen(true)}
       />
 
       <DataTable
@@ -415,7 +455,7 @@ export function QRsPage({
                   : undefined,
               name: editValues.name,
               content: editValues.content,
-              status: editValues.status,
+              isActive: editValues.isActive,
               type: editValues.type,
               scanLimit: editValues.scanCount || undefined,
             }
