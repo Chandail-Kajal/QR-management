@@ -15,7 +15,7 @@ export function createQR(qrDetails: CreateQRInput, userId: number) {
       name: qrDetails.name,
       type: qrDetails.type,
       content: (qrDetails.content as object) || {},
-      isActive:qrDetails.isActive,
+      isActive: qrDetails.isActive,
       folderId: qrDetails.folderId,
       userId,
     },
@@ -55,14 +55,15 @@ export async function getQrTypesWithCount(folderId?: number) {
     result.length === 0
       ? Object.keys(QRType).map((i) => ({ type: i, count: 0 }))
       : result.map((item) => ({
-          type: item.type,
-          count: item._count.type,
-        }));
+        type: item.type,
+        count: item._count.type,
+      }));
 
   return data;
 }
 
-export async function updateQR(id: number, qr: UpdateQRInput) {
+export async function updateQR(id: number, { status, ...qr }: UpdateQRInput) {
+
   return await prisma.qR.update({
     where: {
       id,
@@ -79,7 +80,7 @@ export async function listQRs(
 ) {
   const { page, limit, search, isActive, type, userId } = query;
   const where = {
-    deletedAt:null,
+    deletedAt: null,
     ...(type && { type }),
     ...(folderId && { folderId }),
     ...(userId && { userId }),
@@ -128,11 +129,11 @@ export async function deleteQR(id: number) {
   });
 }
 
-export async function qrStatus(id:number,isActive:boolean){
+export async function qrStatus(id: number, isActive: boolean) {
 
   return await prisma.qR.update({
-    where:{id},
-    data:{
+    where: { id },
+    data: {
       isActive
     },
   })

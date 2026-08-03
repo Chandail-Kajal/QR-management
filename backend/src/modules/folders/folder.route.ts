@@ -30,7 +30,7 @@ folderRouter
   .get(async (req, res) => {
     const query = listFoldersSchema.parse(req.query);
     const userId =
-      req.auth?.userRole === "ADMIN" ? query.userId : req.auth?.userId;
+      query.userId ? req.auth?.userRole === "ADMIN" ? query.userId : req.auth?.userId : req.auth?.userId;
     const data = await listFolders(query, userId);
     res.apiResponse(201, null, data.data, { pagination: data.meta.pagination });
   })

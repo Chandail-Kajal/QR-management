@@ -182,12 +182,14 @@ export function QRsPage({
       if (editValues) {
         await updateQr(editValues.id, {
           ...formData,
-          ...(userId && { userId, folderId: folder?.id }),
+          ...(folderName && { folderId: folder?.id }),
+          ...(userId && { userId }),
         });
       } else {
         await createQR({
           ...formData,
-          ...(userId && { userId, folderId: folder?.id }),
+          ...(folderName && { folderId: folder?.id }),
+          ...(userId && { userId }),
         });
       }
     },
@@ -276,7 +278,7 @@ export function QRsPage({
             </div>
           </div>
         );
-      }, 
+      },
     },
     {
       label: "Status",
@@ -315,11 +317,11 @@ export function QRsPage({
     {
       label: "Change Status",
       dataIndex: "isActive",
-      hidden:user!.role=="USER",
+      hidden: user!.role == "USER",
       render: (status, record) => (
         <div className="inline-flex">
           <Field orientation="horizontal" data-disabled className="w-fit">
-            <Switch id="switch-disabled-unchecked " checked={status} 
+            <Switch id="switch-disabled-unchecked " checked={status}
               onCheckedChange={(checked) => {
                 statusMutation.mutate({
                   id: record.id,
@@ -328,7 +330,7 @@ export function QRsPage({
               }} />
             <FieldLabel htmlFor="switch-disabled-unchecked rounded">{status ? "Deactivate" : "Activate"}</FieldLabel>
           </Field>
- 
+
         </div>
       ),
     },
@@ -419,7 +421,7 @@ export function QRsPage({
         createLabel="New QR"
         searchQuery={search}
         onSearchChange={setSearch}
-        onCreate={((!userId || !folderName) && user?.role === "ADMIN")||user!.role==="USER" ? undefined : () => setCreateOpen(true)}
+        onCreate={(user?.role === "USER" && folder) || (user?.role === "ADMIN" && userId && folderName) ? () => setCreateOpen(true) : undefined}
       />
 
       <DataTable
@@ -449,10 +451,7 @@ export function QRsPage({
         initialData={
           editValues
             ? {
-              folderId:
-                folderName && user?.role !== "ADMIN"
-                  ? (folder?.id as number)
-                  : undefined,
+              folderId: folderName ? folder?.id : undefined,
               name: editValues.name,
               content: editValues.content,
               isActive: editValues.isActive,
@@ -461,7 +460,7 @@ export function QRsPage({
             }
             : undefined
         }
-        onSubmit={mutation.mutate}
+        onSubmit={!folderName ? () => toast.info("Can not save in edit mode, try to edit from folders instead") : mutation.mutate}
       />
     </main>
   );

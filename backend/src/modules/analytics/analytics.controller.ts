@@ -23,6 +23,12 @@ export interface DashboardResponse {
   summary: DashboardSummary;
   scanVolume: ScanVolumePoint[];
   deviceSplit: DeviceSplitItem[];
+  locationSplit: {
+    city: string;
+    country: string;
+    scans: number;
+    percent: number;
+  }[];
 }
 
 export interface DashboardSummary {
@@ -187,29 +193,39 @@ export const getQRAnalytics = async (
     else timeBuckets.night++;
   });
 
-  const countries = await prisma.qRScan.groupBy({
-    by: ["country"],
-    where: { qrId },
-    _count: true,
-    orderBy: {
-      _count: {
-        country: "desc",
+  const locations = await prisma.qRScan.groupBy({
+    by: ["country", "city"],
+    where: {
+      qrId,
+      city: {
+        not: null,
+      },
+      country: {
+        not: null,
       },
     },
-    take: 10,
-  });
-
-  const cities = await prisma.qRScan.groupBy({
-    by: ["city"],
-    where: { qrId },
     _count: true,
     orderBy: {
       _count: {
         city: "desc",
       },
     },
-    take: 10,
+    take: 20,
   });
+
+  const totalLocationScans = locations.reduce(
+    (sum, item) => sum + item._count,
+    0,
+  );
+
+  const locationSplit = locations.map((item) => ({
+    country: item.country!,
+    city: item.city!,
+    scans: item._count,
+    percent: totalLocationScans
+      ? Number(((item._count / totalLocationScans) * 100).toFixed(1))
+      : 0,
+  }));
 
   const devices = await prisma.qRScan.groupBy({
     by: ["device"],
@@ -260,8 +276,7 @@ export const getQRAnalytics = async (
     },
     scanTrend,
     scanTime: timeBuckets,
-    countries,
-    cities,
+    locationSplit,
     devices,
     browsers,
     os,
@@ -303,6 +318,7 @@ export const getDashboard = async (userId?: number) => {
     },
     scanVolume: [],
     deviceSplit: [],
+    locationSplit: []
   };
 
   if (!qrIds.length) {
@@ -406,6 +422,39 @@ export const getDashboard = async (userId?: number) => {
       : 0,
   }));
 
+  const locations = await prisma.qRScan.groupBy({
+    by: ["city", "country"],
+    where: {
+      qrId: {
+        in: qrIds,
+      },
+      city: {
+        not: null,
+      },
+    },
+    _count: true,
+    orderBy: {
+      _count: {
+        city: "desc",
+      },
+    },
+    take: 20, // top 20 cities
+  });
+
+  const totalLocationScans = locations.reduce(
+    (sum, item) => sum + item._count,
+    0,
+  );
+
+  const locationSplit = locations.map((item) => ({
+    city: item.city ?? "Unknown",
+    country: item.country ?? "Unknown",
+    scans: item._count,
+    percent: totalLocationScans
+      ? Number(((item._count / totalLocationScans) * 100).toFixed(1))
+      : 0,
+  }));
+
   const currentMonth = await prisma.qRScan.count({
     where: {
       qrId: { in: qrIds },
@@ -429,8 +478,8 @@ export const getDashboard = async (userId?: number) => {
     previousMonth === 0
       ? 100
       : Number(
-          (((currentMonth - previousMonth) / previousMonth) * 100).toFixed(1),
-        );
+        (((currentMonth - previousMonth) / previousMonth) * 100).toFixed(1),
+      );
 
   result = {
     summary: {
@@ -442,6 +491,7 @@ export const getDashboard = async (userId?: number) => {
     },
     scanVolume,
     deviceSplit,
+    locationSplit
   };
 
   return result;

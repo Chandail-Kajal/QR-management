@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export interface QRAnalyticsData {
   geo: any;
-  scannerLocations: any;
+
   scannerLocations: any;
   locations: any;
   overview: Overview;
@@ -13,6 +14,12 @@ export interface QRAnalyticsData {
   os: CountValue<string>[];
   languages: CountValue<string>[];
   referrers: CountValue<string | null>[];
+   locationSplit: {
+    city: string;
+    country: string;
+    scans: number;
+    percent: number;
+  }[];
 }
 
 export interface Overview {
@@ -51,6 +58,12 @@ export interface DashboardResponse {
   summary: DashboardSummary;
   scanVolume: ScanVolumePoint[];
   deviceSplit: DeviceSplitItem[];
+  locationSplit: {
+    city: string;
+    country: string;
+    scans: number;
+    percent: number;
+  }[];
 }
 
 export interface DashboardSummary {

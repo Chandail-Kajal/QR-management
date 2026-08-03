@@ -13,6 +13,8 @@ import {
   YAxis,
   Line,
   LineChart,
+  BarChart,
+  Bar,
 } from "recharts";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -211,6 +213,8 @@ export function QRAnalyticsPage(props: Props) {
               value: x._count,
             }))}
           />
+
+          <LocationChart data={analytics.locationSplit} />
         </div>
       </div>
     </>
@@ -296,6 +300,62 @@ function SimpleChart({
 
             <Line dataKey="value" />
           </LineChart>
+        </ResponsiveContainer>
+      </CardContent>
+    </Card>
+  );
+}
+
+
+function LocationChart({
+  data,
+}: {
+  data: {
+    city: string;
+    country: string;
+    scans: number;
+    percent: number;
+  }[];
+}) {
+  return (
+    <Card className="lg:col-span-3">
+      <CardHeader>
+        <CardTitle>Top Scan Locations</CardTitle>
+      </CardHeader>
+
+      <CardContent>
+        <ResponsiveContainer width="100%" height={350}>
+          <BarChart
+            data={data.map((x) => ({
+              ...x,
+              location: `${x.city}, ${x.country}`,
+            }))}
+            layout="vertical"
+            margin={{ left: 40 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" />
+
+            <XAxis type="number" />
+
+            <YAxis
+              type="category"
+              dataKey="location"
+              width={180}
+            />
+
+            <Tooltip
+              formatter={(value: number ) => [
+                `${value} scans`,
+                "Scans",
+              ]}
+            />
+
+            <Bar
+              dataKey="scans"
+              fill="#6366F1"
+              radius={[0, 6, 6, 0]}
+            />
+          </BarChart>
         </ResponsiveContainer>
       </CardContent>
     </Card>

@@ -78,7 +78,7 @@ export default function LandingPage() {
         {/* HERO */}
         <section className="max-w-4xl mx-auto px-6 pt-24 pb-16 text-center">
           <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-white mb-6 leading-tight">
-            QR codes that <span className="bg-gradient-to-r from-purple-400 via-fuchsia-400 to-indigo-400 bg-clip-text text-transparent">just work</span>
+            QR codes that <span className="bg-linear-to-r from-purple-400 via-fuchsia-400 to-indigo-400 bg-clip-text text-transparent">just work</span>
           </h1>
           <p className="text-base md:text-lg text-slate-400 max-w-2xl mx-auto mb-10">
             Create and manage dynamic QR codes in seconds, with real-time scan tracking built in.
@@ -86,7 +86,7 @@ export default function LandingPage() {
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
             <Link
               href="/login"
-              className="w-full sm:w-auto px-8 py-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold hover:opacity-90 transition-all duration-200 text-center text-sm uppercase tracking-wider"
+              className="w-full sm:w-auto px-8 py-4 rounded-xl bg-linear-to-r from-purple-600 to-indigo-600 text-white font-bold hover:opacity-90 transition-all duration-200 text-center text-sm uppercase tracking-wider"
             >
               Create Account Free
             </Link>

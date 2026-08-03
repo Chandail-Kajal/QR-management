@@ -15,6 +15,12 @@ import {
   Cell,
 } from "recharts";
 
+import {
+
+  BarChart,
+  Bar,
+} from "recharts";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { TrendingUp, QrCode, Users, Trophy } from "lucide-react";
@@ -39,6 +45,15 @@ export default function DashboardPage() {
         day: "numeric",
       }),
       scans,
+    }));
+  }, [data]);
+
+  const locationData = useMemo(() => {
+    if (!data) return [];
+
+    return data.locationSplit.map((item) => ({
+      ...item,
+      location: `${item.city}, ${item.country}`,
     }));
   }, [data]);
 
@@ -143,10 +158,10 @@ export default function DashboardPage() {
         </Card>
       </div>
 
-      {/* Charts */}
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Line */}
+      {/* Charts */}
+      <div className="grid gap-6 lg:grid-cols-3 pb-20">
+        {/* Scan Volume */}
 
         <Card className="lg:col-span-2">
           <CardHeader>
@@ -171,6 +186,8 @@ export default function DashboardPage() {
           </CardContent>
         </Card>
 
+        {/* Device Split */}
+
         <Card>
           <CardHeader>
             <CardTitle>Device Split</CardTitle>
@@ -184,13 +201,16 @@ export default function DashboardPage() {
                   dataKey="scans"
                   nameKey="device"
                   outerRadius={100}
-                  ///@ts-expect-error 'device not exists'
+                  //@ts-expect-error
                   label={({ device, percent }) =>
                     `${device} ${((percent || 0) * 100).toFixed(0)}%`
                   }
                 >
                   {data.deviceSplit.map((_, index) => (
-                    <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                    <Cell
+                      key={index}
+                      fill={COLORS[index % COLORS.length]}
+                    />
                   ))}
                 </Pie>
 
@@ -208,7 +228,7 @@ export default function DashboardPage() {
                     <div
                       className="h-3 w-3 rounded-full"
                       style={{
-                        background: COLORS[index],
+                        background: COLORS[index % COLORS.length],
                       }}
                     />
 
@@ -219,6 +239,44 @@ export default function DashboardPage() {
                 </div>
               ))}
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Top Locations */}
+
+        <Card className="lg:col-span-3">
+          <CardHeader>
+            <CardTitle>Top Scan Locations</CardTitle>
+          </CardHeader>
+
+          <CardContent>
+            <ResponsiveContainer width="100%" height={350}>
+              <BarChart
+                data={locationData}
+                layout="vertical"
+                margin={{ left: 30 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+
+                <XAxis type="number" />
+
+                <YAxis
+                  type="category"
+                  dataKey="location"
+                  width={170}
+                />
+
+                <Tooltip
+                  formatter={(value: number) => [`${value} scans`, "Scans"]}
+                />
+
+                <Bar
+                  dataKey="scans"
+                  fill="#6366F1"
+                  radius={[0, 6, 6, 0]}
+                />
+              </BarChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
       </div>
