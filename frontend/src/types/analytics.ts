@@ -1,4 +1,8 @@
 export interface QRAnalyticsData {
+  geo: any;
+  scannerLocations: any;
+  scannerLocations: any;
+  locations: any;
   overview: Overview;
   scanTrend: ScanTrendItem[];
   scanTime: ScanTime;

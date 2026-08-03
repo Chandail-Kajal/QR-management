@@ -12,4 +12,5 @@ export const env = {
   REFRESH_TOKEN_SECRET: raw.REFRESH_TOKEN_SECRET || "REFRESH_SECRET_V2",
   DATABASE_URL: raw.DATABASE_URL || "",
   LOG_LEVEL: (raw.LOG_LEVEL || "info") as LogLevels,
+  GEO_API:raw.GEO_API as string,
 };
