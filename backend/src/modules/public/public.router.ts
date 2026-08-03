@@ -6,6 +6,7 @@ import { QRContent } from "@/types";
 import { UAParser } from "ua-parser-js";
 import { z } from "zod";
 import { ApiError } from "@/shared/utils";
+import { GeoLocationService } from "@/shared/ip-api/geoLocationService";
 
 const qrTokenSchema = z.object({
   token: z.coerce.string().min(8, "Invalid qr token"),
@@ -28,6 +29,7 @@ publicRouter.get("/qr/:token", async (req, res, next) => {
     const parser = new UAParser(userAgent);
     const result = parser.getResult();
     const language = req.header("x-language");
+    const ipDetails = await GeoLocationService(ipAddress!);
 
     await prisma.$transaction([
       prisma.qR.update({
@@ -57,6 +59,8 @@ publicRouter.get("/qr/:token", async (req, res, next) => {
                 ? "Tablet"
                 : "Desktop",
           language,
+          city: ipDetails?.city,
+          country: ipDetails?.country_name,
         },
       }),
     ]);
