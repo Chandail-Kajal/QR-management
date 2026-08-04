@@ -135,13 +135,13 @@ export function QRsPage({
     {
       page,
       search: debouncedSearch,
-      type,
+      ...(type != "all" && { type }),
     },
     {
       folderId: folder?.id as number,
       userId,
     },
-    !!folderName,
+    !!folderName
   );
 
   const allQRs = useQRs(

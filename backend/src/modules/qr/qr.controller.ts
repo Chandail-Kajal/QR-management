@@ -6,6 +6,10 @@ import crypto from "crypto";
 import { paginate } from "@/shared/utils/Paginate";
 import { ApiError } from "@/shared/utils";
 
+export async function getQrCountForUserId(userId: number) {
+  return await prisma.qR.count({ where: { userId } })
+}
+
 export function createQR(qrDetails: CreateQRInput, userId: number) {
   const token = crypto.randomBytes(8).toString("hex");
 
@@ -35,12 +39,17 @@ export async function getQR(id: number) {
   return qr;
 }
 
-export async function getQrTypesWithCount(folderId?: number) {
+export async function getQrTypesWithCount(folderId?: number, userId?: number) {
   const where: Record<string, number> = {};
 
   if (folderId) {
     where.folderId = folderId;
   }
+
+  if (userId) {
+    where.userId = userId
+  }
+
   const result = await prisma.qR.groupBy({
     by: ["type"],
     _count: {
@@ -48,6 +57,7 @@ export async function getQrTypesWithCount(folderId?: number) {
     },
     where: {
       ...where,
+      deletedAt: null,
     },
   });
 

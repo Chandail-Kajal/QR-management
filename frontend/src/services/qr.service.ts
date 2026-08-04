@@ -37,6 +37,7 @@ export async function getFolderQRs(
   params: Params,
   meta: { folderId: number | string; userId?: string },
 ) {
+  console.log({meta});
   const res = await api.get<IApiResponse<TQRDTO[], IApiMetaPagination>>(
     `/qrs/folders/${meta.folderId}`,
     {

@@ -73,7 +73,7 @@ export default function LandingPage() {
       </header>
 
       {/* ================= MAIN ================= */}
-      <main className="flex-grow bg-slate-950">
+      <main className="grow bg-slate-950">
 
         {/* HERO */}
         <section className="max-w-4xl mx-auto px-6 pt-24 pb-16 text-center">

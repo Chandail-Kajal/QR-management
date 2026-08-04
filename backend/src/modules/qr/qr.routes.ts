@@ -19,6 +19,7 @@ import {
   qrIdSchema,
   updateQRSchema,
 } from "./qr.validator";
+import { checkPlanLimit, loadSubscription } from "@/middlewares/subscription-checker";
 
 export const qrRouter = express.Router();
 
@@ -36,18 +37,21 @@ qrRouter
     const data = await listQRs({ ...query, userId });
     res.apiResponse(200, null, data.data, data.meta);
   })
-  .post(async (req, res) => {
-      const { userId: uid, ...qr } = createQRSchema.parse(req.body);
+  .post(loadSubscription, checkPlanLimit("maxQRCodes"), async (req, res) => {
+    const { userId: uid, ...qr } = createQRSchema.parse(req.body);
     const userId =
       req.auth?.userRole === "ADMIN" ? uid : (req.auth?.userId as number);
+
     const newQr = await createQR(qr, userId as number);
     res.apiResponse(201, "Qr create successfully", newQr);
   });
 
 qrRouter.get("/type-counts", allowRoles("ADMIN", "USER"), async (req, res) => {
   const { folderId } = req.query;
+  const userId = req.auth?.userRole === "ADMIN" ? undefined : req.auth?.userId!
   const data = await getQrTypesWithCount(
     folderId ? Number(folderId) : undefined,
+    userId
   );
   res.apiResponse(200, null, data);
 });
@@ -72,14 +76,14 @@ qrRouter
     res.apiResponse(200, "Qr deleted successfully");
   })
   .put(allowRoles("ADMIN"),
-  async(req,res)=>{
-    const {id} =qrIdSchema.parse(req.params);
-    const {isActive}=isActiveSchema.parse(req.body);
-    await qrStatus(id,isActive);
-    res.apiResponse(200,"Qr status Changed Succesfully");
+    async (req, res) => {
+      const { id } = qrIdSchema.parse(req.params);
+      const { isActive } = isActiveSchema.parse(req.body);
+      await qrStatus(id, isActive);
+      res.apiResponse(200, "Qr status Changed Succesfully");
 
-  }
-)
+    }
+  )
 
 qrRouter.get(
   "/folders/:folderId",
@@ -95,4 +99,3 @@ qrRouter.get(
     res.apiResponse(200, null, data.data, data.meta);
   },
 );
- 

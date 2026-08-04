@@ -2,6 +2,8 @@ import "express-serve-static-core";
 import { Role } from "@/generated/prisma/enums";
 import { APIResponse } from "@/shared/utils";
 
+import { SubscriptionPlan } from "@/generated/prisma/client";
+
 declare module "express-serve-static-core" {
   interface Response {
     apiResponse: <T>(
@@ -14,9 +16,12 @@ declare module "express-serve-static-core" {
 
   interface Request {
     auth?: { userId: number; userRole: string | null };
-    subscrition?: {
-      planId: number,
-      planType: string
-    }
+    subscription?: {
+      id: number;
+      userId: number;
+      planId: number;
+      plan: SubscriptionPlan;
+    };
+
   }
 }
