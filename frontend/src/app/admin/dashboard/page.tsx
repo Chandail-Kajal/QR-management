@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 "use client";
 
 import { useEffect, useMemo } from "react";
@@ -134,7 +135,7 @@ export default function DashboardPage() {
                   {data.summary.topPerformer?.scans ?? 0} scans
                 </p>
               </div>
-
+ 
               <Trophy className="h-8 w-8 text-amber-500" />
             </CardContent>
           </div>
@@ -264,10 +265,6 @@ export default function DashboardPage() {
                   type="category"
                   dataKey="location"
                   width={170}
-                />
-
-                <Tooltip
-                  formatter={(value: number) => [`${value} scans`, "Scans"]}
                 />
 
                 <Bar

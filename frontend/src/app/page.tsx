@@ -26,7 +26,7 @@ export default function LandingPage() {
       <header className="border-b border-slate-900 bg-slate-950 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="h-9 w-9 bg-gradient-to-br from-purple-600 via-fuchsia-500 to-indigo-500 rounded-lg flex items-center justify-center font-bold text-xl text-white">
+            <div className="h-9 w-9 bg-linear-to-br from-purple-600 via-fuchsia-500 to-indigo-500 rounded-lg flex items-center justify-center font-bold text-xl text-white">
               QR
             </div>
             <span className="font-bold text-xl tracking-tight text-white">Smart QR</span>
@@ -65,7 +65,7 @@ export default function LandingPage() {
 
           <Link
             href="/login"
-            className="px-5 py-2 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:opacity-90 text-sm font-semibold text-white transition-all duration-200 transform hover:-translate-y-0.5"
+            className="px-5 py-2 rounded-lg bg-linear-to-r from-purple-600 to-indigo-600 hover:opacity-90 text-sm font-semibold text-white transition-all duration-200 transform hover:-translate-y-0.5"
           >
             Log In
           </Link>

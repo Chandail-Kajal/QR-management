@@ -8,6 +8,8 @@ import {
   Settings,
   Users,
   BadgePlus,
+  SubscriptIcon,
+  Layers,
 } from "lucide-react";
 import { Role } from "./roles";
 
@@ -61,6 +63,13 @@ export const navigations: NavItem[] = [
     label: "Settings",
     href: "/admin/settings",
     icon: Settings,
+    access: [Role.ADMIN],
+  },
+  {
+    id: "sub-plans",
+    label: "Subscription Plans",
+    href: "/admin/sub-plans",
+    icon: Layers,
     access: [Role.ADMIN],
   },
 ];

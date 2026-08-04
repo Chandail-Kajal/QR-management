@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import {prisma} from "@/config/prisma";
+import { prisma } from "@/config/prisma";
 
 // Interfaces mirroring the expected response contract
 export type Role = "ADMIN" | "USER";
@@ -94,10 +94,10 @@ export const getAdminBillingData = async (_req: Request, res: Response): Promise
       const activeSubscription = user.subscriptions[0];
       const plan = activeSubscription?.plan;
 
-      // 1. Determine Plan Name
+
       const planName = plan?.name || "Free Trial";
 
-      // 2. Map Database Subscription Status to UI Status
+
       let uiStatus: Status = "EXPIRED";
       if (activeSubscription) {
         const isCanceledOrExpired =
@@ -124,9 +124,9 @@ export const getAdminBillingData = async (_req: Request, res: Response): Promise
       // Find the earliest created QR date or fallback to user creation date
       const earliestQrDate = user.qrs.length
         ? user.qrs.reduce(
-            (earliest, qr) => (qr.createdAt < earliest ? qr.createdAt : earliest),
-            user.qrs[0].createdAt
-          )
+          (earliest, qr) => (qr.createdAt < earliest ? qr.createdAt : earliest),
+          user.qrs[0].createdAt
+        )
         : user.createdAt;
 
       // Categorize QR types into the 4 UI bucket breakdowns

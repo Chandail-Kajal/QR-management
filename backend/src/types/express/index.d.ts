@@ -14,5 +14,9 @@ declare module "express-serve-static-core" {
 
   interface Request {
     auth?: { userId: number; userRole: string | null };
+    subscrition?: {
+      planId: number,
+      planType: string
+    }
   }
 }

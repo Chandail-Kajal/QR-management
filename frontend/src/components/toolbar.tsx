@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 
 interface ToolbarProps extends React.ComponentProps<"div"> {
   searchQuery: string;
-  onSearchChange: (value: string) => void;
+  onSearchChange?: (value: string) => void;
   searchPlaceholder?: string;
   onCreate?: () => void;
   createLabel?: string;
@@ -34,7 +34,7 @@ export function Toolbar({
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         {/* Left Control Group: Search + Inner Left Append Slots */}
         <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center max-w-2xl w-full">
-          <div className="relative w-full max-w-md shrink-0">
+          {onSearchChange && <div className="relative w-full max-w-md shrink-0">
             <Search
               size={18}
               className="text-text-secondary absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
@@ -46,7 +46,7 @@ export function Toolbar({
               placeholder={searchPlaceholder}
               className="h-10 w-full rounded-sm border border-border bg-surface pl-10 pr-4 text-sm text-text outline-none transition-colors placeholder:text-text-secondary focus:border-secondary"
             />
-          </div>
+          </div>}
           {leftAddons && (
             <div className="flex items-center gap-2 empty:hidden">
               {leftAddons}

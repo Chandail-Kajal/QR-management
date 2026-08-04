@@ -18,8 +18,8 @@ export async function getUsers(params: Params) {
     },
   );
   return {
-    items: res.data.data,
-    pagination: res.data.meta.pagination,
+    items: res.data.data || [],
+    pagination: res.data.meta.pagination || {},
   };
 }
 
@@ -41,7 +41,7 @@ export async function updateUser(id: number | string, data: TUpdateUserDTO) {
 export async function deleteUser(id: number | string) {
   await api.delete(`/users/${id}`);
 }
-export async function resetPassword(id:number,password:string){
-const res =await api.patch<IApiResponse<TUserDTO>>(`/users/${id}`,{password});
- return res.data.data;
+export async function resetPassword(id: number, password: string) {
+  const res = await api.patch<IApiResponse<TUserDTO>>(`/users/${id}`, { password });
+  return res.data.data;
 }
