@@ -145,6 +145,11 @@ export function QRsPage({
   );
 
   const allQRs = useQRs(
+
+
+
+
+    
     {
       page,
       search: debouncedSearch,

@@ -493,17 +493,21 @@ export function SubPlanDialog({
                                 </>
                             )}
                         </Button>
+                        <div className="flex flex-row items-center justify-end gap-2">
 
-                        {currentStep < STEPS.length ? (
-                            <Button type="button" onClick={handleNext}>
+                        {/* {currentStep < STEPS.length ? ( */}
+                            <Button type="button" onClick={handleNext}
+                            variant="outline"
+                            >
                                 Next <ChevronRight className="ml-1 h-4 w-4" />
                             </Button>
-                        ) : (
-                            <Button type="submit" disabled={loading}>
+                        {/* // ) : ( */}
+                            <Button type="submit" disabled={loading||currentStep<STEPS.length}>
                                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                                 {mode === "create" ? "Create Plan" : "Save Changes"}
                             </Button>
-                        )}
+                        {/* // )} */}
+                        </div>
                     </DialogFooter>
                 </form>
             </DialogContent>

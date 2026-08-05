@@ -97,7 +97,7 @@ export default function DashboardPage() {
               <TrendingUp className="h-8 w-8 text-primary" />
             </CardContent>
           </div>
-        </Card>
+        </Card> 
 
         <Card>
           <div className="relative">
@@ -123,7 +123,7 @@ export default function DashboardPage() {
             <CardContent className="flex items-center justify-between pt-6">
               <div
                 className={`absolute -top-4 left-0 right-0 w-full p-0.5 rounded-2xl bg-linear-to-r from-amber-600 to-yellow-400`}
-              />
+              /> 
               <div>
                 <p className="text-sm text-muted-foreground">Top Performer</p>
 
@@ -204,7 +204,7 @@ export default function DashboardPage() {
                   outerRadius={100}
                   //@ts-expect-error
                   label={({ device, percent }) =>
-                    `${device} ${((percent || 0) * 100).toFixed(0)}%`
+                    `${device} ${(percent ||0 ).toFixed(0)}%`
                   }
                 >
                   {data.deviceSplit.map((_, index) => (
