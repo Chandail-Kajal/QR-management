@@ -4,7 +4,7 @@ import { ILoginResponseDTO } from "@/types";
 
 interface AuthState {
   user: ILoginResponseDTO["user"] | null;
-  plan: ILoginResponseDTO["subscription"] | null;
+  subscription: ILoginResponseDTO["subscription"] | null;
   accessToken: ILoginResponseDTO["accessToken"] | null;
 
   hydrated: boolean;
@@ -20,7 +20,7 @@ export const useAuthStore = create<AuthState>()(
   persist(
     (set) => ({
       user: null,
-      plan: null,
+      subscription: null,
       accessToken: null,
       hydrated: false,
       selectedWorkspaceId: null,
@@ -39,7 +39,7 @@ export const useAuthStore = create<AuthState>()(
       logout: () =>
         set({
           user: null,
-          plan: null,
+          subscription: null,
           accessToken: null,
         }),
     }),

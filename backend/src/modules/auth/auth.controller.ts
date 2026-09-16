@@ -4,6 +4,7 @@ import bcrypt from "bcrypt";
 import { Role, SubscriptionStatus } from "@/generated/prisma/client";
 import { signAccessToken } from "@/shared/jwt";
 import { ChangePassword, SignupDto } from "./auth.validator";
+import { calculatePlanEndDate } from "./auth.utils";
 
 export interface AuthUser {
   id: number;
@@ -15,11 +16,25 @@ export interface AuthUser {
 }
 
 export interface UserSubscription {
-  id: number;
-  status: SubscriptionStatus;
-  planId: number;
+  allowCustomDesign: boolean;
+  allowedQRTypes: string[];
+  allowExpiryDate: boolean;
+  allowPasswordProtection: boolean;
+  analyticsHistoryDays: number;
+  isFree: boolean;
+  isActive: boolean;
+  maxCampaigns: number;
+  maxFileSizeMb: number;
+  maxFileUploads: number;
+  name: string;
+  maxFolders: number;
+  maxQRCodes: number;
+  maxQRsPerFolder: number;
+  maxScansPerQR: number;
+  maxTotalScans: number;
   startDate: Date;
-  endDate: Date | null;
+  expiryDate: Date;
+  subscriptionStatus: SubscriptionStatus;
 }
 
 export interface LoginResult {
@@ -46,24 +61,6 @@ export const getUser = async (email?: string | null, id?: number | null) => {
       role: true,
       createdAt: true,
       updatedAt: true,
-      subscriptions: {
-        where: {
-          status: {
-            in: [SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIALING],
-          },
-        },
-        orderBy: {
-          createdAt: "desc",
-        },
-        take: 1,
-        select: {
-          id: true,
-          status: true,
-          planId: true,
-          startDate: true,
-          endDate: true,
-        },
-      },
     },
   });
 
@@ -71,7 +68,46 @@ export const getUser = async (email?: string | null, id?: number | null) => {
     return null;
   }
 
-  const activeSubscription = user.subscriptions[0] || null;
+  const activeSubscription =
+    (await prisma.subscription.findFirst({
+      where: {
+        userId: user.id,
+        status: {
+          in: [SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIALING],
+        },
+      },
+      select: {
+        planId: true,
+        startDate: true,
+        id: true,
+        endDate: true,
+        status: true,
+      },
+    })) || null;
+  if (!activeSubscription) throw new ApiError(400, "No subscription exists");
+  const activeSubscriptionPlan = await prisma.subscriptionPlan.findUnique({
+    where: { id: activeSubscription.planId },
+    select: {
+      allowCustomDesign: true,
+      allowedQRTypes: true,
+      allowExpiryDate: true,
+      allowPasswordProtection: true,
+      analyticsHistoryDays: true,
+      isFree: true,
+      isActive: true,
+      maxCampaigns: true,
+      maxFileSizeMb: true,
+      maxFileUploads: true,
+      name: true,
+      maxFolders: true,
+      maxQRCodes: true,
+      maxQRsPerFolder: true,
+      maxScansPerQR: true,
+      maxTotalScans: true,
+    },
+  });
+
+  console.log({ activeSubscription, activeSubscriptionPlan });
 
   return {
     user: {
@@ -82,7 +118,12 @@ export const getUser = async (email?: string | null, id?: number | null) => {
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     },
-    subscription: activeSubscription,
+    subscription: {
+      ...activeSubscriptionPlan,
+      startDate: activeSubscription.startDate,
+      expiryDate: activeSubscription.endDate,
+      subscriptionStatus: activeSubscription.status,
+    },
   };
 };
 
@@ -116,7 +157,7 @@ export const login = async (
 };
 
 export async function createUser(dto: SignupDto) {
-  const normalizedEmail = dto.email.toLowerCase();
+  const normalizedEmail = dto.email.trim().toLowerCase();
 
   const existing = await prisma.user.findUnique({
     where: {
@@ -131,7 +172,6 @@ export async function createUser(dto: SignupDto) {
   const hashedPassword = await bcrypt.hash(dto.password, 10);
 
   return prisma.$transaction(async (tx) => {
-    // 1. Create the User
     const user = await tx.user.create({
       data: {
         name: dto.name,
@@ -141,17 +181,67 @@ export async function createUser(dto: SignupDto) {
       },
     });
 
-    // 2. Assign Default Free/Trial Subscription (14-day Trial)
-    const fourteenDaysFromNow = new Date();
-    fourteenDaysFromNow.setDate(fourteenDaysFromNow.getDate() + 14);
+    /**
+     * Determine which subscription plan the user should receive.
+     *
+     * If planId is provided:
+     *   - Validate that the plan exists and is active.
+     *
+     * If planId is not provided:
+     *   - Assign the active free plan.
+     */
+    const plan = dto.planId
+      ? await tx.subscriptionPlan.findFirst({
+          where: {
+            id: dto.planId,
+            isActive: true,
+          },
+          select: {
+            id: true,
+            isFree: true,
+            intervalType: true,
+            intervalValue: true,
+          },
+        })
+      : await tx.subscriptionPlan.findFirst({
+          where: {
+            isFree: true,
+            isActive: true,
+          },
+          select: {
+            id: true,
+            isFree: true,
+            intervalType: true,
+            intervalValue: true,
+          },
+        });
+
+    if (!plan) {
+      throw new ApiError(
+        400,
+        dto.planId
+          ? "Requested plan is not available!"
+          : "No Free plan is available!",
+      );
+    }
+
+    const startDate = new Date();
+
+    const endDate = calculatePlanEndDate(
+      startDate,
+      plan.intervalType,
+      plan.intervalValue,
+    );
 
     await tx.subscription.create({
       data: {
         userId: user.id,
-        planId: 1, // Default Free Plan ID (from seed)
-        status: SubscriptionStatus.TRIALING,
-        startDate: new Date(),
-        endDate: fourteenDaysFromNow,
+        planId: plan.id,
+        status: plan.isFree
+          ? SubscriptionStatus.TRIALING
+          : SubscriptionStatus.ACTIVE,
+        startDate,
+        endDate,
       },
     });
 
@@ -164,18 +254,28 @@ export async function createUser(dto: SignupDto) {
   });
 }
 
-
-export async function changePassword(userId: number, passwords: ChangePassword) {
-  const existingUser = await prisma.user.findFirst({ where: { id: userId }, select: { id: true, password: true } })
-  if (!existingUser) throw new ApiError(404, "User not exists")
-  const isCurrentPasswordMatched = await bcrypt.compare(passwords.currentPassword, existingUser.password)
-  if (!isCurrentPasswordMatched) throw new ApiError(400, "Current password is invalid")
-  const newHash = await bcrypt.hash(passwords.newPassword, 10)
+export async function changePassword(
+  userId: number,
+  passwords: ChangePassword,
+) {
+  const existingUser = await prisma.user.findFirst({
+    where: { id: userId },
+    select: { id: true, password: true },
+  });
+  if (!existingUser) throw new ApiError(404, "User not exists");
+  const isCurrentPasswordMatched = await bcrypt.compare(
+    passwords.currentPassword,
+    existingUser.password,
+  );
+  if (!isCurrentPasswordMatched)
+    throw new ApiError(400, "Current password is invalid");
+  const newHash = await bcrypt.hash(passwords.newPassword, 10);
   const updatedUser = await prisma.user.update({
-    where: { id: userId }, data: {
-      password: newHash
-    }
-  })
+    where: { id: userId },
+    data: {
+      password: newHash,
+    },
+  });
 
-  return updatedUser
-} 
+  return updatedUser;
+}

@@ -12,7 +12,12 @@ import { QRActionsDropdown } from "./components/qr-action-dropdown";
 import { useFolderQRs, useQRs, useQrTypeCounts } from "@/hooks/use-qrs";
 import { QrModalForm } from "./components/add-update-modal";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { changeStatus, createQR, deleteQR, updateQr } from "@/services/qr.service";
+import {
+  changeStatus,
+  createQR,
+  deleteQR,
+  updateQr,
+} from "@/services/qr.service";
 import { toast } from "sonner";
 import { SegmentedControl } from "@/components/segmented-control";
 import { getQRTypeIcon } from "@/lib/preview-type-icon";
@@ -141,15 +146,10 @@ export function QRsPage({
       folderId: folder?.id as number,
       userId,
     },
-    !!folderName
+    !!folderName,
   );
 
   const allQRs = useQRs(
-
-
-
-
-    
     {
       page,
       search: debouncedSearch,
@@ -225,7 +225,6 @@ export function QRsPage({
     },
   });
 
-
   const deleteMutation = useMutation({
     mutationFn: deleteQR,
     onError: (err) => toast.error(`Error: ${err.message}`),
@@ -290,9 +289,16 @@ export function QRsPage({
       dataIndex: "isActive",
       render: (status) => (
         <div className="inline-flex">
-          <div className={clsx("text-xs rounded-full px-2 py-0.5 border", status ? "bg-success/10 border-success text-success font-semibold" : "bg-red-400 ")}>{status ? "Active" : "Inactive"}</div>
-
-
+          <div
+            className={clsx(
+              "text-xs rounded-full px-2 py-0.5 border",
+              status
+                ? "bg-success/10 border-success text-success font-semibold"
+                : "bg-red-400 ",
+            )}
+          >
+            {status ? "Active" : "Inactive"}
+          </div>
         </div>
       ),
     },
@@ -326,16 +332,20 @@ export function QRsPage({
       render: (status, record) => (
         <div className="inline-flex">
           <Field orientation="horizontal" data-disabled className="w-fit">
-            <Switch id="switch-disabled-unchecked " checked={status}
+            <Switch
+              id="switch-disabled-unchecked "
+              checked={status}
               onCheckedChange={(checked) => {
                 statusMutation.mutate({
                   id: record.id,
                   isActive: checked,
                 });
-              }} />
-            <FieldLabel htmlFor="switch-disabled-unchecked rounded">{status ? "Deactivate" : "Activate"}</FieldLabel>
+              }}
+            />
+            <FieldLabel htmlFor="switch-disabled-unchecked rounded">
+              {status ? "Deactivate" : "Activate"}
+            </FieldLabel>
           </Field>
-
         </div>
       ),
     },
@@ -357,7 +367,6 @@ export function QRsPage({
             qr={qr}
             onEdit={onEdit}
             onDelete={onDelete}
-
           />
         </div>
       ),
@@ -426,7 +435,12 @@ export function QRsPage({
         createLabel="New QR"
         searchQuery={search}
         onSearchChange={setSearch}
-        onCreate={(user?.role === "USER" && folder) || (user?.role === "ADMIN" && userId && folderName) ? () => setCreateOpen(true) : undefined}
+        onCreate={
+          (user?.role === "USER" && folder) ||
+          (user?.role === "ADMIN" && userId && folderName)
+            ? () => setCreateOpen(true)
+            : undefined
+        }
       />
 
       <DataTable
@@ -456,16 +470,23 @@ export function QRsPage({
         initialData={
           editValues
             ? {
-              folderId: folderName ? folder?.id : undefined,
-              name: editValues.name,
-              content: editValues.content,
-              isActive: editValues.isActive,
-              type: editValues.type,
-              scanLimit: editValues.scanCount || undefined,
-            }
+                folderId: folderName ? folder?.id : undefined,
+                name: editValues.name,
+                content: editValues.content,
+                isActive: editValues.isActive,
+                type: editValues.type,
+                scanLimit: editValues.scanCount || undefined,
+              }
             : undefined
         }
-        onSubmit={!folderName ? () => toast.info("Can not save in edit mode, try to edit from folders instead") : mutation.mutate}
+        onSubmit={
+          !folderName
+            ? () =>
+                toast.info(
+                  "Can not save in edit mode, try to edit from folders instead",
+                )
+            : mutation.mutate
+        }
       />
     </main>
   );

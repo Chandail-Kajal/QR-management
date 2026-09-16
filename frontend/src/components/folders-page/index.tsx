@@ -48,9 +48,12 @@ export function FoldersPage({ userId }: { userId?: string }) {
   const mutation = useMutation({
     mutationFn: async (data: { name: string; id?: string | number }) => {
       if (editValues) {
-        updateFolder(editValues.id as number, { name: data.name, userId });
+        await updateFolder(editValues.id as number, {
+          name: data.name,
+          userId,
+        });
       } else {
-        createFolder(data);
+        await createFolder(data);
       }
     },
     onError: (err) => {
@@ -77,7 +80,7 @@ export function FoldersPage({ userId }: { userId?: string }) {
       toast.error(error.message);
     },
 
-    mutationFn: deleteFolder,
+    mutationFn: async (id: number) => await deleteFolder(id),
   });
 
   useEffect(() => {

@@ -19,22 +19,29 @@ import {
   listFoldersSchema,
   updateFolderSchema,
 } from "./folder.validator";
+import {
+  checkPlanLimit,
+  loadSubscription,
+} from "@/middlewares/subscription-checker";
 
 export const folderRouter = express.Router();
 
-folderRouter.use(auth);
+folderRouter.use(auth, loadSubscription);
 
 folderRouter
   .route("/")
   .all(allowRoles("ADMIN", "USER"))
   .get(async (req, res) => {
     const query = listFoldersSchema.parse(req.query);
-    const userId =
-      query.userId ? req.auth?.userRole === "ADMIN" ? query.userId : req.auth?.userId : req.auth?.userId;
+    const userId = query.userId
+      ? req.auth?.userRole === "ADMIN"
+        ? query.userId
+        : req.auth?.userId
+      : req.auth?.userId;
     const data = await listFolders(query, userId);
     res.apiResponse(201, null, data.data, { pagination: data.meta.pagination });
   })
-  .post(async (req, res) => {
+  .post(checkPlanLimit("maxFolders"), async (req, res) => {
     const body = createFolderSchema.parse(req.body);
     const newFolder = await createFolder({
       ...body,

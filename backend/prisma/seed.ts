@@ -315,7 +315,7 @@ async function main() {
         userId: admin.id,
         folderId: qr.folderId ?? null,
         campaignId: qr.campaignId ?? null,
-        status: QRStatus.ACTIVE,
+        // status: QRStatus.ACTIVE,
       },
     });
 

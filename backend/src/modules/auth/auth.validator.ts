@@ -13,16 +13,13 @@ export const signupSchema = z.object({
   email: z.email(),
   password: z.coerce.string().trim().min(8, "Password must be 8 chars long"),
   name: z.coerce.string().trim().min(3, "name must be 3 chars long"),
+  planId: z.coerce.number().int().gt(0).optional(),
 });
 
 export const changePasswordSchema = z.object({
   currentPassword: z.coerce.string().min(8, "Password must be 8 chars long"),
   newPassword: z.coerce.string().min(8, "Password must be 8 chars long"),
-})
-
+});
 
 export type SignupDto = z.infer<typeof signupSchema>;
-export type ChangePassword = z.infer<typeof changePasswordSchema>
-
-
-
+export type ChangePassword = z.infer<typeof changePasswordSchema>;

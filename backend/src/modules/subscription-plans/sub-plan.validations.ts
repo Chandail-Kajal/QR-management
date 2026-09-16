@@ -8,7 +8,7 @@ export const createSubPlanSchema = z
         isFree: z.coerce.boolean(),
         isActive: z.coerce.boolean(),
 
-        price: z.coerce.number().int().optional().nullable(),
+        price: z.coerce.number().optional().nullable(),
 
         currency: z.enum(["USD", "INR", "JPY", "EUR"]),
         intervalType: z.enum(["DAYS", "MONTHS"]),
@@ -49,7 +49,7 @@ export const updateSubPlanSchema = z.object({
     isFree: z.coerce.boolean(),
     isActive: z.coerce.boolean(),
 
-    price: z.coerce.number().int().optional().nullable(),
+    price: z.coerce.number().optional().nullable(),
 
     currency: z.enum(["USD", "INR", "JPY", "EUR"]),
     intervalType: z.enum(["DAYS", "MONTHS"]),

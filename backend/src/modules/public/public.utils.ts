@@ -109,6 +109,12 @@ export function resolveQRDestination(
         },
       };
 
+    case "SOCIAL":
+      return {
+        renderMode: "SOCIAL",
+        content: content as SocialQRContent,
+      };
+
     default:
       throw new ApiError(400, "Unsupported QR Type");
   }

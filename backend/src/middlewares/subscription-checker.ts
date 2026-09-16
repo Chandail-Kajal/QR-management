@@ -4,12 +4,12 @@ import { prisma } from "@/config/prisma";
 import { ApiError } from "@/shared/utils";
 import { NextFunction, Request, Response } from "express";
 import { usageResolvers } from "@/shared/utils/usageResolver";
-
+import { Role } from "@/generated/prisma/enums";
 
 export const loadSubscription = async (
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   const userId = req.auth?.userId;
 
@@ -17,14 +17,13 @@ export const loadSubscription = async (
     throw new ApiError(401, "Unauthorized");
   }
 
+  if (req.auth?.userRole === Role.ADMIN) return next();
+
   const subscription = await prisma.subscription.findFirst({
     where: {
       userId,
-      status: "ACTIVE",
-      OR: [
-        { endDate: null },
-        { endDate: { gt: new Date() } },
-      ],
+      status: { in: ["ACTIVE", "TRIALING"] },
+      OR: [{ endDate: null }, { endDate: { gt: new Date() } }],
     },
     include: {
       plan: true,
@@ -49,13 +48,13 @@ export const loadSubscription = async (
   next();
 };
 
-
-
 type Feature = keyof typeof usageResolvers;
 
 export const checkPlanLimit =
   (feature: Feature) =>
   async (req: Request, res: Response, next: NextFunction) => {
+    if (req.auth?.userRole === Role.ADMIN) return next();
+
     if (!req.subscription) {
       throw new ApiError(500, "Subscription not loaded.");
     }
@@ -67,14 +66,12 @@ export const checkPlanLimit =
       return next();
     }
 
-    const currentUsage = await usageResolvers[feature](
-      req.subscription.userId
-    );
+    const currentUsage = await usageResolvers[feature](req.subscription.userId);
 
     if (currentUsage >= limit) {
       throw new ApiError(
         403,
-        `${feature} limit reached. Upgrade your plan to continue.`
+        `${feature} limit reached. Upgrade your plan to continue.`,
       );
     }
 

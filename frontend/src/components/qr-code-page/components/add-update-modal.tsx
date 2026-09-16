@@ -44,6 +44,8 @@ import {
 import { createQRSchema } from "./validations";
 import { QRType, TCreateQRDTO } from "@/types";
 import { StepperHeader } from "./stepper";
+import { usePlanQrTypes } from "@/hooks/use-plan-limits";
+import { useAuthStore } from "@/stores/auth.store";
 
 interface QRDialogProps {
   open: boolean;
@@ -132,6 +134,11 @@ export function QrModalForm({
   folderSearchQuery,
   folderSearchLoading,
 }: QRDialogProps) {
+  const ALLOWED_QR_TYPES = usePlanQrTypes();
+  const sub = useAuthStore((s) => s.subscription);
+  const isDesignAllowed = sub?.allowCustomDesign;
+  const lastStep = isDesignAllowed ? 2 : 1;
+
   const [step, setStep] = useState<number>(0);
 
   const [selectedFolder, setSelectedFolder] = useState<string>("Demo");
@@ -216,9 +223,19 @@ export function QrModalForm({
   const handleNextStep = async () => {
     if (step === 0) {
       setStep(1);
-    } else if (step === 1) {
+      return;
+    }
+
+    if (step === 1) {
       const isValid = await trigger(["name", "content"]);
-      if (isValid) setStep(2);
+
+      if (!isValid) return;
+
+      if (isDesignAllowed) {
+        setStep(2);
+      } else {
+        handleSubmit((data) => onSubmit(data as unknown as TCreateQRDTO))();
+      }
     }
   };
 
@@ -250,7 +267,7 @@ export function QrModalForm({
             steps={[
               { title: "Choose Type" },
               { title: "Configure Content" },
-              { title: "Customize Design" },
+              ...(isDesignAllowed ? [{ title: "Customize Design" }] : []),
             ]}
           />
         </div>
@@ -263,7 +280,9 @@ export function QrModalForm({
                   Select QR Code Objective
                 </h4>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {QR_TYPE_CONFIGS.map((cfg) => (
+                  {QR_TYPE_CONFIGS.filter((q) =>
+                    ALLOWED_QR_TYPES.includes(q.id),
+                  ).map((cfg) => (
                     <div
                       key={cfg.id}
                       onClick={() => onTypeChange(cfg.id as QRType)}
@@ -390,7 +409,7 @@ export function QrModalForm({
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <div className="flex flex-col gap-1.5">
                         <label className="text-xs font-semibold text-gray-700 tracking-wide">
-                          Default Action Subject Line 
+                          Default Action Subject Line
                         </label>
                         <Input
                           placeholder="Inquiry from QR Vector"
@@ -734,7 +753,11 @@ export function QrModalForm({
           )}
         </div>
 
-        <form onSubmit={handleSubmit((data) => onSubmit(data as unknown as TCreateQRDTO))}>
+        <form
+          onSubmit={handleSubmit((data) =>
+            onSubmit(data as unknown as TCreateQRDTO),
+          )}
+        >
           <DialogFooter className="px-8 h-20 pb-8 border-t border-gray-100 bg-slate-50 flex items-center justify-between gap-2 sm:justify-between">
             <div className="flex items-center ">
               {step > 0 && (
@@ -759,7 +782,7 @@ export function QrModalForm({
                 Cancel
               </Button>
 
-              {step < 2 ? (
+              {step < lastStep ? (
                 <Button
                   type="button"
                   onClick={handleNextStep}

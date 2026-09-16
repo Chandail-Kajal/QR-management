@@ -1,5 +1,5 @@
 import { api } from "@/lib/api";
-import { IApiMetaPagination, IApiResponse } from "@/types";
+import { IApiMetaErrorStack, IApiMetaPagination, IApiResponse } from "@/types";
 import { TCreateFolderDTO, TFolderDTO, TUpdateFolderDTO } from "@/types/folder";
 import { AxiosError } from "axios";
 
@@ -44,25 +44,39 @@ export async function getFolderByName({ name }: { name: string }) {
 }
 
 export async function createFolder(data: TCreateFolderDTO) {
-  const res = await api.post<IApiResponse<TFolderDTO>>("/folders", {
-    name: data.name,
-    ...(data.userId && { userId: data.userId }),
-  });
-  return res.data.data;
+  try {
+    const res = await api.post<IApiResponse<TFolderDTO>>("/folders", {
+      name: data.name,
+      ...(data.userId && { userId: data.userId }),
+    });
+    return res.data.data;
+  } catch (error) {
+    throw new Error(
+      (error as AxiosError<IApiResponse<IApiMetaErrorStack>>).response?.data
+        .message,
+    );
+  }
 }
 
 export async function updateFolder(
   id: number | string,
   data: TUpdateFolderDTO,
 ) {
-  const res = await api.patch<IApiResponse<TUpdateFolderDTO>>(
-    "/folders/" + id,
-    {
-      name: data.name,
-      ...(data.userId && { userId: data.userId }),
-    },
-  );
-  return res.data.data;
+  try {
+    const res = await api.patch<IApiResponse<TUpdateFolderDTO>>(
+      "/folders/" + id,
+      {
+        name: data.name,
+        ...(data.userId && { userId: data.userId }),
+      },
+    );
+    return res.data.data;
+  } catch (error) {
+    throw new Error(
+      (error as AxiosError<IApiResponse<IApiMetaErrorStack>>).response?.data
+        .message,
+    );
+  }
 }
 
 export async function deleteFolder(id: number | string) {

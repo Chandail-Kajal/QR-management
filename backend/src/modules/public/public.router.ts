@@ -8,7 +8,7 @@ import { z } from "zod";
 import { ApiError } from "@/shared/utils";
 import { updateGeolocationOnScan } from "@/shared/3rd-party/geolocaiton-ip-api";
 
-const qrTokenSchema = z.object({
+export const qrTokenSchema = z.object({
   token: z.coerce.string().min(8, "Invalid qr token"),
 });
 
@@ -18,10 +18,6 @@ publicRouter.get("/qr/:token", async (req, res, next) => {
   try {
     const { token } = qrTokenSchema.parse(req.params);
     const qr = await findQr(token);
-    if (qr.scanLimit !== null && qr.scanCount >= qr.scanLimit) {
-      throw new ApiError(403, "QR scan limit reached");
-    }
-
     const ipAddress =
       req.headers["x-forwarded-for"]?.toString().split(",")[0] ||
       req.socket.remoteAddress;
@@ -58,7 +54,6 @@ publicRouter.get("/qr/:token", async (req, res, next) => {
                 ? "Tablet"
                 : "Desktop",
           language,
-
         },
       }),
     ]);

@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import { SubPlanDialog } from "./sub-plan-dialog";
 import { Badge } from "@/components/ui/badge";
 import clsx from "clsx";
+import { CreateSubPlanValues, UpdateSubPlanValues } from "./validations";
 
 
 export default function SubPlanManagement() {
@@ -51,12 +52,12 @@ export default function SubPlanManagement() {
     } = useDeleteSubPlan();
 
     const [editingId, setEditingId] = useState<number | undefined>(undefined);
-    const [editValues, setEditValues] = useState<TSubPlanDTO | null>(null);
+    const [editValues, setEditValues] = useState<UpdateSubPlanValues | null>(null);
 
     // Sync editing selection to modal state
     const handleEdit = (plan: TSubPlanDTO) => {
         setEditingId(plan.id);
-        setEditValues(plan);
+        setEditValues(plan as UpdateSubPlanValues);
         setOpen(true);
     };
 
@@ -280,7 +281,7 @@ export default function SubPlanManagement() {
                             ...values,
                         });
                     } else {
-                        createSubPlan(values);
+                        createSubPlan(values as CreateSubPlanValues);
                     }
                 }}
             />

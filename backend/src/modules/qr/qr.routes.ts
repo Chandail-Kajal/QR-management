@@ -23,7 +23,7 @@ import { checkPlanLimit, loadSubscription } from "@/middlewares/subscription-che
 
 export const qrRouter = express.Router();
 
-qrRouter.use(auth);
+qrRouter.use(auth, loadSubscription);
 
 qrRouter
   .route("/")
@@ -37,7 +37,7 @@ qrRouter
     const data = await listQRs({ ...query, userId });
     res.apiResponse(200, null, data.data, data.meta);
   })
-  .post(loadSubscription, checkPlanLimit("maxQRCodes"), async (req, res) => {
+  .post(checkPlanLimit("maxQRCodes"), async (req, res) => {
     const { userId: uid, ...qr } = createQRSchema.parse(req.body);
     const userId =
       req.auth?.userRole === "ADMIN" ? uid : (req.auth?.userId as number);

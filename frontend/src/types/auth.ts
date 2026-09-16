@@ -16,11 +16,25 @@ export interface AuthUser {
 }
 
 export interface UserSubscription {
-  id: number;
-  status: SubscriptionStatus;
-  planId: number;
+  allowCustomDesign: boolean;
+  allowedQRTypes: string[];
+  allowExpiryDate: boolean;
+  allowPasswordProtection: boolean;
+  analyticsHistoryDays: number;
+  isFree: boolean;
+  isActive: boolean;
+  maxCampaigns: number;
+  maxFileSizeMb: number;
+  maxFileUploads: number;
+  name: string;
+  maxFolders: number;
+  maxQRCodes: number;
+  maxQRsPerFolder: number;
+  maxScansPerQR: number;
+  maxTotalScans: number;
   startDate: Date;
-  endDate: Date | null;
+  expiryDate: Date;
+  subscriptionStatus: SubscriptionStatus;
 }
 
 export interface ILoginResponseDTO {
