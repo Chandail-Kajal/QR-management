@@ -331,10 +331,16 @@ export function QRsPage({
       hidden: user!.role == "USER",
       render: (status, record) => (
         <div className="inline-flex">
-          <Field orientation="horizontal" data-disabled className="w-fit">
+          <Field orientation="horizontal" className="w-fit items-center gap-2">
             <Switch
-              id="switch-disabled-unchecked "
+              id={`switch-${record.id}`}
               checked={status}
+              className={clsx(
+                "transition-colors",
+                status
+                  ? "!bg-emerald-500 data-[state=checked]:!bg-emerald-500"
+                  : "!bg-red-200 hover:!bg-red-300 data-[state=unchecked]:!bg-red-200"
+              )}
               onCheckedChange={(checked) => {
                 statusMutation.mutate({
                   id: record.id,
@@ -342,7 +348,13 @@ export function QRsPage({
                 });
               }}
             />
-            <FieldLabel htmlFor="switch-disabled-unchecked rounded">
+            <FieldLabel
+              htmlFor={`switch-${record.id}`}
+              className={clsx(
+                "text-xs font-medium cursor-pointer select-none",
+                status ? "text-emerald-600" : "text-red-500"
+              )}
+            >
               {status ? "Deactivate" : "Activate"}
             </FieldLabel>
           </Field>
@@ -437,7 +449,7 @@ export function QRsPage({
         onSearchChange={setSearch}
         onCreate={
           (user?.role === "USER" && folder) ||
-          (user?.role === "ADMIN" && userId && folderName)
+            (user?.role === "ADMIN" && userId && folderName)
             ? () => setCreateOpen(true)
             : undefined
         }
@@ -470,21 +482,21 @@ export function QRsPage({
         initialData={
           editValues
             ? {
-                folderId: folderName ? folder?.id : undefined,
-                name: editValues.name,
-                content: editValues.content,
-                isActive: editValues.isActive,
-                type: editValues.type,
-                scanLimit: editValues.scanCount || undefined,
-              }
+              folderId: folderName ? folder?.id : undefined,
+              name: editValues.name,
+              content: editValues.content,
+              isActive: editValues.isActive,
+              type: editValues.type,
+              scanLimit: editValues.scanCount || undefined,
+            }
             : undefined
         }
         onSubmit={
           !folderName
             ? () =>
-                toast.info(
-                  "Can not save in edit mode, try to edit from folders instead",
-                )
+              toast.info(
+                "Can not save in edit mode, try to edit from folders instead",
+              )
             : mutation.mutate
         }
       />
