@@ -109,6 +109,21 @@ export const getUser = async (email?: string | null, id?: number | null) => {
 
   console.log({ activeSubscription, activeSubscriptionPlan });
 
+  // Parse allowedQRTypes if it's a JSON string (stored via JSON.stringify into a Json column)
+  let parsedAllowedQRTypes: string[] = [];
+  if (activeSubscriptionPlan?.allowedQRTypes) {
+    const raw = activeSubscriptionPlan.allowedQRTypes;
+    if (typeof raw === "string") {
+      try {
+        parsedAllowedQRTypes = JSON.parse(raw);
+      } catch {
+        parsedAllowedQRTypes = [];
+      }
+    } else if (Array.isArray(raw)) {
+      parsedAllowedQRTypes = raw as string[];
+    }
+  }
+
   return {
     user: {
       id: user.id,
@@ -120,6 +135,7 @@ export const getUser = async (email?: string | null, id?: number | null) => {
     },
     subscription: {
       ...activeSubscriptionPlan,
+      allowedQRTypes: parsedAllowedQRTypes,
       startDate: activeSubscription.startDate,
       expiryDate: activeSubscription.endDate,
       subscriptionStatus: activeSubscription.status,

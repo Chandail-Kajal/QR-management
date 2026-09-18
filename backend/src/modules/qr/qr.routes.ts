@@ -42,6 +42,27 @@ qrRouter
     const userId =
       req.auth?.userRole === "ADMIN" ? uid : (req.auth?.userId as number);
 
+    // Validate that the QR type is allowed by the user's subscription plan
+    if (req.auth?.userRole !== "ADMIN" && req.subscription?.plan) {
+      const rawAllowedTypes = req.subscription.plan.allowedQRTypes;
+      let allowedTypes: string[] = [];
+
+      if (typeof rawAllowedTypes === "string") {
+        try {
+          allowedTypes = JSON.parse(rawAllowedTypes);
+        } catch {
+          allowedTypes = [];
+        }
+      } else if (Array.isArray(rawAllowedTypes)) {
+        allowedTypes = rawAllowedTypes as string[];
+      }
+
+      if (allowedTypes.length > 0 && !allowedTypes.includes(qr.type)) {
+        res.apiResponse(403, `QR type "${qr.type}" is not allowed on your current plan.`);
+        return;
+      }
+    }
+
     const newQr = await createQR(qr, userId as number);
     res.apiResponse(201, "Qr create successfully", newQr);
   });
