@@ -20,6 +20,15 @@ import {
   StarIcon,
   HeartIcon,
   Folder,
+  FileText,
+  FileIcon,
+  Camera,
+  Globe,
+  Briefcase,
+  AtSign,
+  Play,
+  Music2,
+  Share2,
 } from "lucide-react";
 
 import {
@@ -71,6 +80,13 @@ export const QR_TYPE_CONFIGS = [
     bg: "bg-blue-50 text-blue-600",
   },
   {
+    id: "TEXT",
+    name: "Text",
+    icon: <FileText />,
+    desc: "Plain text message",
+    bg: "bg-slate-50 text-slate-700",
+  },
+  {
     id: "VCARD",
     name: "vCard",
     icon: <Contact />,
@@ -106,6 +122,13 @@ export const QR_TYPE_CONFIGS = [
     bg: "bg-lime-50 text-lime-700",
   },
   {
+    id: "FILE",
+    name: "File",
+    icon: <FileIcon />,
+    desc: "Downloadable file link",
+    bg: "bg-violet-50 text-violet-700",
+  },
+  {
     id: "GOOGLE_REVIEW",
     name: "G. Review",
     icon: <StarIcon />,
@@ -118,6 +141,55 @@ export const QR_TYPE_CONFIGS = [
     icon: <HeartIcon />,
     desc: "Instant text conversation",
     bg: "bg-green-50 text-green-700",
+  },
+  {
+    id: "INSTAGRAM",
+    name: "Instagram",
+    icon: <Camera />,
+    desc: "Instagram profile link",
+    bg: "bg-pink-50 text-pink-700",
+  },
+  {
+    id: "FACEBOOK",
+    name: "Facebook",
+    icon: <Globe />,
+    desc: "Facebook page link",
+    bg: "bg-blue-50 text-blue-700",
+  },
+  {
+    id: "LINKEDIN",
+    name: "LinkedIn",
+    icon: <Briefcase />,
+    desc: "Professional profile link",
+    bg: "bg-sky-50 text-sky-700",
+  },
+  {
+    id: "X",
+    name: "X (Twitter)",
+    icon: <AtSign />,
+    desc: "X / Twitter profile link",
+    bg: "bg-gray-50 text-gray-700",
+  },
+  {
+    id: "YOUTUBE",
+    name: "YouTube",
+    icon: <Play />,
+    desc: "YouTube channel link",
+    bg: "bg-red-50 text-red-700",
+  },
+  {
+    id: "TIKTOK",
+    name: "TikTok",
+    icon: <Music2 />,
+    desc: "TikTok profile link",
+    bg: "bg-fuchsia-50 text-fuchsia-700",
+  },
+  {
+    id: "SOCIAL",
+    name: "Social",
+    icon: <Share2 />,
+    desc: "Multi-platform social links",
+    bg: "bg-indigo-50 text-indigo-700",
   },
 ] as const;
 
@@ -216,6 +288,37 @@ export function QrModalForm({
         break;
       case "WHATSAPP":
         setValue("content", { phone: "", message: "" });
+        break;
+      case "FILE":
+        setValue("content", { fileId: null, fileName: "" });
+        break;
+      case "GOOGLE_REVIEW":
+        setValue("content", { placeId: "", reviewUrl: "" });
+        break;
+      case "INSTAGRAM":
+        setValue("content", { username: "", url: "" });
+        break;
+      case "FACEBOOK":
+        setValue("content", { pageName: "", url: "" });
+        break;
+      case "LINKEDIN":
+        setValue("content", { profileName: "", url: "" });
+        break;
+      case "X":
+        setValue("content", { username: "", url: "" });
+        break;
+      case "YOUTUBE":
+        setValue("content", { channelName: "", url: "" });
+        break;
+      case "TIKTOK":
+        setValue("content", { username: "", url: "" });
+        break;
+      case "SOCIAL":
+        setValue("content", {
+          title: "",
+          description: "",
+          links: {},
+        });
         break;
     }
   };
@@ -560,6 +663,210 @@ export function QrModalForm({
                   </div>
                 )}
 
+                {type === "TEXT" && (
+                  <div className="flex flex-col gap-1.5 md:col-span-2">
+                    <label className="text-xs font-semibold text-gray-700 tracking-wide">
+                      Text Content *
+                    </label>
+                    <Input
+                      placeholder="Enter your text message..."
+                      className="h-10 border-gray-200 rounded-lg"
+                      {...register("content.text")}
+                    />
+                  </div>
+                )}
+
+                {type === "GOOGLE_REVIEW" && (
+                  <div className="flex flex-col gap-3 md:col-span-2">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-gray-700 tracking-wide">
+                        Google Place ID *
+                      </label>
+                      <Input
+                        placeholder="ChIJ..."
+                        className="h-10 border-gray-200 rounded-lg"
+                        {...register("content.placeId")}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-gray-700 tracking-wide">
+                        Review URL *
+                      </label>
+                      <Input
+                        placeholder="https://search.google.com/local/writereview?placeid=..."
+                        className="h-10 border-gray-200 rounded-lg"
+                        {...register("content.reviewUrl")}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {(type === "INSTAGRAM" ||
+                  type === "FACEBOOK" ||
+                  type === "LINKEDIN" ||
+                  type === "X" ||
+                  type === "YOUTUBE" ||
+                  type === "TIKTOK") && (
+                  <div className="flex flex-col gap-3 md:col-span-2">
+                    {(type === "INSTAGRAM" ||
+                      type === "X" ||
+                      type === "TIKTOK") && (
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-semibold text-gray-700 tracking-wide">
+                          Username
+                        </label>
+                        <Input
+                          placeholder="@username"
+                          className="h-10 border-gray-200 rounded-lg"
+                          {...register("content.username")}
+                        />
+                      </div>
+                    )}
+                    {(type === "FACEBOOK" || type === "LINKEDIN") && (
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-semibold text-gray-700 tracking-wide">
+                          {type === "FACEBOOK" ? "Page Name" : "Profile Name"}
+                        </label>
+                        <Input
+                          placeholder={type === "FACEBOOK" ? "My Page" : "John Doe"}
+                          className="h-10 border-gray-200 rounded-lg"
+                          {...register(type === "FACEBOOK" ? "content.pageName" : "content.profileName")}
+                        />
+                      </div>
+                    )}
+                    {type === "YOUTUBE" && (
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-semibold text-gray-700 tracking-wide">
+                          Channel Name
+                        </label>
+                        <Input
+                          placeholder="My Channel"
+                          className="h-10 border-gray-200 rounded-lg"
+                          {...register("content.channelName")}
+                        />
+                      </div>
+                    )}
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-gray-700 tracking-wide">
+                        Profile URL *
+                      </label>
+                      <Input
+                        placeholder="https://..."
+                        className="h-10 border-gray-200 rounded-lg"
+                        {...register("content.url")}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {type === "SOCIAL" && (
+                  <div className="flex flex-col gap-3 md:col-span-2">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-semibold text-gray-700">
+                          Title
+                        </label>
+                        <Input
+                          placeholder="My Social Links"
+                          className="h-10 border-gray-200 rounded-lg"
+                          {...register("content.title")}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-semibold text-gray-700">
+                          Description
+                        </label>
+                        <Input
+                          placeholder="Connect with me everywhere"
+                          className="h-10 border-gray-200 rounded-lg"
+                          {...register("content.description")}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-semibold text-gray-700">
+                          Website
+                        </label>
+                        <Input
+                          placeholder="https://mysite.com"
+                          className="h-10 border-gray-200 rounded-lg"
+                          {...register("content.links.website")}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-semibold text-gray-700">
+                          Instagram
+                        </label>
+                        <Input
+                          placeholder="https://instagram.com/..."
+                          className="h-10 border-gray-200 rounded-lg"
+                          {...register("content.links.instagram")}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-semibold text-gray-700">
+                          Facebook
+                        </label>
+                        <Input
+                          placeholder="https://facebook.com/..."
+                          className="h-10 border-gray-200 rounded-lg"
+                          {...register("content.links.facebook")}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-semibold text-gray-700">
+                          LinkedIn
+                        </label>
+                        <Input
+                          placeholder="https://linkedin.com/in/..."
+                          className="h-10 border-gray-200 rounded-lg"
+                          {...register("content.links.linkedin")}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-semibold text-gray-700">
+                          X (Twitter)
+                        </label>
+                        <Input
+                          placeholder="https://x.com/..."
+                          className="h-10 border-gray-200 rounded-lg"
+                          {...register("content.links.x")}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-semibold text-gray-700">
+                          YouTube
+                        </label>
+                        <Input
+                          placeholder="https://youtube.com/..."
+                          className="h-10 border-gray-200 rounded-lg"
+                          {...register("content.links.youtube")}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-semibold text-gray-700">
+                          TikTok
+                        </label>
+                        <Input
+                          placeholder="https://tiktok.com/@..."
+                          className="h-10 border-gray-200 rounded-lg"
+                          {...register("content.links.tiktok")}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-semibold text-gray-700">
+                          WhatsApp
+                        </label>
+                        <Input
+                          placeholder="https://wa.me/..."
+                          className="h-10 border-gray-200 rounded-lg"
+                          {...register("content.links.whatsapp")}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-xs font-semibold text-gray-700">
                     Hard Scan Throttling Limit
