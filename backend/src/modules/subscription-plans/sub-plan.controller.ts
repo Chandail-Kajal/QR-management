@@ -3,14 +3,24 @@ import { CreateSubPlan, ListSubPlan, UpdateSubPlan } from "./sub-plan.validation
 import { paginate } from "@/shared/utils/Paginate";
 
 export const createSubPlan = async (data: CreateSubPlan) => {
-    return await prisma.subscriptionPlan.create({ data: { ...data, allowedQRTypes: JSON.stringify(data.allowedQRTypes) } })
+    const { price, ...rest } = data;
+    return await prisma.subscriptionPlan.create({
+        data: {
+            ...rest,
+            allowedQRTypes: JSON.stringify(data.allowedQRTypes),
+            ...(price != null ? { price } : {}),
+        }
+    })
 }
 
 export const updateSubPlan = async (id: number, data: UpdateSubPlan) => {
     try {
+        const { price, ...rest } = data;
         return await prisma.subscriptionPlan.update({
             where: { id }, data: {
-                ...data, ...(data.allowedQRTypes ? { allowedQRTypes: JSON.stringify(data.allowedQRTypes) } : {})
+                ...rest,
+                ...(rest.allowedQRTypes ? { allowedQRTypes: JSON.stringify(rest.allowedQRTypes) } : {}),
+                ...(price !== undefined ? { price: price ?? undefined } : {}),
             }
         })
 
@@ -18,6 +28,7 @@ export const updateSubPlan = async (id: number, data: UpdateSubPlan) => {
         console.log(error);
     }
 }
+
 
 export const deleteSubPlan = async (id: number) => {
     return await prisma.subscriptionPlan.delete({ where: { id } })

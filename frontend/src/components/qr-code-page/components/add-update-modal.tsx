@@ -186,9 +186,9 @@ export const QR_TYPE_CONFIGS = [
   },
   {
     id: "SOCIAL",
-    name: "Social",
+    name: "Social Media",
     icon: <Share2 />,
-    desc: "Multi-platform social links",
+    desc: "Other platforms (Pinterest, Snapchat, Reddit...)",
     bg: "bg-indigo-50 text-indigo-700",
   },
 ] as const;
@@ -315,9 +315,9 @@ export function QrModalForm({
         break;
       case "SOCIAL":
         setValue("content", {
-          title: "",
-          description: "",
-          links: {},
+          platform: "Pinterest",
+          username: "",
+          url: "",
         });
         break;
     }
@@ -761,109 +761,54 @@ export function QrModalForm({
 
                 {type === "SOCIAL" && (
                   <div className="flex flex-col gap-3 md:col-span-2">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-semibold text-gray-700">
-                          Title
-                        </label>
-                        <Input
-                          placeholder="My Social Links"
-                          className="h-10 border-gray-200 rounded-lg"
-                          {...register("content.title")}
-                        />
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-semibold text-gray-700">
-                          Description
-                        </label>
-                        <Input
-                          placeholder="Connect with me everywhere"
-                          className="h-10 border-gray-200 rounded-lg"
-                          {...register("content.description")}
-                        />
-                      </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-gray-700 tracking-wide">
+                        Social Platform *
+                      </label>
+                      <Select
+                        value={watch("content.platform") || "Pinterest"}
+                        onValueChange={(v: string) =>
+                          setValue("content.platform", v)
+                        }
+                      >
+                        <SelectTrigger className="h-10 border-gray-200 rounded-lg">
+                          <SelectValue placeholder="Select pending platform" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Pinterest">Pinterest</SelectItem>
+                          <SelectItem value="Snapchat">Snapchat</SelectItem>
+                          <SelectItem value="Reddit">Reddit</SelectItem>
+                          <SelectItem value="Threads">Threads</SelectItem>
+                          <SelectItem value="Telegram">Telegram</SelectItem>
+                          <SelectItem value="Discord">Discord</SelectItem>
+                          <SelectItem value="Twitch">Twitch</SelectItem>
+                          <SelectItem value="GitHub">GitHub</SelectItem>
+                          <SelectItem value="Medium">Medium</SelectItem>
+                          <SelectItem value="Tumblr">Tumblr</SelectItem>
+                          <SelectItem value="Spotify">Spotify</SelectItem>
+                          <SelectItem value="Other">Other / Website</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-semibold text-gray-700">
-                          Website
-                        </label>
-                        <Input
-                          placeholder="https://mysite.com"
-                          className="h-10 border-gray-200 rounded-lg"
-                          {...register("content.links.website")}
-                        />
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-semibold text-gray-700">
-                          Instagram
-                        </label>
-                        <Input
-                          placeholder="https://instagram.com/..."
-                          className="h-10 border-gray-200 rounded-lg"
-                          {...register("content.links.instagram")}
-                        />
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-semibold text-gray-700">
-                          Facebook
-                        </label>
-                        <Input
-                          placeholder="https://facebook.com/..."
-                          className="h-10 border-gray-200 rounded-lg"
-                          {...register("content.links.facebook")}
-                        />
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-semibold text-gray-700">
-                          LinkedIn
-                        </label>
-                        <Input
-                          placeholder="https://linkedin.com/in/..."
-                          className="h-10 border-gray-200 rounded-lg"
-                          {...register("content.links.linkedin")}
-                        />
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-semibold text-gray-700">
-                          X (Twitter)
-                        </label>
-                        <Input
-                          placeholder="https://x.com/..."
-                          className="h-10 border-gray-200 rounded-lg"
-                          {...register("content.links.x")}
-                        />
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-semibold text-gray-700">
-                          YouTube
-                        </label>
-                        <Input
-                          placeholder="https://youtube.com/..."
-                          className="h-10 border-gray-200 rounded-lg"
-                          {...register("content.links.youtube")}
-                        />
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-semibold text-gray-700">
-                          TikTok
-                        </label>
-                        <Input
-                          placeholder="https://tiktok.com/@..."
-                          className="h-10 border-gray-200 rounded-lg"
-                          {...register("content.links.tiktok")}
-                        />
-                      </div>
-                      <div className="flex flex-col gap-1.5">
-                        <label className="text-xs font-semibold text-gray-700">
-                          WhatsApp
-                        </label>
-                        <Input
-                          placeholder="https://wa.me/..."
-                          className="h-10 border-gray-200 rounded-lg"
-                          {...register("content.links.whatsapp")}
-                        />
-                      </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-gray-700 tracking-wide">
+                        Username / Profile Name
+                      </label>
+                      <Input
+                        placeholder="@username or profile name"
+                        className="h-10 border-gray-200 rounded-lg"
+                        {...register("content.username")}
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-semibold text-gray-700 tracking-wide">
+                        Profile URL *
+                      </label>
+                      <Input
+                        placeholder="https://..."
+                        className="h-10 border-gray-200 rounded-lg"
+                        {...register("content.url")}
+                      />
                     </div>
                   </div>
                 )}

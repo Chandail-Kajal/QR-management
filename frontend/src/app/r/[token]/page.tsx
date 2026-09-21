@@ -12,8 +12,8 @@ type Redirect = {
 };
 
 type QRResponse = {
-  renderMode: "REDIRECT" | "VCARD";
-  content: Redirect | VCardQRContent;
+  renderMode: "REDIRECT" | "VCARD" | "WIFI" | "SOCIAL";
+  content: any;
 };
 
 export default function QRPage() {

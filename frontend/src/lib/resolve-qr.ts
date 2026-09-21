@@ -53,7 +53,8 @@ export function resolveDestination(content: QRContent): string | null {
     case "X":
     case "YOUTUBE":
     case "TIKTOK":
-      return content.url;
+    case "SOCIAL":
+      return (content as any).url || null;
 
     default:
       return null;

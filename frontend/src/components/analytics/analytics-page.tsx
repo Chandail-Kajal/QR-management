@@ -344,7 +344,7 @@ function LocationChart({
             />
 
             <Tooltip
-              formatter={(value: number ) => [
+              formatter={(value) => [
                 `${value} scans`,
                 "Scans",
               ]}

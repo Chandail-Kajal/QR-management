@@ -88,9 +88,13 @@ function getContentPreview(qr: TQRDTO) {
     case "X":
     case "YOUTUBE":
     case "TIKTOK":
-      return content.url;
     case "SOCIAL":
-      return content.title || "Social Links";
+      return (
+        content.url ||
+        (content.platform
+          ? `${content.platform}: ${content.username || content.url}`
+          : content.title || "Social Links")
+      );
     default:
       return "-";
   }
@@ -146,7 +150,7 @@ export function QRsPage({
       folderId: folder?.id as number,
       userId,
     },
-    !!folderName,
+    !!folderName && !!folder?.id,
   );
 
   const allQRs = useQRs(

@@ -110,6 +110,14 @@ export function resolveQRDestination(
       };
 
     case "SOCIAL":
+      if ((content as any).url) {
+        return {
+          renderMode: "REDIRECT",
+          content: {
+            destinationUrl: (content as any).url,
+          },
+        };
+      }
       return {
         renderMode: "SOCIAL",
         content: content as SocialQRContent,

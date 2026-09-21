@@ -15,6 +15,12 @@ export interface SystemNotification {
   createdAt: string;
 }
 
+export interface UserFolderInfo {
+  id: number;
+  name: string;
+  qrCount: number;
+}
+
 export interface ManagedUser {
   id: number;
   name: string;
@@ -24,6 +30,14 @@ export interface ManagedUser {
   planName: string;
   subscriptionId: number | null;
   qrsCount: number;
+  totalScans: number;
+  scanCount1m: number;
+  scanCount3m: number;
+  scanCount6m: number;
+  scanCount12m: number;
+  foldersCount: number;
+  folders: UserFolderInfo[];
+  createdAt: string;
 }
 
 export interface QRScannerRecord {
@@ -61,7 +75,7 @@ export const getAdminSettingsData = async (_req: Request, res: Response): Promis
     const date6m = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
     const date12m = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
 
-    // 1. FETCH MANAGED USERS
+    // 1. FETCH MANAGED USERS WITH FOLDERS & SCANS
     const dbUsers = await prisma.user.findMany({
       where: { deletedAt: null },
       select: {
@@ -70,6 +84,7 @@ export const getAdminSettingsData = async (_req: Request, res: Response): Promis
         email: true,
         role: true,
         status: true,
+        createdAt: true,
         subscriptions: {
           orderBy: { createdAt: "desc" },
           take: 1,
@@ -81,7 +96,32 @@ export const getAdminSettingsData = async (_req: Request, res: Response): Promis
           },
         },
         _count: {
-          select: { qrs: { where: { deletedAt: null } } },
+          select: {
+            qrs: { where: { deletedAt: null } },
+            folders: true,
+          },
+        },
+        folders: {
+          select: {
+            id: true,
+            name: true,
+            _count: {
+              select: { qrs: { where: { deletedAt: null } } },
+            },
+          },
+          orderBy: { createdAt: "asc" },
+        },
+        qrs: {
+          where: { deletedAt: null },
+          select: {
+            id: true,
+            name: true,
+            scanCount: true,
+            scans: {
+              where: { scannedAt: { gte: date12m } },
+              select: { scannedAt: true },
+            },
+          },
         },
       },
       orderBy: { createdAt: "desc" },
@@ -89,6 +129,24 @@ export const getAdminSettingsData = async (_req: Request, res: Response): Promis
 
     const managedUsers: ManagedUser[] = dbUsers.map((user) => {
       const activeSub = user.subscriptions[0];
+
+      let userScanCount1m = 0;
+      let userScanCount3m = 0;
+      let userScanCount6m = 0;
+      let userScanCount12m = 0;
+      let userTotalScans = 0;
+
+      user.qrs.forEach((qr) => {
+        userTotalScans += qr.scanCount || 0;
+        qr.scans.forEach((scan) => {
+          const time = scan.scannedAt.getTime();
+          if (time >= date1m.getTime()) userScanCount1m++;
+          if (time >= date3m.getTime()) userScanCount3m++;
+          if (time >= date6m.getTime()) userScanCount6m++;
+          if (time >= date12m.getTime()) userScanCount12m++;
+        });
+      });
+
       return {
         id: user.id,
         name: user.name,
@@ -98,6 +156,18 @@ export const getAdminSettingsData = async (_req: Request, res: Response): Promis
         planName: activeSub?.plan?.name || "Free Trial",
         subscriptionId: activeSub?.id || null,
         qrsCount: user._count.qrs,
+        totalScans: userTotalScans,
+        scanCount1m: userScanCount1m,
+        scanCount3m: userScanCount3m,
+        scanCount6m: userScanCount6m,
+        scanCount12m: userScanCount12m,
+        foldersCount: user.folders.length,
+        folders: user.folders.map((f) => ({
+          id: f.id,
+          name: f.name,
+          qrCount: f._count.qrs,
+        })),
+        createdAt: user.createdAt.toISOString(),
       };
     });
 

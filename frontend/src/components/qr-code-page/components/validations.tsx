@@ -47,8 +47,70 @@ const vcardSchema = z.object({
 });
 
 const whatsappSchema = z.object({
-  phone: z.string().min(1),
+  phone: z.string().min(1, "Phone number is required"),
   message: z.string().optional(),
+});
+
+const googleReviewSchema = z.object({
+  placeId: z.string().optional(),
+  reviewUrl: z.string().url("Invalid Google Review URL"),
+});
+
+const instagramSchema = z.object({
+  username: z.string().optional(),
+  url: z.string().url("Invalid Instagram URL"),
+});
+
+const facebookSchema = z.object({
+  pageName: z.string().optional(),
+  url: z.string().url("Invalid Facebook URL"),
+});
+
+const linkedinSchema = z.object({
+  profileName: z.string().optional(),
+  url: z.string().url("Invalid LinkedIn URL"),
+});
+
+const xSchema = z.object({
+  username: z.string().optional(),
+  url: z.string().url("Invalid X URL"),
+});
+
+const youtubeSchema = z.object({
+  channelName: z.string().optional(),
+  url: z.string().url("Invalid YouTube URL"),
+});
+
+const tiktokSchema = z.object({
+  username: z.string().optional(),
+  url: z.string().url("Invalid TikTok URL"),
+});
+
+const socialSchema = z
+  .object({
+    platform: z.string().optional(),
+    username: z.string().optional(),
+    profileName: z.string().optional(),
+    url: z.string().url("Invalid Profile URL").optional(),
+    title: z.string().optional(),
+    description: z.string().optional(),
+    links: z.record(z.string(), z.string()).optional(),
+  })
+  .refine(
+    (data) =>
+      Boolean(
+        data.url || (data.links && Object.values(data.links).some(Boolean)),
+      ),
+    {
+      message: "Profile URL is required",
+      path: ["url"],
+    },
+  );
+
+const fileSchema = z.object({
+  fileId: z.number().int().positive().optional(),
+  fileName: z.string().optional(),
+  url: z.string().optional(),
 });
 
 export const createQRSchema = z
@@ -64,7 +126,7 @@ export const createQRSchema = z
     content: z.any(),
   })
   .superRefine((data, ctx) => {
-    const validators = {
+    const validators: Record<string, z.ZodTypeAny> = {
       URL: urlSchema,
       TEXT: textSchema,
       EMAIL: emailSchema,
@@ -73,9 +135,18 @@ export const createQRSchema = z
       WIFI: wifiSchema,
       VCARD: vcardSchema,
       WHATSAPP: whatsappSchema,
+      GOOGLE_REVIEW: googleReviewSchema,
+      INSTAGRAM: instagramSchema,
+      FACEBOOK: facebookSchema,
+      LINKEDIN: linkedinSchema,
+      X: xSchema,
+      YOUTUBE: youtubeSchema,
+      TIKTOK: tiktokSchema,
+      SOCIAL: socialSchema,
+      FILE: fileSchema,
     };
 
-    const validator = validators[data.type as keyof typeof validators];
+    const validator = validators[data.type];
 
     if (!validator) return;
 

@@ -20,20 +20,20 @@ export interface UserSubscription {
   allowedQRTypes: string[];
   allowExpiryDate: boolean;
   allowPasswordProtection: boolean;
-  analyticsHistoryDays: number;
+  analyticsHistoryDays: number | null;
   isFree: boolean;
   isActive: boolean;
-  maxCampaigns: number;
-  maxFileSizeMb: number;
-  maxFileUploads: number;
+  maxCampaigns: number | null;
+  maxFileSizeMb: number | null;
+  maxFileUploads: number | null;
   name: string;
-  maxFolders: number;
-  maxQRCodes: number;
-  maxQRsPerFolder: number;
-  maxScansPerQR: number;
-  maxTotalScans: number;
+  maxFolders: number | null;
+  maxQRCodes: number | null;
+  maxQRsPerFolder: number | null;
+  maxScansPerQR: number | null;
+  maxTotalScans: number | null;
   startDate: Date;
-  expiryDate: Date;
+  expiryDate: Date | null;
   subscriptionStatus: SubscriptionStatus;
 }
 
@@ -108,6 +108,8 @@ export const getUser = async (email?: string | null, id?: number | null) => {
   });
 
   console.log({ activeSubscription, activeSubscriptionPlan });
+
+  if (!activeSubscriptionPlan) throw new ApiError(400, "Subscription plan not found");
 
   // Parse allowedQRTypes if it's a JSON string (stored via JSON.stringify into a Json column)
   let parsedAllowedQRTypes: string[] = [];

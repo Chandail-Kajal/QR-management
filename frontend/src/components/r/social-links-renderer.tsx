@@ -7,12 +7,26 @@ import {
   FaFacebook as Facebook,
   FaYoutube as Youtube,
   FaTwitter as Twitter,
+  FaPinterest as Pinterest,
+  FaSnapchat as Snapchat,
+  FaReddit as Reddit,
+  FaThreads as Threads,
+  FaTelegram as Telegram,
+  FaDiscord as Discord,
+  FaTwitch as Twitch,
+  FaGithub as Github,
+  FaMedium as Medium,
+  FaTumblr as Tumblr,
+  FaSpotify as Spotify,
 } from "react-icons/fa6";
 
 import { Card } from "@/components/ui/card";
 import { SocialQRContent } from "@/types";
 
-const SOCIAL_CONFIG = {
+const SOCIAL_CONFIG: Record<
+  string,
+  { label: string; icon: any; className: string }
+> = {
   instagram: {
     label: "Instagram",
     icon: Instagram,
@@ -48,17 +62,86 @@ const SOCIAL_CONFIG = {
     icon: MessageCircle,
     className: "hover:border-green-500/50 hover:bg-green-500/10",
   },
+  pinterest: {
+    label: "Pinterest",
+    icon: Pinterest,
+    className: "hover:border-red-500/50 hover:bg-red-500/10",
+  },
+  snapchat: {
+    label: "Snapchat",
+    icon: Snapchat,
+    className: "hover:border-yellow-400/50 hover:bg-yellow-400/10",
+  },
+  reddit: {
+    label: "Reddit",
+    icon: Reddit,
+    className: "hover:border-orange-500/50 hover:bg-orange-500/10",
+  },
+  threads: {
+    label: "Threads",
+    icon: Threads,
+    className: "hover:border-white/50 hover:bg-white/10",
+  },
+  telegram: {
+    label: "Telegram",
+    icon: Telegram,
+    className: "hover:border-sky-400/50 hover:bg-sky-400/10",
+  },
+  discord: {
+    label: "Discord",
+    icon: Discord,
+    className: "hover:border-indigo-400/50 hover:bg-indigo-400/10",
+  },
+  twitch: {
+    label: "Twitch",
+    icon: Twitch,
+    className: "hover:border-purple-400/50 hover:bg-purple-400/10",
+  },
+  github: {
+    label: "GitHub",
+    icon: Github,
+    className: "hover:border-gray-400/50 hover:bg-gray-400/10",
+  },
+  medium: {
+    label: "Medium",
+    icon: Medium,
+    className: "hover:border-green-400/50 hover:bg-green-400/10",
+  },
+  tumblr: {
+    label: "Tumblr",
+    icon: Tumblr,
+    className: "hover:border-blue-400/50 hover:bg-blue-400/10",
+  },
+  spotify: {
+    label: "Spotify",
+    icon: Spotify,
+    className: "hover:border-green-500/50 hover:bg-green-500/10",
+  },
   website: {
     label: "Website",
     icon: Globe,
     className: "hover:border-cyan-500/50 hover:bg-cyan-500/10",
   },
-} as const;
+  other: {
+    label: "Other Link",
+    icon: Globe,
+    className: "hover:border-cyan-500/50 hover:bg-cyan-500/10",
+  },
+};
 
 export function SocialRenderer({ content }: { content: SocialQRContent }) {
-  const links = Object.entries(content.links).filter(([, url]) =>
+  const rawLinks =
+    content.links ??
+    (content.url
+      ? {
+          [content.platform ? content.platform.toLowerCase() : "website"]:
+            content.url,
+        }
+      : {});
+
+  const links = Object.entries(rawLinks).filter(([, url]) =>
     Boolean(url),
-  ) as [keyof typeof SOCIAL_CONFIG, string][];
+  ) as [string, string][];
 
   return (
     <div className="bg-black flex flex-col items-center justify-start p-4 py-12">

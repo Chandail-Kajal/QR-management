@@ -111,10 +111,14 @@ export interface TikTokQRContent {
 
 export interface SocialQRContent {
   type: "SOCIAL";
+  platform?: string;
+  username?: string;
+  profileName?: string;
+  url?: string;
   title?: string;
   description?: string;
   avatarFileId?: number;
-  links: {
+  links?: {
     website?: string;
     instagram?: string;
     facebook?: string;
@@ -123,6 +127,18 @@ export interface SocialQRContent {
     youtube?: string;
     tiktok?: string;
     whatsapp?: string;
+    pinterest?: string;
+    snapchat?: string;
+    reddit?: string;
+    threads?: string;
+    telegram?: string;
+    discord?: string;
+    twitch?: string;
+    github?: string;
+    medium?: string;
+    tumblr?: string;
+    spotify?: string;
+    [key: string]: string | undefined;
   };
 }
 
